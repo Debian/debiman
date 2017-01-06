@@ -343,3 +343,19 @@ min-width: 200px;
 .pkgversion {
 float: right;
 }
+
+/* mandoc styles */
+
+.mandoc {
+    /* Required so that table.head and table.foot can take up 100% of what remains after floating the panels. */
+    overflow: hidden;
+}
+table.head, table.foot {
+    width: 100%;
+}
+.head-vol {
+    text-align: center;
+}
+.head-rtitle {
+    text-align: right;
+}
