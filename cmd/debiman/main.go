@@ -78,6 +78,10 @@ func logic() error {
 		return err
 	}
 
+	if err := renderAux(*servingDir, globalView); err != nil {
+		return err
+	}
+
 	return nil
 }
 

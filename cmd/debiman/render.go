@@ -19,6 +19,7 @@ import (
 )
 
 //go:generate go run gentmpl.go header footer style manpage manpageerror contents pkgindex index faq
+//go:generate go run genbundled.go static/Inconsolata.woff static/Inconsolata.woff2 static/openlogo-50.svg static/opensearch.xml static/Roboto-Bold.woff static/Roboto-Bold.woff2 static/Roboto-Regular.woff static/Roboto-Regular.woff2
 
 type breadcrumb struct {
 	Link string
