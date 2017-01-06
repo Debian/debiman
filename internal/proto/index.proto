@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+
+message IndexEntry {
+  string name = 1;
+  string suite = 2;
+  string binarypkg = 3;
+  string section = 4;
+  string language = 5;
+}
+
+message Index {
+  repeated IndexEntry entry = 1;
+  repeated string language = 2;
+  repeated string suite = 3;
+  repeated string section = 4;
+}

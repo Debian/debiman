@@ -1,0 +1,16 @@
+[Unit]
+Description=debiman auxilliary service endpoints
+
+[Service]
+Restart=always
+StartLimitInterval=0
+User=nobody
+Group=nogroup
+ExecStart=/usr/bin/debiman-auxserver
+# Provide a separate /tmp to the process.
+PrivateTmp=true
+# Provide all system files read-only to the process.
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
