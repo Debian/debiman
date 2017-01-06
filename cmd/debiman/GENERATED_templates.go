@@ -420,6 +420,10 @@ table.head, table.foot {
 }
 .head-rtitle {
     text-align: right;
+}
+
+.spacer {
+    min-height: 1em;
 }`
 var manpageContent = `{{ template "header" . }}
 
