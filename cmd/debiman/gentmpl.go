@@ -7,23 +7,16 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
-	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"text/template"
 	"unicode/utf8"
 )
 
-var output = flag.String("output", "templates.go", "Where to put the variable declarations")
+var output = flag.String("output", "GENERATED_templates.go", "Where to put the variable declarations")
 var pkgname = flag.String("package", "main", "What package should the output file belong to")
-
-// errWriter wraps an io.Writer and saves the first error it encounters (and
-// otherwise ignores all write-errors).
-type errWriter struct {
-	io.Writer
-	err error
-}
 
 // Like strconv.CanBackquote, but allows multi-line backquoted strings (i.e.
 // does not consider \n in the input a cause to return false).
@@ -75,7 +68,13 @@ func main() {
 		n := flag.Arg(i)
 		b, err := ioutil.ReadFile("templates/" + n + ".html")
 		if err != nil {
-			log.Fatal(err)
+			// Fall back to .css
+			if os.IsNotExist(err) {
+				b, err = ioutil.ReadFile("templates/" + n + ".css")
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 		// If we can use backquotes, we do — it makes generated files easier to read.
 		var literal string
