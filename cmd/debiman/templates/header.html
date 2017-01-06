@@ -26,9 +26,17 @@
 <ul>
    <li><a href="/">Index</a></li>
    <li><a href="/about.html">About Manpages</a></li>
-   <li><a href="/faq.faq">FAQ</a></li>
+   <li><a href="/faq.html">FAQ</a></li>
 </ul>
 </div>
-   <p id="breadcrumbs">&nbsp;</p>
+   <p id="breadcrumbs">&nbsp;
+     {{- range $i, $b := .Breadcrumbs }}
+     {{ if eq $b.Link "" }}
+     &#x2F; {{ $b.Text }}
+     {{ else }}
+     &#x2F; <a href="{{ $b.Link }}">{{ $b.Text }}</a>
+     {{ end }}
+     {{ end -}}
+   </p>
 </div>
 <div id="content">

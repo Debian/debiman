@@ -1,15 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"compress/gzip"
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
@@ -80,7 +77,7 @@ var longSections = map[string]string{
 	"9": "Kernel routines [Non standard]",
 }
 
-var manpageTmpl = template.Must(template.New("manpage").
+var manpageTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage").
 	Funcs(map[string]interface{}{
 		"DisplayLang": func(tag language.Tag) string {
 			return display.Self.Name(tag)
@@ -94,7 +91,7 @@ var manpageTmpl = template.Must(template.New("manpage").
 	}).
 	Parse(manpageContent))
 
-var manpageerrorTmpl = template.Must(template.New("manpage-error").
+var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage-error").
 	Funcs(map[string]interface{}{
 		"DisplayLang": func(tag language.Tag) string {
 			return display.Self.Name(tag)
@@ -310,66 +307,40 @@ func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Met
 	// strings.Sort (at least on the list of languages)?
 	collate.New(language.English).Sort(byLanguage(langs))
 
-	f, err := ioutil.TempFile(filepath.Dir(dest), "debiman-")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	// TODO(later): benchmark/support other compression algorithms. zopfli gets dos2unix from 9659B to 9274B (4% win)
-
-	// NOTE(stapelberg): gzip’s decompression phase takes the same
-	// time, regardless of compression level. Hence, we invest the
-	// maximum CPU time once to achieve the best compression.
-	w, err := gzip.NewWriterLevel(f, gzip.BestCompression)
-	if err != nil {
-		return err
-	}
-	defer w.Close()
-
 	t := manpageTmpl
+	title := fmt.Sprintf("%s(%s)", meta.Name, meta.Section)
 	if renderErr != nil {
 		t = manpageerrorTmpl
+		title = "Error: " + title
 	}
 
-	buf := bufio.NewWriter(w)
-	if err := t.Execute(buf, struct {
-		Suites   []*manpage.Meta
-		Versions []*manpage.Meta
-		Sections []*manpage.Meta
-		Bins     []*manpage.Meta
-		Langs    []*manpage.Meta
-		Meta     *manpage.Meta
-		Content  template.HTML
-		Error    error
-	}{
-		Suites:   suites,
-		Versions: versions,
-		Sections: sections,
-		Bins:     bins,
-		Langs:    langs,
-		Meta:     meta,
-		Content:  template.HTML(content),
-		Error:    renderErr,
-	}); err != nil {
-		return err
-	}
-
-	if err := buf.Flush(); err != nil {
-		return err
-	}
-
-	if err := w.Close(); err != nil {
-		return err
-	}
-
-	if err := f.Chmod(0644); err != nil {
-		return err
-	}
-
-	if err := f.Close(); err != nil {
-		return err
-	}
-
-	return os.Rename(f.Name(), dest)
+	return writeAtomically(dest, func(w io.Writer) error {
+		return t.Execute(w, struct {
+			Title       string
+			Breadcrumbs []breadcrumb
+			Suites      []*manpage.Meta
+			Versions    []*manpage.Meta
+			Sections    []*manpage.Meta
+			Bins        []*manpage.Meta
+			Langs       []*manpage.Meta
+			Meta        *manpage.Meta
+			Content     template.HTML
+			Error       error
+		}{
+			Title: title,
+			Breadcrumbs: []breadcrumb{
+				{fmt.Sprintf("/contents-%s.html", meta.Package.Suite), meta.Package.Suite},
+				{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
+				{"", title},
+			},
+			Suites:   suites,
+			Versions: versions,
+			Sections: sections,
+			Bins:     bins,
+			Langs:    langs,
+			Meta:     meta,
+			Content:  template.HTML(content),
+			Error:    renderErr,
+		})
+	})
 }

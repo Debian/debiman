@@ -1,32 +1,15 @@
 package main
 
 import (
-	"compress/gzip"
+	"fmt"
 	"html/template"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+	"io"
 	"sort"
 
 	"github.com/Debian/debiman/internal/manpage"
-
-	"golang.org/x/text/language"
-	"golang.org/x/text/language/display"
 )
 
-var pkgindexTmpl = template.Must(template.New("contents").
-	Funcs(map[string]interface{}{
-		"DisplayLang": func(tag language.Tag) string {
-			return display.Self.Name(tag)
-		},
-		"ShortSection": func(section string) string {
-			return shortSections[section]
-		},
-		"LongSection": func(section string) string {
-			return longSections[section]
-		},
-	}).
-	Parse(pkgindexContent))
+var pkgindexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("pkgindex").Parse(pkgindexContent))
 
 func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 	var first *manpage.Meta
@@ -41,46 +24,23 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 	}
 	sort.Strings(mans)
 
-	f, err := ioutil.TempFile(filepath.Dir(dest), "debiman-")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	// TODO(later): benchmark/support other compression algorithms. zopfli gets dos2unix from 9659B to 9274B (4% win)
-
-	// NOTE(stapelberg): gzip’s decompression phase takes the same
-	// time, regardless of compression level. Hence, we invest the
-	// maximum CPU time once to achieve the best compression.
-	w, err := gzip.NewWriterLevel(f, gzip.BestCompression)
-	if err != nil {
-		return err
-	}
-	defer w.Close()
-
-	if err := pkgindexTmpl.Execute(w, struct {
-		First         *manpage.Meta
-		ManpageByName map[string]*manpage.Meta
-		Mans          []string
-	}{
-		First:         first,
-		ManpageByName: manpageByName,
-		Mans:          mans,
-	}); err != nil {
-		return err
-	}
-
-	if err := w.Close(); err != nil {
-		return err
-	}
-
-	if err := f.Chmod(0644); err != nil {
-		return err
-	}
-
-	if err := f.Close(); err != nil {
-		return err
-	}
-
-	return os.Rename(f.Name(), dest)
+	return writeAtomically(dest, func(w io.Writer) error {
+		return pkgindexTmpl.Execute(w, struct {
+			Title         string
+			Breadcrumbs   []breadcrumb
+			First         *manpage.Meta
+			ManpageByName map[string]*manpage.Meta
+			Mans          []string
+		}{
+			Title: fmt.Sprintf("Manpages of %s in Debian %s", first.Package.Binarypkg, first.Package.Suite),
+			Breadcrumbs: []breadcrumb{
+				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
+				{fmt.Sprintf("/%s/%s/index.html", first.Package.Suite, first.Package.Binarypkg), first.Package.Binarypkg},
+				{"", "Contents"},
+			},
+			First:         first,
+			ManpageByName: manpageByName,
+			Mans:          mans,
+		})
+	})
 }
