@@ -163,47 +163,13 @@ func soElim(src string, r io.Reader, w io.Writer, p pkgEntry, contentByPath map[
 }
 
 func writeManpage(src, dest string, r io.Reader, p pkgEntry, contentByPath map[string][]contentEntry) ([]string, error) {
-	f, err := ioutil.TempFile(filepath.Dir(dest), "debiman-")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	buf := bufio.NewWriter(f)
-
-	// TODO(later): benchmark/support other compression algorithms. zopfli gets dos2unix from 9659B to 9274B (4% win)
-	w, err := gzip.NewWriterLevel(buf, gzip.BestCompression)
-	if err != nil {
-		return nil, err
-	}
-	defer w.Close()
-
-	refs, err := soElim(src, r, w, p, contentByPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := w.Close(); err != nil {
-		return nil, err
-	}
-
-	if err := buf.Flush(); err != nil {
-		return nil, err
-	}
-
-	if err := f.Chmod(0644); err != nil {
-		return nil, err
-	}
-
-	if err := f.Close(); err != nil {
-		return nil, err
-	}
-
-	if err := os.Rename(f.Name(), dest); err != nil {
-		return nil, err
-	}
-
-	return refs, nil
+	var refs []string
+	err := writeAtomically(dest, func(w io.Writer) error {
+		var err error
+		refs, err = soElim(src, r, w, p, contentByPath)
+		return err
+	})
+	return refs, err
 }
 
 func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]contentEntry) error {
