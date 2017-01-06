@@ -664,7 +664,7 @@ var indexContent = `{{ template "header" . }}
 
 <ol>
   <li>
-    <form method="GET" action="http://man.localhost/jump">
+    <form method="GET" action="/jump">
       Directly jump to manpage:
       <input type="text" name="q" autofocus="autofocus" placeholder="manpage name">
       <input type="submit" value="Jump to manpage">
