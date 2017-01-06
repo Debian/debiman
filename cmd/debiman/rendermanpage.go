@@ -323,6 +323,7 @@ func rendermanpage(job renderJob) error {
 
 	t := manpageTmpl
 	title := fmt.Sprintf("%s(%s) — %s — Debian %s", meta.Name, meta.Section, meta.Package.Binarypkg, meta.Package.Suite)
+	shorttitle := fmt.Sprintf("%s(%s)", meta.Name, meta.Section)
 	if renderErr != nil {
 		t = manpageerrorTmpl
 		title = "Error: " + title
@@ -351,7 +352,7 @@ func rendermanpage(job renderJob) error {
 			Breadcrumbs: []breadcrumb{
 				{fmt.Sprintf("/contents-%s.html", meta.Package.Suite), meta.Package.Suite},
 				{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
-				{"", title},
+				{"", shorttitle},
 			},
 			FooterExtra: footerExtra,
 			Suites:      suites,
