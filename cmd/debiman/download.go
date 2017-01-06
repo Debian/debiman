@@ -277,6 +277,9 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 		if err != nil {
 			return err
 		}
+		if err := os.Chtimes(destPath, header.ModTime, header.ModTime); err != nil {
+			return err
+		}
 		if err := r.Close(); err != nil {
 			return err
 		}

@@ -7,8 +7,10 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
@@ -16,6 +18,8 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
 )
+
+const iso8601Format = "2006-01-02T15:04:05Z"
 
 // TODO(later): move this list to a package within pault.ag/debian/?
 var releaseList = []string{
@@ -183,18 +187,28 @@ func (p byLanguage) Bytes(i int) []byte {
 	return []byte(p[i].Language)
 }
 
-func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Meta, xref map[string][]*manpage.Meta) error {
+type renderJob struct {
+	dest     string
+	src      string
+	meta     *manpage.Meta
+	versions []*manpage.Meta
+	xref     map[string][]*manpage.Meta
+	modTime  time.Time
+}
+
+func rendermanpage(job renderJob) error {
+	meta := job.meta // for convenience
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
 	// TODO(later): add plain-text version
-	content, renderErr := convertFile(src, func(ref string) string {
+	content, renderErr := convertFile(job.src, func(ref string) string {
 		idx := strings.LastIndex(ref, "(")
 		if idx == -1 {
 			return ""
 		}
 		section := ref[idx+1 : len(ref)-1]
 		name := ref[:idx]
-		related, ok := xref[name]
+		related, ok := job.xref[name]
 		if !ok {
 			return ""
 		}
@@ -213,10 +227,10 @@ func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Met
 		}
 		return "/" + bestLanguageMatch(meta, filtered).ServingPath() + ".html"
 	})
-	log.Printf("rendering %q", dest)
+	log.Printf("rendering %q", job.dest)
 
-	suites := make([]*manpage.Meta, 0, len(versions))
-	for _, v := range versions {
+	suites := make([]*manpage.Meta, 0, len(job.versions))
+	for _, v := range job.versions {
 		if v.Package.Binarypkg != meta.Package.Binarypkg {
 			continue
 		}
@@ -242,7 +256,7 @@ func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Met
 	})
 
 	bySection := make(map[string][]*manpage.Meta)
-	for _, v := range versions {
+	for _, v := range job.versions {
 		if v.Package.Suite != meta.Package.Suite {
 			continue
 		}
@@ -257,8 +271,8 @@ func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Met
 	})
 
 	conflicting := make(map[string]bool)
-	bins := make([]*manpage.Meta, 0, len(versions))
-	for _, v := range versions {
+	bins := make([]*manpage.Meta, 0, len(job.versions))
+	for _, v := range job.versions {
 		if v.Section != meta.Section {
 			continue
 		}
@@ -285,8 +299,8 @@ func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Met
 		return bins[i].Package.Binarypkg < bins[j].Package.Binarypkg
 	})
 
-	langs := make([]*manpage.Meta, 0, len(versions))
-	for _, v := range versions {
+	langs := make([]*manpage.Meta, 0, len(job.versions))
+	for _, v := range job.versions {
 		if v.Section != meta.Section {
 			continue
 		}
@@ -308,16 +322,22 @@ func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Met
 	collate.New(language.English).Sort(byLanguage(langs))
 
 	t := manpageTmpl
-	title := fmt.Sprintf("%s(%s)", meta.Name, meta.Section)
+	title := fmt.Sprintf("%s(%s) — %s — Debian %s", meta.Name, meta.Section, meta.Package.Binarypkg, meta.Package.Suite)
 	if renderErr != nil {
 		t = manpageerrorTmpl
 		title = "Error: " + title
 	}
 
-	return writeAtomically(dest, func(w io.Writer) error {
+	footerExtra := fmt.Sprintf("Source file %s was last updated at %v and converted to HTML at %v",
+		filepath.Base(job.src),
+		job.modTime.UTC().Format(iso8601Format),
+		time.Now().UTC().Format(iso8601Format))
+
+	if err := writeAtomically(job.dest, func(w io.Writer) error {
 		return t.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb
+			FooterExtra string
 			Suites      []*manpage.Meta
 			Versions    []*manpage.Meta
 			Sections    []*manpage.Meta
@@ -333,14 +353,19 @@ func rendermanpage(dest, src string, meta *manpage.Meta, versions []*manpage.Met
 				{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
 				{"", title},
 			},
-			Suites:   suites,
-			Versions: versions,
-			Sections: sections,
-			Bins:     bins,
-			Langs:    langs,
-			Meta:     meta,
-			Content:  template.HTML(content),
-			Error:    renderErr,
+			FooterExtra: footerExtra,
+			Suites:      suites,
+			Versions:    job.versions,
+			Sections:    sections,
+			Bins:        bins,
+			Langs:       langs,
+			Meta:        meta,
+			Content:     template.HTML(content),
+			Error:       renderErr,
 		})
-	})
+	}); err != nil {
+		return err
+	}
+
+	return os.Chtimes(job.dest, job.modTime, job.modTime)
 }

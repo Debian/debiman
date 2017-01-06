@@ -47,7 +47,19 @@ var headerContent = `<!DOCTYPE html>
 </div>
 <div id="content">
 `
-var footerContent = ``
+var footerContent = `</div>
+<div id="footer">
+{{ if ne .FooterExtra "" }}
+<p>{{ .FooterExtra }}</p>
+{{ else }}
+<p>Page last updated {{ Now }}</p>
+{{ end }}
+<hr>
+<div id="fineprint">
+<p>debiman TODO, see <a href="https://github.com/Debian/debiman/">github.com/Debian/debiman</a></p>
+</div>
+</div>
+`
 var styleContent = `@font-face {
   font-family: 'Inconsolata';
   src: local('Inconsolata'), url(/Inconsolata.woff2) format('woff2'), url(/Inconsolata.woff) format('woff');

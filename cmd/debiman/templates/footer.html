@@ -1,0 +1,12 @@
+</div>
+<div id="footer">
+{{ if ne .FooterExtra "" }}
+<p>{{ .FooterExtra }}</p>
+{{ else }}
+<p>Page last updated {{ Now }}</p>
+{{ end }}
+<hr>
+<div id="fineprint">
+<p>debiman TODO, see <a href="https://github.com/Debian/debiman/">github.com/Debian/debiman</a></p>
+</div>
+</div>

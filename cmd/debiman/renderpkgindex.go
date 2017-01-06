@@ -28,6 +28,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title         string
 			Breadcrumbs   []breadcrumb
+			FooterExtra   string
 			First         *manpage.Meta
 			ManpageByName map[string]*manpage.Meta
 			Mans          []string

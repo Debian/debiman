@@ -16,6 +16,7 @@ func renderContents(dest, suite string, bins []string) error {
 		return contentsTmpl.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb
+			FooterExtra string
 			Bins        []string
 			Suite       string
 		}{

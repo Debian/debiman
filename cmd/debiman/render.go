@@ -28,7 +28,12 @@ var commonTmpls = parseCommonTemplates()
 func parseCommonTemplates() *template.Template {
 	t := template.New("root")
 	t = template.Must(t.New("header").Parse(headerContent))
-	t = template.Must(t.New("footer").Parse(footerContent))
+	t = template.Must(t.New("footer").
+		Funcs(map[string]interface{}{
+			"Now": func() string {
+				return time.Now().UTC().Format(iso8601Format)
+			}}).
+		Parse(footerContent))
 	t = template.Must(t.New("style").Parse(styleContent))
 	return t
 }
@@ -65,22 +70,14 @@ func renderAll(gv globalView) error {
 		binsBySuite[sfi.Name()] = names
 	}
 
-	// TODO: make render() take a renderJob to avoid duplication
-	type renderJob struct {
-		dest     string
-		src      string
-		meta     *manpage.Meta
-		versions []*manpage.Meta
-		xref     map[string][]*manpage.Meta
-	}
 	eg, ctx := errgroup.WithContext(context.Background())
 	renderChan := make(chan renderJob)
 	// TODO: flag for parallelism level
 	for i := 0; i < 30; i++ {
 		eg.Go(func() error {
 			for r := range renderChan {
-				if err := rendermanpage(r.dest, r.src, r.meta, r.versions, r.xref); err != nil {
-					// render writes an error page if rendering
+				if err := rendermanpage(r); err != nil {
+					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file
 					// system full) and should lead to termination.
 					return err
@@ -149,7 +146,7 @@ func renderAll(gv globalView) error {
 			if !ok || html.ModTime().Before(f.ModTime()) {
 				versions := gv.xref[m.Name]
 				// Replace m with its corresponding entry in versions
-				// so that render() can use pointer equality to
+				// so that rendermanpage() can use pointer equality to
 				// efficiently skip entries.
 				for _, v := range versions {
 					if v.ServingPath() == m.ServingPath() {
@@ -164,6 +161,7 @@ func renderAll(gv globalView) error {
 					meta:     m,
 					versions: versions,
 					xref:     gv.xref,
+					modTime:  f.ModTime(),
 				}:
 				case <-ctx.Done():
 					break

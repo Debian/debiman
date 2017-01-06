@@ -29,6 +29,7 @@ func renderAux(destDir string, gv globalView) error {
 		return indexTmpl.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb
+			FooterExtra string
 			Suites      []string
 		}{
 			Title:  "index",
@@ -42,6 +43,7 @@ func renderAux(destDir string, gv globalView) error {
 		return faqTmpl.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb
+			FooterExtra string
 		}{
 			Title: "FAQ",
 		})
