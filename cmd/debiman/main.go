@@ -34,8 +34,6 @@ var (
 		"If non-empty, a comma-separated whitelist of packages to render (for developing)")
 )
 
-//go:generate go run gentmpl.go header footer style manpage manpageerror contents pkgindex index faq
-
 // TODO: handle deleted packages, i.e. packages which are present on
 // disk but not in pkgs
 
