@@ -161,6 +161,20 @@ func postprocess(resolve func(ref string) string, n *html.Node) error {
 	if n.Parent == nil {
 		return nil
 	}
+	if n.Type == html.ElementNode &&
+		(n.Data == "html" ||
+			n.Data == "head" ||
+			n.Data == "body") {
+		c := n.FirstChild
+		for c != nil {
+			next := c.NextSibling
+			n.RemoveChild(c)
+			n.Parent.InsertBefore(c, n)
+			c = next
+		}
+		n.Parent.RemoveChild(n)
+		return nil
+	}
 	if resolve == nil {
 		return nil
 	}
