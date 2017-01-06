@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Debian/debiman/internal/redirect"
 	"github.com/golang/protobuf/proto"
@@ -79,11 +80,23 @@ func handleRedirect(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redir, http.StatusTemporaryRedirect)
 }
 
+func handleJump(w http.ResponseWriter, r *http.Request) {
+	q := r.FormValue("q")
+	if strings.TrimSpace(q) == "" {
+		http.Error(w, "No q= query parameter specified", http.StatusBadRequest)
+		return
+	}
+
+	r.URL.Path = "/" + q
+	handleRedirect(w, r)
+}
+
 func main() {
 	flag.Parse()
 
 	log.Printf("debiman auxserver loading index from %q", *indexPath)
 
+	http.HandleFunc("/jump", handleJump)
 	http.HandleFunc("/", handleRedirect)
 
 	var err error
