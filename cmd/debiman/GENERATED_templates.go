@@ -568,7 +568,7 @@ other languages
 <li class="list-group-item
 {{- if eq $man.Language $.Meta.Language }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ DisplayLang $man.LanguageTag }}</a>
+<a href="/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
 </li>
 {{ end }}
 </ul>
@@ -685,7 +685,7 @@ other languages
 <li class="list-group-item
 {{- if eq $man.Language $.Meta.Language }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ DisplayLang $man.LanguageTag }}</a>
+<a href="/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
 </li>
 {{ end }}
 </ul>

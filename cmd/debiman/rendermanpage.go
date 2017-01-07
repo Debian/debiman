@@ -88,6 +88,9 @@ var manpageTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage"
 		"DisplayLang": func(tag language.Tag) string {
 			return display.Self.Name(tag)
 		},
+		"EnglishLang": func(tag language.Tag) string {
+			return display.English.Languages().Name(tag)
+		},
 		"ShortSection": func(section string) string {
 			return shortSections[section]
 		},
@@ -105,6 +108,9 @@ var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("man
 	Funcs(map[string]interface{}{
 		"DisplayLang": func(tag language.Tag) string {
 			return display.Self.Name(tag)
+		},
+		"EnglishLang": func(tag language.Tag) string {
+			return display.English.Languages().Name(tag)
 		},
 		"ShortSection": func(section string) string {
 			return shortSections[section]
