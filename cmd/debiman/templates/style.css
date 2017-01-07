@@ -361,21 +361,26 @@ min-width: 200px;
     width: 200px;
 }
 
-.otherversions li {
+.otherversions li,
+.otherlangs li {
     display: flex;
 }
 
-.otherversions a {
+.otherversions a,
+.otherlangs a {
     flex-shrink: 0;
 }
 
-.pkgversion, .toc a {
+.pkgversion,
+.pkgname,
+.toc a {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
 }
 
-.pkgversion {
+.pkgversion,
+.pkgname {
     margin-left: auto;
     padding-left: 1em;
 }

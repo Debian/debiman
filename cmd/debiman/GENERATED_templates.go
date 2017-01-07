@@ -423,21 +423,26 @@ min-width: 200px;
     width: 200px;
 }
 
-.otherversions li {
+.otherversions li,
+.otherlangs li {
     display: flex;
 }
 
-.otherversions a {
+.otherversions a,
+.otherlangs a {
     flex-shrink: 0;
 }
 
-.pkgversion, .toc a {
+.pkgversion,
+.pkgname,
+.toc a {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
 }
 
-.pkgversion {
+.pkgversion,
+.pkgname {
     margin-left: auto;
     padding-left: 1em;
 }
@@ -558,7 +563,7 @@ other versions
 </div>
 
 {{ if gt (len .Langs) 1 }}
-<div class="panel" role="complementary">
+<div class="panel otherlangs" role="complementary">
 <div class="panel-heading" role="heading">
 other languages
 </div>
@@ -569,6 +574,9 @@ other languages
 {{- if eq $man.Language $.Meta.Language }} active{{- end -}}
 ">
 <a href="/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
+{{ if (index $.Ambiguous $man) }}
+<span class="pkgname">{{ $man.Package.Binarypkg }}</span>
+{{ end }}
 </li>
 {{ end }}
 </ul>
@@ -675,7 +683,7 @@ other versions
 </div>
 
 {{ if gt (len .Langs) 1 }}
-<div class="panel" role="complementary">
+<div class="panel otherlangs" role="complementary">
 <div class="panel-heading" role="heading">
 other languages
 </div>
@@ -686,6 +694,9 @@ other languages
 {{- if eq $man.Language $.Meta.Language }} active{{- end -}}
 ">
 <a href="/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
+{{ if (index $.Ambiguous $man) }}
+<span class="pkgname">{{ $man.Package.Binarypkg }}</span>
+{{ end }}
 </li>
 {{ end }}
 </ul>

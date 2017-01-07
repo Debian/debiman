@@ -54,7 +54,7 @@ other versions
 </div>
 
 {{ if gt (len .Langs) 1 }}
-<div class="panel" role="complementary">
+<div class="panel otherlangs" role="complementary">
 <div class="panel-heading" role="heading">
 other languages
 </div>
@@ -65,6 +65,9 @@ other languages
 {{- if eq $man.Language $.Meta.Language }} active{{- end -}}
 ">
 <a href="/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
+{{ if (index $.Ambiguous $man) }}
+<span class="pkgname">{{ $man.Package.Binarypkg }}</span>
+{{ end }}
 </li>
 {{ end }}
 </ul>

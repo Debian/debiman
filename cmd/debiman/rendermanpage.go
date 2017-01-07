@@ -215,7 +215,23 @@ type renderJob struct {
 
 var notYetRenderedSentinel = errors.New("Not yet rendered")
 
-func rendermanpage(job renderJob) error {
+type manpagePrepData struct {
+	Title       string
+	Breadcrumbs []breadcrumb
+	FooterExtra string
+	Suites      []*manpage.Meta
+	Versions    []*manpage.Meta
+	Sections    []*manpage.Meta
+	Bins        []*manpage.Meta
+	Langs       []*manpage.Meta
+	Meta        *manpage.Meta
+	TOC         []string
+	Ambiguous   map[*manpage.Meta]bool
+	Content     template.HTML
+	Error       error
+}
+
+func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, error) {
 	meta := job.meta // for convenience
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
@@ -229,7 +245,7 @@ func rendermanpage(job renderJob) error {
 	if job.symlink {
 		link, err := os.Readlink(job.src)
 		if err != nil {
-			return err
+			return nil, manpagePrepData{}, err
 		}
 		resolved := filepath.Join(filepath.Dir(job.src), link)
 		renderedPath := strings.TrimSuffix(resolved, ".gz") + ".html.gz"
@@ -339,7 +355,8 @@ func rendermanpage(job renderJob) error {
 		return bins[i].Package.Binarypkg < bins[j].Package.Binarypkg
 	})
 
-	langs := make([]*manpage.Meta, 0, len(job.versions))
+	ambiguous := make(map[*manpage.Meta]bool)
+	byLang := make(map[string][]*manpage.Meta)
 	for _, v := range job.versions {
 		if v.Section != meta.Section {
 			continue
@@ -350,7 +367,17 @@ func rendermanpage(job renderJob) error {
 		if conflicting[v.Package.Binarypkg] {
 			continue
 		}
-		langs = append(langs, v)
+
+		byLang[v.Language] = append(byLang[v.Language], v)
+	}
+	langs := make([]*manpage.Meta, 0, len(byLang))
+	for _, all := range byLang {
+		for _, e := range all {
+			langs = append(langs, e)
+			if len(all) > 1 {
+				ambiguous[e] = true
+			}
+		}
 	}
 
 	// NOTE(stapelberg): since our user interface currently is in
@@ -374,38 +401,35 @@ func rendermanpage(job renderJob) error {
 		job.modTime.UTC().Format(iso8601Format),
 		time.Now().UTC().Format(iso8601Format))
 
+	return t, manpagePrepData{
+		Title: title,
+		Breadcrumbs: []breadcrumb{
+			{fmt.Sprintf("/contents-%s.html", meta.Package.Suite), meta.Package.Suite},
+			{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
+			{"", shorttitle},
+		},
+		FooterExtra: footerExtra,
+		Suites:      suites,
+		Versions:    job.versions,
+		Sections:    sections,
+		Bins:        bins,
+		Langs:       langs,
+		Meta:        meta,
+		TOC:         toc,
+		Ambiguous:   ambiguous,
+		Content:     template.HTML(content),
+		Error:       renderErr,
+	}, nil
+}
+
+func rendermanpage(job renderJob) error {
+	t, data, err := rendermanpageprep(job)
+	if err != nil {
+		return err
+	}
+
 	if err := writeAtomically(job.dest, true, func(w io.Writer) error {
-		return t.Execute(w, struct {
-			Title       string
-			Breadcrumbs []breadcrumb
-			FooterExtra string
-			Suites      []*manpage.Meta
-			Versions    []*manpage.Meta
-			Sections    []*manpage.Meta
-			Bins        []*manpage.Meta
-			Langs       []*manpage.Meta
-			Meta        *manpage.Meta
-			TOC         []string
-			Content     template.HTML
-			Error       error
-		}{
-			Title: title,
-			Breadcrumbs: []breadcrumb{
-				{fmt.Sprintf("/contents-%s.html", meta.Package.Suite), meta.Package.Suite},
-				{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
-				{"", shorttitle},
-			},
-			FooterExtra: footerExtra,
-			Suites:      suites,
-			Versions:    job.versions,
-			Sections:    sections,
-			Bins:        bins,
-			Langs:       langs,
-			Meta:        meta,
-			TOC:         toc,
-			Content:     template.HTML(content),
-			Error:       renderErr,
-		})
+		return t.Execute(w, data)
 	}); err != nil {
 		return err
 	}
