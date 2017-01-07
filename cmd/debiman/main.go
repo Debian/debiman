@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -36,7 +37,13 @@ var (
 	forceRerender = flag.Bool("force_rerender",
 		false,
 		"Forces all manpages to be re-rendered, even if they are up to date")
+
+	showVersion = flag.Bool("version",
+		false,
+		"Show debiman version and exit")
 )
+
+//go:generate go run genversion.go
 
 // TODO: handle deleted packages, i.e. packages which are present on
 // disk but not in pkgs
@@ -93,6 +100,11 @@ func main() {
 	flag.Parse()
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	if *showVersion {
+		fmt.Printf("debiman %s\n", debimanVersion)
+		return
+	}
 
 	// All of our .so references are relative to *servingDir. For
 	// mandoc(1) to find the files, we need to change the working

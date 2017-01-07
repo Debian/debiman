@@ -27,13 +27,15 @@ func renderAux(destDir string, gv globalView) error {
 
 	if err := writeAtomically(filepath.Join(destDir, "index.html.gz"), true, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {
-			Title       string
-			Breadcrumbs []breadcrumb
-			FooterExtra string
-			Suites      []string
+			Title          string
+			DebimanVersion string
+			Breadcrumbs    []breadcrumb
+			FooterExtra    string
+			Suites         []string
 		}{
-			Title:  "index",
-			Suites: suites,
+			Title:          "index",
+			Suites:         suites,
+			DebimanVersion: debimanVersion,
 		})
 	}); err != nil {
 		return err
@@ -41,11 +43,13 @@ func renderAux(destDir string, gv globalView) error {
 
 	if err := writeAtomically(filepath.Join(destDir, "faq.html.gz"), true, func(w io.Writer) error {
 		return faqTmpl.Execute(w, struct {
-			Title       string
-			Breadcrumbs []breadcrumb
-			FooterExtra string
+			Title          string
+			DebimanVersion string
+			Breadcrumbs    []breadcrumb
+			FooterExtra    string
 		}{
-			Title: "FAQ",
+			Title:          "FAQ",
+			DebimanVersion: debimanVersion,
 		})
 	}); err != nil {
 		return err

@@ -216,19 +216,20 @@ type renderJob struct {
 var notYetRenderedSentinel = errors.New("Not yet rendered")
 
 type manpagePrepData struct {
-	Title       string
-	Breadcrumbs []breadcrumb
-	FooterExtra string
-	Suites      []*manpage.Meta
-	Versions    []*manpage.Meta
-	Sections    []*manpage.Meta
-	Bins        []*manpage.Meta
-	Langs       []*manpage.Meta
-	Meta        *manpage.Meta
-	TOC         []string
-	Ambiguous   map[*manpage.Meta]bool
-	Content     template.HTML
-	Error       error
+	Title          string
+	DebimanVersion string
+	Breadcrumbs    []breadcrumb
+	FooterExtra    string
+	Suites         []*manpage.Meta
+	Versions       []*manpage.Meta
+	Sections       []*manpage.Meta
+	Bins           []*manpage.Meta
+	Langs          []*manpage.Meta
+	Meta           *manpage.Meta
+	TOC            []string
+	Ambiguous      map[*manpage.Meta]bool
+	Content        template.HTML
+	Error          error
 }
 
 func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, error) {
@@ -402,7 +403,8 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 		time.Now().UTC().Format(iso8601Format))
 
 	return t, manpagePrepData{
-		Title: title,
+		Title:          title,
+		DebimanVersion: debimanVersion,
 		Breadcrumbs: []breadcrumb{
 			{fmt.Sprintf("/contents-%s.html", meta.Package.Suite), meta.Package.Suite},
 			{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},

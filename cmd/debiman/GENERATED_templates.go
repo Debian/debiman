@@ -56,7 +56,7 @@ var footerContent = `</div>
 {{ end }}
 <hr>
 <div id="fineprint">
-<p>debiman TODO, see <a href="https://github.com/Debian/debiman/">github.com/Debian/debiman</a></p>
+<p>debiman {{ .DebimanVersion }}, see <a href="https://github.com/Debian/debiman/">github.com/Debian/debiman</a></p>
 </div>
 </div>
 `

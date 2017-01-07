@@ -26,14 +26,16 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 
 	return writeAtomically(dest, true, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
-			Title         string
-			Breadcrumbs   []breadcrumb
-			FooterExtra   string
-			First         *manpage.Meta
-			ManpageByName map[string]*manpage.Meta
-			Mans          []string
+			Title          string
+			DebimanVersion string
+			Breadcrumbs    []breadcrumb
+			FooterExtra    string
+			First          *manpage.Meta
+			ManpageByName  map[string]*manpage.Meta
+			Mans           []string
 		}{
-			Title: fmt.Sprintf("Manpages of %s in Debian %s", first.Package.Binarypkg, first.Package.Suite),
+			Title:          fmt.Sprintf("Manpages of %s in Debian %s", first.Package.Binarypkg, first.Package.Suite),
+			DebimanVersion: debimanVersion,
 			Breadcrumbs: []breadcrumb{
 				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
 				{fmt.Sprintf("/%s/%s/index.html", first.Package.Suite, first.Package.Binarypkg), first.Package.Binarypkg},
