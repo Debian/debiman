@@ -140,10 +140,6 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		return "", fmt.Errorf("No such man page: name=%q", name)
 	}
 
-	if binarypkg == "" {
-		binarypkg = entries[0].Binarypkg
-	}
-
 	if fullyQualified() {
 		return concat(), nil
 	}
@@ -151,7 +147,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	// TODO: use pointers
 	filtered := make([]IndexEntry, 0, len(entries))
 	for _, e := range entries {
-		if e.Binarypkg != binarypkg {
+		if binarypkg != "" && e.Binarypkg != binarypkg {
 			continue
 		}
 		if e.Suite != suite {
@@ -192,6 +188,13 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		// ignore err: t == nil results in the default language
 		best := bestLanguageMatch(t, lfiltered)
 		lang = best.Language
+		if binarypkg == "" {
+			binarypkg = best.Binarypkg
+		}
+	}
+
+	if binarypkg == "" {
+		binarypkg = filtered[0].Binarypkg
 	}
 
 	return concat(), nil
