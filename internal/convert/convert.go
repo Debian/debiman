@@ -175,6 +175,19 @@ func headTable(n *html.Node) bool {
 	return false
 }
 
+func replaceId(n *html.Node, id string) {
+	for idx, a := range n.Attr {
+		if a.Key == "id" {
+			n.Attr[idx].Val = id
+			return
+		}
+	}
+	n.Attr = append(n.Attr, html.Attribute{
+		Key: "id",
+		Val: id,
+	})
+}
+
 func postprocess(resolve func(ref string) string, n *html.Node, toc *[]string) error {
 	if n.Parent == nil {
 		return nil
@@ -206,11 +219,7 @@ func postprocess(resolve func(ref string) string, n *html.Node, toc *[]string) e
 		// http://stackoverflow.com/a/79022/712014
 		id := strings.Replace(text, " ", "_", -1)
 		u := url.URL{Fragment: id}
-		// We unconditionally append because mandoc does not set ids.
-		n.Attr = append(n.Attr, html.Attribute{
-			Key: "id",
-			Val: id,
-		})
+		replaceId(n, id)
 		// Insert an <a> element into the heading, after the text. Via
 		// CSS, this link will only be made visible while hovering.
 		a := &html.Node{
