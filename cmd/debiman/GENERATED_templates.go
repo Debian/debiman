@@ -455,6 +455,15 @@ h4:hover .anchor,
 h5:hover .anchor,
 h6:hover .anchor {
     visibility: visible;
+}
+
+@media print {
+    #header, #footer, .panel, .anchor {
+	display: none;
+    }
+    #content {
+	margin: 0;
+    }
 }`
 var manpageContent = `{{ template "header" . }}
 

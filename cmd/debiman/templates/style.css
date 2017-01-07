@@ -394,3 +394,12 @@ h5:hover .anchor,
 h6:hover .anchor {
     visibility: visible;
 }
+
+@media print {
+    #header, #footer, .panel, .anchor {
+	display: none;
+    }
+    #content {
+	margin: 0;
+    }
+}
