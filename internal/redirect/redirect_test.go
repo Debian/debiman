@@ -145,23 +145,29 @@ func TestUnderspecified(t *testing.T) {
 		{Case: 2, URL: "systemd.service.en", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 2, URL: "i3.fr", want: "jessie/i3-wm/i3.1.fr.html"}, // non-default language
 
-		{Case: 3, URL: "i3.1", want: "jessie/i3-wm/i3.1.en.html"}, // default section
+		{Case: 3, URL: "i3.1", want: "jessie/i3-wm/i3.1.en.html"},  // default section
+		{Case: 3, URL: "i3(1)", want: "jessie/i3-wm/i3.1.en.html"}, // default section
 		{Case: 3, URL: "systemd.service.5", want: "jessie/systemd/systemd.service.5.en.html"},
+		{Case: 3, URL: "systemd.service(5)", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 3, URL: "i3.5", want: "jessie/i3-wm/i3.5.en.html"}, // non-default section
 
-		{Case: 4, URL: "i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"}, // default section
-		{Case: 4, URL: "i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
+		{Case: 4, URL: "i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},  // default section
+		{Case: 4, URL: "i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"},  // non-default section
+		{Case: 4, URL: "i3(5).fr", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
 		{Case: 4, URL: "systemd.service.5.en", want: "jessie/systemd/systemd.service.5.en.html"},
 
 		{Case: 5, URL: "i3-wm/i3", want: "jessie/i3-wm/i3.1.en.html"},
 
 		{Case: 6, URL: "i3-wm/i3.fr", want: "jessie/i3-wm/i3.1.fr.html"},
 
-		{Case: 7, URL: "i3-wm/i3.1", want: "jessie/i3-wm/i3.1.en.html"}, // default section
-		{Case: 7, URL: "i3-wm/i3.5", want: "jessie/i3-wm/i3.5.en.html"}, // non-default section
+		{Case: 7, URL: "i3-wm/i3.1", want: "jessie/i3-wm/i3.1.en.html"},  // default section
+		{Case: 7, URL: "i3-wm/i3.5", want: "jessie/i3-wm/i3.5.en.html"},  // non-default section
+		{Case: 7, URL: "i3-wm/i3(5)", want: "jessie/i3-wm/i3.5.en.html"}, // non-default section
 
-		{Case: 8, URL: "i3-wm/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"}, // default section
-		{Case: 8, URL: "i3-wm/i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
+		{Case: 8, URL: "i3-wm/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},  // default section
+		{Case: 8, URL: "i3-wm/i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"},  // non-default section
+		{Case: 8, URL: "i3-wm/i3(5).fr", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
+		{Case: 8, URL: "i3-wm/i3(5)fr", want: "jessie/i3-wm/i3.5.fr.html"},  // non-default section
 
 		{Case: 9, URL: "jessie/i3", want: "jessie/i3-wm/i3.1.en.html"},   // default suite
 		{Case: 9, URL: "testing/i3", want: "testing/i3-wm/i3.1.en.html"}, // non-default suite

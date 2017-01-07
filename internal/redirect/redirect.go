@@ -110,6 +110,14 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		path = strings.TrimSuffix(path, ".gz")
 	}
 
+	// Parens are converted into dots, so that “i3(1)” becomes
+	// “i3.1.”. Trailing dots are stripped and two dots next to each
+	// other are converted into one.
+	path = strings.Replace(path, "(", ".", -1)
+	path = strings.Replace(path, ")", ".", -1)
+	path = strings.Replace(path, "..", ".", -1)
+	path = strings.TrimSuffix(path, ".")
+
 	suite, binarypkg := i.splitDir(path)
 	name, section, lang := i.splitBase(path)
 
