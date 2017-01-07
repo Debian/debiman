@@ -26,7 +26,8 @@ var (
 
 func loadIndex(path string) (redirect.Index, error) {
 	index := redirect.Index{
-		Langs: make(map[string]bool),
+		Langs:    make(map[string]bool),
+		Sections: make(map[string]bool),
 		Suites: map[string]bool{
 			"testing":  true,
 			"unstable": true,
@@ -55,6 +56,9 @@ func loadIndex(path string) (redirect.Index, error) {
 	}
 	for _, l := range idx.Suite {
 		index.Suites[l] = true
+	}
+	for _, l := range idx.Section {
+		index.Sections[l] = true
 	}
 
 	return index, nil
