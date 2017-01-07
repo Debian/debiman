@@ -532,7 +532,7 @@ table of contents
 <ul class="list-group list-group-flush">
 {{ range $idx, $heading := .TOC }}
 <li class="list-group-item">
-  <a href="{{ FragmentLink $heading }}" class="toclink">{{ $heading }}</a>
+  <a href="{{ FragmentLink $heading }}" class="toclink" title="{{ $heading }}">{{ $heading }}</a>
 </li>
 {{ end }}
 </ul>
@@ -649,7 +649,7 @@ table of contents
 <ul class="list-group list-group-flush">
 {{ range $idx, $heading := .TOC }}
 <li class="list-group-item">
-  <a href="{{ FragmentLink $heading }}" class="toclink">{{ $heading }}</a>
+  <a href="{{ FragmentLink $heading }}" class="toclink" title="{{ $heading }}">{{ $heading }}</a>
 </li>
 {{ end }}
 </ul>
