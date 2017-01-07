@@ -135,6 +135,11 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 			continue
 		}
 
+		if len(manpageByName) == 0 {
+			log.Printf("WARNING: empty directory %q, not generating package index", dir)
+			continue
+		}
+
 		if err := renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName); err != nil {
 			return err
 		}
