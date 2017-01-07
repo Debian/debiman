@@ -259,12 +259,6 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 				}
 				return err
 			}
-			// For convenience, we also symlink the corresponding HTML
-			// file here, so that we don’t need to re-read the symlink
-			// and mangle the path later on.
-			if err := os.Symlink(strings.TrimSuffix(rel, ".gz")+".html.gz", strings.TrimSuffix(destPath, ".gz")+".html.gz"); err != nil {
-				return err
-			}
 
 			continue
 		}

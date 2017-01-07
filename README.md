@@ -72,8 +72,6 @@ When interrupted, you can just run debiman again with the same options. It will 
 
 If for some reason you notice corruption or other mistakes in some manpages, just delete the directory in which they are placed, then re-run debiman to download and re-process these pages from scratch.
 
-If you decide to remove only the HTML files, avoid using globbing (e.g. `rm *.html.gz`) because it matches symlinks. Instead, use e.g. `find . -type f -name "*.html.gz" -delete`.
-
 It is safe to run debiman while you are serving from -serving_dir. debiman will swap files atomically using rename(2).
 
 TODO: add numbers for how long synchronization typically takes from scratch and incrementally, also how much network traffic it will cause

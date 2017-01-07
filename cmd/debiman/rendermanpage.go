@@ -2,6 +2,7 @@ package main
 
 import (
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -203,39 +204,63 @@ type renderJob struct {
 	versions []*manpage.Meta
 	xref     map[string][]*manpage.Meta
 	modTime  time.Time
+	symlink  bool
 }
+
+var notYetRenderedSentinel = errors.New("Not yet rendered")
 
 func rendermanpage(job renderJob) error {
 	meta := job.meta // for convenience
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
 	// TODO(later): add plain-text version
-	content, toc, renderErr := convertFile(job.src, func(ref string) string {
-		idx := strings.LastIndex(ref, "(")
-		if idx == -1 {
-			return ""
+
+	var (
+		content   string
+		toc       []string
+		renderErr = notYetRenderedSentinel
+	)
+	if job.symlink {
+		link, err := os.Readlink(job.src)
+		if err != nil {
+			return err
 		}
-		section := ref[idx+1 : len(ref)-1]
-		name := ref[:idx]
-		related, ok := job.xref[name]
-		if !ok {
-			return ""
+		resolved := filepath.Join(filepath.Dir(job.src), link)
+		renderedPath := strings.TrimSuffix(resolved, ".gz") + ".html.gz"
+		content, toc, renderErr = reuse(renderedPath)
+		if renderErr != nil {
+			log.Printf("WARNING: re-using %q failed: %v", renderedPath, renderErr)
 		}
-		filtered := make([]*manpage.Meta, 0, len(related))
-		for _, r := range related {
-			if r.Section != section {
-				continue
+	}
+	if renderErr != nil {
+		content, toc, renderErr = convertFile(job.src, func(ref string) string {
+			idx := strings.LastIndex(ref, "(")
+			if idx == -1 {
+				return ""
 			}
-			if r.Package.Suite != meta.Package.Suite {
-				continue
+			section := ref[idx+1 : len(ref)-1]
+			name := ref[:idx]
+			related, ok := job.xref[name]
+			if !ok {
+				return ""
 			}
-			filtered = append(filtered, r)
-		}
-		if len(filtered) == 0 {
-			return ""
-		}
-		return "/" + bestLanguageMatch(meta, filtered).ServingPath() + ".html"
-	})
+			filtered := make([]*manpage.Meta, 0, len(related))
+			for _, r := range related {
+				if r.Section != section {
+					continue
+				}
+				if r.Package.Suite != meta.Package.Suite {
+					continue
+				}
+				filtered = append(filtered, r)
+			}
+			if len(filtered) == 0 {
+				return ""
+			}
+			return "/" + bestLanguageMatch(meta, filtered).ServingPath() + ".html"
+		})
+	}
+
 	log.Printf("rendering %q", job.dest)
 
 	suites := make([]*manpage.Meta, 0, len(job.versions))
