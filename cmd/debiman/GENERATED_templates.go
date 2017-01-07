@@ -86,7 +86,7 @@ body {
 	background-repeat: repeat-x;
 	font-family: 'Roboto', sans-serif;
 	font-size: 100%;
-	line-height: 1.5;
+	line-height: 1.2;
 	letter-spacing: 0.15px;
 	margin: 0;
 	padding: 0;
@@ -215,7 +215,8 @@ a:visited {
 }
 
 .mandoc {
-        font-family: 'Inconsolata', monospace;
+    font-family: 'Inconsolata', monospace;
+    font-size: 1.04rem;
 }
 
 #footer {
@@ -224,7 +225,7 @@ a:visited {
 	border-right: 0;
 	background-color: #f5f6f7;
 	padding: 1em;
-	margin: 0 10px 0 52px;
+	margin: 1em 10px 0 52px;
 	font-size: 0.75em;
 	line-height: 1.5em;
 }
@@ -245,7 +246,7 @@ hr {
 
 /* from tracker.debian.org */
 
-a, a:hover, a:focus {
+a, a:hover, a:focus, a:visited {
     color: #0530D7;
     text-decoration: none;
 }
@@ -275,6 +276,10 @@ a, a:hover, a:focus {
   font-weight: 500;
   color: #ffffff;
   outline-style: none;
+}
+
+.panel summary {
+    padding-left: 7px;
 }
 
 .panel details ul {
@@ -402,6 +407,17 @@ font-family: 'Roboto';
 min-width: 200px;
 }
 
+.toc {
+    /* Limit the content’s width */
+    width: 200px;
+}
+
+.toc li {
+    font-size: 98%;
+    letter-spacing: 0.02em;
+    display: flex;
+}
+
 .otherversions {
     /* Limit the content’s width */
     width: 200px;
@@ -415,12 +431,15 @@ min-width: 200px;
     flex-shrink: 0;
 }
 
-.pkgversion {
-    margin-left: auto;
+.pkgversion, .toc a {
     text-overflow: ellipsis;
     overflow: hidden;
-    padding-left: 1em;
     white-space: nowrap;
+}
+
+.pkgversion {
+    margin-left: auto;
+    padding-left: 1em;
 }
 
 /* mandoc styles */
@@ -428,6 +447,7 @@ min-width: 200px;
 .mandoc {
     /* Required so that table.head and table.foot can take up 100% of what remains after floating the panels. */
     overflow: hidden;
+    margin-top: .5em;
 }
 table.head, table.foot {
     width: 100%;
@@ -457,11 +477,28 @@ h6:hover .anchor {
     visibility: visible;
 }
 
+h1, h2, h3, h4, h5, h6 {
+    letter-spacing: .07em;
+    margin-top: 1.5em;
+    margin-bottom: .35em;
+}
+
+h1 {
+    font-size: 150%;
+}
+
+h2 {
+    font-size: 125%;
+}
+
 @media print {
     #header, #footer, .panel, .anchor {
 	display: none;
     }
     #content {
+	margin: 0;
+    }
+    .mandoc {
 	margin: 0;
     }
 }`
@@ -486,7 +523,7 @@ links
 </div>
 </div>
 
-<div class="panel" role="complementary" style="padding-bottom: 0">
+<div class="panel toc" role="complementary" style="padding-bottom: 0">
 <details>
 <summary>
 table of contents
@@ -603,7 +640,7 @@ links
 </div>
 </div>
 
-<div class="panel" role="complementary" style="padding-bottom: 0">
+<div class="panel toc" role="complementary" style="padding-bottom: 0">
 <details>
 <summary>
 table of contents
