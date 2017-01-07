@@ -164,7 +164,7 @@ func soElim(src string, r io.Reader, w io.Writer, p pkgEntry, contentByPath map[
 
 func writeManpage(src, dest string, r io.Reader, p pkgEntry, contentByPath map[string][]contentEntry) ([]string, error) {
 	var refs []string
-	err := writeAtomically(dest, func(w io.Writer) error {
+	err := writeAtomically(dest, true, func(w io.Writer) error {
 		var err error
 		refs, err = soElim(src, r, w, p, contentByPath)
 		return err
@@ -328,14 +328,10 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 			if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
 				return err
 			}
-			f, err := os.Create(destPath)
-			if err != nil {
+			if err := writeAtomically(destPath, false, func(w io.Writer) error {
+				_, err := io.Copy(w, d.Data)
 				return err
-			}
-			if _, err := io.Copy(f, d.Data); err != nil {
-				return err
-			}
-			if err := f.Close(); err != nil {
+			}); err != nil {
 				return err
 			}
 		}

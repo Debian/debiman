@@ -24,7 +24,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 	}
 	sort.Strings(mans)
 
-	return writeAtomically(dest, func(w io.Writer) error {
+	return writeAtomically(dest, true, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title         string
 			Breadcrumbs   []breadcrumb

@@ -343,7 +343,7 @@ func rendermanpage(job renderJob) error {
 		job.modTime.UTC().Format(iso8601Format),
 		time.Now().UTC().Format(iso8601Format))
 
-	if err := writeAtomically(job.dest, func(w io.Writer) error {
+	if err := writeAtomically(job.dest, true, func(w io.Writer) error {
 		return t.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb

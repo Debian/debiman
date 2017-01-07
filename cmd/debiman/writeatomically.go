@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func writeAtomically(dest string, write func(w io.Writer) error) error {
+func writeAtomically(dest string, compress bool, write func(w io.Writer) error) error {
 	f, err := ioutil.TempFile(filepath.Dir(dest), "debiman-")
 	if err != nil {
 		return err
@@ -21,21 +21,28 @@ func writeAtomically(dest string, write func(w io.Writer) error) error {
 
 	bufw := bufio.NewWriter(f)
 
-	// NOTE(stapelberg): gzip’s decompression phase takes the same
-	// time, regardless of compression level. Hence, we invest the
-	// maximum CPU time once to achieve the best compression.
-	gzipw, err := gzip.NewWriterLevel(bufw, gzip.BestCompression)
-	if err != nil {
+	w := io.Writer(bufw)
+	var gzipw *gzip.Writer
+	if compress {
+		// NOTE(stapelberg): gzip’s decompression phase takes the same
+		// time, regardless of compression level. Hence, we invest the
+		// maximum CPU time once to achieve the best compression.
+		gzipw, err = gzip.NewWriterLevel(bufw, gzip.BestCompression)
+		if err != nil {
+			return err
+		}
+		defer gzipw.Close()
+		w = gzipw
+	}
+
+	if err := write(w); err != nil {
 		return err
 	}
-	defer gzipw.Close()
 
-	if err := write(gzipw); err != nil {
-		return err
-	}
-
-	if err := gzipw.Close(); err != nil {
-		return err
+	if compress {
+		if err := gzipw.Close(); err != nil {
+			return err
+		}
 	}
 
 	if err := bufw.Flush(); err != nil {

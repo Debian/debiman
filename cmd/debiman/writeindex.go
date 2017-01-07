@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 
 	pb "github.com/Debian/debiman/internal/proto"
 	"github.com/golang/protobuf/proto"
@@ -45,6 +45,8 @@ func writeIndex(dest string, gv globalView) error {
 		return err
 	}
 
-	// TODO: atomic writing
-	return ioutil.WriteFile(dest, idxb, 0644)
+	return writeAtomically(dest, false, func(w io.Writer) error {
+		_, err := w.Write(idxb)
+		return err
+	})
 }

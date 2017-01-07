@@ -25,7 +25,7 @@ func renderAux(destDir string, gv globalView) error {
 		return orderi < orderj
 	})
 
-	if err := writeAtomically(filepath.Join(destDir, "index.html.gz"), func(w io.Writer) error {
+	if err := writeAtomically(filepath.Join(destDir, "index.html.gz"), true, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb
@@ -39,7 +39,7 @@ func renderAux(destDir string, gv globalView) error {
 		return err
 	}
 
-	if err := writeAtomically(filepath.Join(destDir, "faq.html.gz"), func(w io.Writer) error {
+	if err := writeAtomically(filepath.Join(destDir, "faq.html.gz"), true, func(w io.Writer) error {
 		return faqTmpl.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb
@@ -52,7 +52,7 @@ func renderAux(destDir string, gv globalView) error {
 	}
 
 	for name, content := range bundled {
-		if err := writeAtomically(filepath.Join(destDir, filepath.Base(name)+".gz"), func(w io.Writer) error {
+		if err := writeAtomically(filepath.Join(destDir, filepath.Base(name)+".gz"), true, func(w io.Writer) error {
 			_, err := w.Write(content)
 			return err
 		}); err != nil {

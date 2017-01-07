@@ -12,7 +12,7 @@ var contentsTmpl = template.Must(template.Must(commonTmpls.Clone()).New("content
 func renderContents(dest, suite string, bins []string) error {
 	sort.Strings(bins)
 
-	return writeAtomically(dest, func(w io.Writer) error {
+	return writeAtomically(dest, true, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
 			Title       string
 			Breadcrumbs []breadcrumb
