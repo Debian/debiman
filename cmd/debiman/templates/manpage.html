@@ -19,6 +19,23 @@ links
 </div>
 </div>
 
+<div class="panel" role="complementary" style="padding-bottom: 0">
+<details>
+<summary>
+table of contents
+</summary>
+<div class="panel-body">
+<ul class="list-group list-group-flush">
+{{ range $idx, $heading := .TOC }}
+<li class="list-group-item">
+  <a href="{{ FragmentLink $heading }}">{{ $heading }}</a>
+</li>
+{{ end }}
+</ul>
+</div>
+</details>
+</div>
+
 <div class="panel" role="complementary">
 <div class="panel-heading" role="heading">
 other versions

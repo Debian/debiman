@@ -63,7 +63,7 @@ func TestToHTML(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer f.Close()
-			got, err := ToHTML(f, func(ref string) string {
+			got, _, err := ToHTML(f, func(ref string) string {
 				return refs[ref]
 			})
 			if err != nil {
@@ -394,7 +394,7 @@ func TestFormattedXref(t *testing.T) {
 	want := []*html.Node{p}
 
 	got := formattedXrefInput()
-	if err := recurse(got, func(n *html.Node) error { return postprocess(func(ref string) string { return ref }, n) }); err != nil {
+	if err := recurse(got, func(n *html.Node) error { return postprocess(func(ref string) string { return ref }, n, nil) }); err != nil {
 		t.Fatal(err)
 	}
 	if err := cmpElems(input, []*html.Node{got}, want); err != nil {

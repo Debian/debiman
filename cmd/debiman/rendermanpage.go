@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -92,6 +93,10 @@ var manpageTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage"
 		"LongSection": func(section string) string {
 			return longSections[section]
 		},
+		"FragmentLink": func(fragment string) string {
+			u := url.URL{Fragment: fragment}
+			return u.String()
+		},
 	}).
 	Parse(manpageContent))
 
@@ -106,29 +111,33 @@ var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("man
 		"LongSection": func(section string) string {
 			return longSections[section]
 		},
+		"FragmentLink": func(fragment string) string {
+			u := url.URL{Fragment: fragment}
+			return u.String()
+		},
 	}).
 	Parse(manpageerrorContent))
 
-func convertFile(src string, resolve func(ref string) string) (string, error) {
+func convertFile(src string, resolve func(ref string) string) (doc string, toc []string, err error) {
 	f, err := os.Open(src)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	defer f.Close()
 	r, err := gzip.NewReader(f)
 	if err != nil {
 		if err == io.EOF {
 			// TODO: better representation of an empty manpage
-			return "This space intentionally left blank.", nil
+			return "This space intentionally left blank.", nil, nil
 		}
-		return "", err
+		return "", nil, err
 	}
 	defer r.Close()
-	out, err := convert.ToHTML(r, resolve)
+	out, toc, err := convert.ToHTML(r, resolve)
 	if err != nil {
-		return "", fmt.Errorf("convert(%q): %v", src, err)
+		return "", nil, fmt.Errorf("convert(%q): %v", src, err)
 	}
-	return out, nil
+	return out, toc, nil
 }
 
 // bestLanguageMatch returns the best manpage out of options (coming
@@ -201,7 +210,7 @@ func rendermanpage(job renderJob) error {
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
 	// TODO(later): add plain-text version
-	content, renderErr := convertFile(job.src, func(ref string) string {
+	content, toc, renderErr := convertFile(job.src, func(ref string) string {
 		idx := strings.LastIndex(ref, "(")
 		if idx == -1 {
 			return ""
@@ -345,6 +354,7 @@ func rendermanpage(job renderJob) error {
 			Bins        []*manpage.Meta
 			Langs       []*manpage.Meta
 			Meta        *manpage.Meta
+			TOC         []string
 			Content     template.HTML
 			Error       error
 		}{
@@ -361,6 +371,7 @@ func rendermanpage(job renderJob) error {
 			Bins:        bins,
 			Langs:       langs,
 			Meta:        meta,
+			TOC:         toc,
 			Content:     template.HTML(content),
 			Error:       renderErr,
 		})

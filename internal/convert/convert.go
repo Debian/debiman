@@ -17,6 +17,15 @@ import (
 	"golang.org/x/net/html"
 )
 
+var heading = map[string]bool{
+	"h1": true,
+	"h2": true,
+	"h3": true,
+	"h4": true,
+	"h5": true,
+	"h6": true,
+}
+
 func recurse(n *html.Node, f func(c *html.Node) error) error {
 	c := n.FirstChild
 	for c != nil {
@@ -157,10 +166,23 @@ func plaintext(n *html.Node) string {
 	return result
 }
 
-func postprocess(resolve func(ref string) string, n *html.Node) error {
+func headTable(n *html.Node) bool {
+	for _, a := range n.Attr {
+		if a.Key == "class" && a.Val == "head" {
+			return true
+		}
+	}
+	return false
+}
+
+func postprocess(resolve func(ref string) string, n *html.Node, toc *[]string) error {
 	if n.Parent == nil {
 		return nil
 	}
+
+	// Remove <html>, <head> and <body> tags, as we are dealing with
+	// an HTML fragment that is included in an existing document, not
+	// a document itself.
 	if n.Type == html.ElementNode &&
 		(n.Data == "html" ||
 			n.Data == "head" ||
@@ -175,9 +197,45 @@ func postprocess(resolve func(ref string) string, n *html.Node) error {
 		n.Parent.RemoveChild(n)
 		return nil
 	}
+
+	if n.Type == html.ElementNode && heading[n.Data] {
+		// Derive and set an id="" attribute for the heading
+		text := plaintext(n)
+		// HTML5 requires that ids must contain at least one character
+		// and may not contain any spaces, see
+		// http://stackoverflow.com/a/79022/712014
+		id := strings.Replace(text, " ", "_", -1)
+		u := url.URL{Fragment: id}
+		// We unconditionally append because mandoc does not set ids.
+		n.Attr = append(n.Attr, html.Attribute{
+			Key: "id",
+			Val: id,
+		})
+		// Insert an <a> element into the heading, after the text. Via
+		// CSS, this link will only be made visible while hovering.
+		a := &html.Node{
+			Type: html.ElementNode,
+			Data: "a",
+			Attr: []html.Attribute{
+				{Key: "class", Val: "anchor"},
+				{Key: "href", Val: u.String()},
+			},
+		}
+		a.AppendChild(&html.Node{
+			Type: html.TextNode,
+			Data: "¶",
+		})
+		n.AppendChild(a)
+
+		if n.Data == "h1" && toc != nil {
+			*toc = append(*toc, text)
+		}
+	}
+
 	if resolve == nil {
 		return nil
 	}
+
 	// resolve cross references
 	if n.Type == html.TextNode {
 		replacements := xref(n.Data, resolve)
@@ -265,13 +323,13 @@ func mandoc(r io.Reader) (string, error) {
 //
 // resolve, if non-nil, will be called to resolve a reference (like
 // “rm(1)”) into a URL.
-func ToHTML(r io.Reader, resolve func(ref string) string) (string, error) {
+func ToHTML(r io.Reader, resolve func(ref string) string) (doc string, toc []string, err error) {
 	// TODO: add table of contents
 	// TODO: add paragraph signs next to each header for permalinks
 
 	out, err := mandoc(r)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	// var out bytes.Buffer
 	// cmd := exec.Command("mandoc", "-Ofragment", "-Thtml")
@@ -282,18 +340,18 @@ func ToHTML(r io.Reader, resolve func(ref string) string) (string, error) {
 	// 	return "", err
 	// }
 
-	doc, err := html.Parse(strings.NewReader(out))
+	parsed, err := html.Parse(strings.NewReader(out))
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	err = recurse(doc, func(n *html.Node) error { return postprocess(resolve, n) })
+	err = recurse(parsed, func(n *html.Node) error { return postprocess(resolve, n, &toc) })
 	if err != nil {
-		return "", err
+		return "", toc, err
 	}
 	var rendered bytes.Buffer
-	if err := html.Render(&rendered, doc); err != nil {
-		return "", err
+	if err := html.Render(&rendered, parsed); err != nil {
+		return "", toc, err
 	}
-	return rendered.String(), nil
+	return rendered.String(), toc, nil
 }

@@ -261,24 +261,24 @@ a, a:hover, a:focus {
           box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
 }
 
-.panel-heading {
-  padding: 5px 5px;
+.panel-heading, .panel details {
   margin: -15px -15px 0px;
-  font-size: 17.5px;
-  font-weight: 500;
-  color: #ffffff;
   background-color: #d70751;
   border-bottom: 1px solid #dddddd;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
 }
 
-.panel-heading a {
-    color: white;
+.panel-heading, .panel summary {
+  padding: 5px 5px;
+  font-size: 17.5px;
+  font-weight: 500;
+  color: #ffffff;
+  outline-style: none;
 }
 
-.panel-heading a:hover {
-    color: blue;
+.panel details ul {
+  margin: 0;
 }
 
 .panel-footer {
@@ -424,6 +424,20 @@ table.head, table.foot {
 
 .spacer {
     min-height: 1em;
+}
+
+.anchor {
+    margin-left: .25em;
+    visibility: hidden;
+}
+
+h1:hover .anchor,
+h2:hover .anchor,
+h3:hover .anchor,
+h4:hover .anchor,
+h5:hover .anchor,
+h6:hover .anchor {
+    visibility: visible;
 }`
 var manpageContent = `{{ template "header" . }}
 
@@ -444,6 +458,23 @@ links
 </li>
 </ul>
 </div>
+</div>
+
+<div class="panel" role="complementary" style="padding-bottom: 0">
+<details>
+<summary>
+table of contents
+</summary>
+<div class="panel-body">
+<ul class="list-group list-group-flush">
+{{ range $idx, $heading := .TOC }}
+<li class="list-group-item">
+  <a href="{{ FragmentLink $heading }}">{{ $heading }}</a>
+</li>
+{{ end }}
+</ul>
+</div>
+</details>
 </div>
 
 <div class="panel" role="complementary">
@@ -544,6 +575,23 @@ links
 </li>
 </ul>
 </div>
+</div>
+
+<div class="panel" role="complementary" style="padding-bottom: 0">
+<details>
+<summary>
+table of contents
+</summary>
+<div class="panel-body">
+<ul class="list-group list-group-flush">
+{{ range $idx, $heading := .TOC }}
+<li class="list-group-item">
+  <a href="{{ FragmentLink $heading }}">{{ $heading }}</a>
+</li>
+{{ end }}
+</ul>
+</div>
+</details>
 </div>
 
 <div class="panel" role="complementary">
