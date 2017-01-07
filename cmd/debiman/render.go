@@ -38,7 +38,15 @@ func parseCommonTemplates() *template.Template {
 	return t
 }
 
-func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map[string][]os.FileInfo, whitelist map[string]bool, renderSymlinks bool, gv globalView) error {
+type renderingMode int
+
+const (
+	regularFiles renderingMode = iota
+	symlinks
+	packageIndex
+)
+
+func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map[string][]os.FileInfo, whitelist map[string]bool, mode renderingMode, gv globalView) error {
 	// the invariant is: each file ending in .gz must have a corresponding .html.gz file
 	// the .html.gz must have a modtime that is >= the modtime of the .gz file
 	for dir, files := range contents {
@@ -68,11 +76,12 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 
 			symlink := f.Mode()&os.ModeSymlink != 0
 
-			if symlink && !renderSymlinks {
+			if mode == regularFiles && symlink ||
+				mode == symlinks && !symlink {
 				continue
 			}
 
-			if f.ModTime().After(indexModTime) {
+			if !indexNeedsUpdate && f.ModTime().After(indexModTime) {
 				indexNeedsUpdate = true
 			}
 
@@ -85,6 +94,9 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 			}
 
 			manpageByName[f.Name()] = m
+			if mode == packageIndex {
+				continue
+			}
 
 			n := strings.TrimSuffix(f.Name(), ".gz") + ".html.gz"
 			html, ok := fileByName[n]
@@ -113,6 +125,10 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 					break
 				}
 			}
+		}
+
+		if mode != packageIndex {
+			continue
 		}
 
 		if !indexNeedsUpdate && !*forceRerender {
@@ -187,12 +203,18 @@ func renderAll(gv globalView) error {
 	}
 
 	// Render all regular files first
-	if err := walkContents(ctx, renderChan, contents, whitelist, false, gv); err != nil {
+	if err := walkContents(ctx, renderChan, contents, whitelist, regularFiles, gv); err != nil {
 		return err
 	}
 
-	// …then render all symlinks, re-using the rendered fragments
-	if err := walkContents(ctx, renderChan, contents, whitelist, true, gv); err != nil {
+	// then render all symlinks, re-using the rendered fragments
+	if err := walkContents(ctx, renderChan, contents, whitelist, symlinks, gv); err != nil {
+		return err
+	}
+
+	// and finally render the package index files which need to
+	// consider both regular files and symlinks.
+	if err := walkContents(ctx, renderChan, contents, whitelist, packageIndex, gv); err != nil {
 		return err
 	}
 
