@@ -88,7 +88,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 
 			n := strings.TrimSuffix(f.Name(), ".gz") + ".html.gz"
 			html, ok := fileByName[n]
-			if !ok || html.ModTime().Before(f.ModTime()) {
+			if !ok || html.ModTime().Before(f.ModTime()) || *forceRerender {
 				versions := gv.xref[m.Name]
 				// Replace m with its corresponding entry in versions
 				// so that rendermanpage() can use pointer equality to
@@ -115,7 +115,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 			}
 		}
 
-		if !indexNeedsUpdate {
+		if !indexNeedsUpdate && !*forceRerender {
 			continue
 		}
 

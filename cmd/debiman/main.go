@@ -32,6 +32,10 @@ var (
 	onlyRender = flag.String("only_render_pkgs",
 		"",
 		"If non-empty, a comma-separated whitelist of packages to render (for developing)")
+
+	forceRerender = flag.Bool("force_rerender",
+		false,
+		"Forces all manpages to be re-rendered, even if they are up to date")
 )
 
 // TODO: handle deleted packages, i.e. packages which are present on
