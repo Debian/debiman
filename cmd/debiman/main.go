@@ -43,7 +43,8 @@ var (
 		"Show debiman version and exit")
 )
 
-//go:generate go run genversion.go
+// use go build -ldflags "-X main.debimanVersion=<version>" to set the version
+var debimanVersion = "HEAD"
 
 // TODO: handle deleted packages, i.e. packages which are present on
 // disk but not in pkgs
