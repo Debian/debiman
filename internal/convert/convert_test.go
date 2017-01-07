@@ -56,6 +56,7 @@ func TestToHTML(t *testing.T) {
 	}
 	docs := []string{"i3lock", "refs"}
 	for _, d := range docs {
+		d := d // copy
 		t.Run(d, func(t *testing.T) {
 			t.Parallel()
 			f, err := os.Open("../../testdata/" + d + ".1")

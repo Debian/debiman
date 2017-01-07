@@ -3,36 +3,98 @@
 <tbody>
 <tr>
 <td class="head-ltitle">
-REFS(1)</td>
+<a href="testing/i3lock/i3lock.1.C">i3lock(1)</a></td>
 <td class="head-vol">
-General Commands Manual</td>
+User Manuals</td>
 <td class="head-rtitle">
-REFS(1)</td>
+<a href="testing/i3lock/i3lock.1.C">i3lock(1)</a></td>
 </tr>
 </tbody>
 </table>
+<div style="height: 1.00em;">
+ </div>
+<div style="height: 1.00em;">
+ </div>
 <div class="section">
-<h1>NAME</h1> refs - test file<div style="height: 1.00em;">
+<h1 id="NAME">NAME<a class="anchor" href="#NAME">¶</a></h1> i3lock - improved screen locker<div style="height: 1.00em;">
  </div>
 </div>
 <div class="section">
-<h1>SEE ALSO</h1> <a class="link-ext" href="http://w3m.sourceforge.net">project website</a><div style="height: 1.00em;">
+<h1 id="SYNOPSIS">SYNOPSIS<a class="anchor" href="#SYNOPSIS">¶</a></h1> <b>i3lock</b> [-v] [-c <i>color</i>]<div style="height: 1.00em;">
  </div>
-More details can be found in the <a href="testing/i3lock/i3lock.1.C">i3lock(1)</a> or refs(1) man pages.<div style="height: 1.00em;">
+</div>
+<div class="section">
+<h1 id="DESCRIPTION">DESCRIPTION<a class="anchor" href="#DESCRIPTION">¶</a></h1> <b>i3lock</b> is a simple screen locker like slock. After starting it, you will see a white screen (you can configure the color/an image). You can return to your screen by entering your password.<div style="height: 1.00em;">
  </div>
-References to <a href="testing/i3-wm/i3-msg.1.C">i3-msg(1)</a> might cause trouble when matching on word boundaries.<div style="height: 1.00em;">
+</div>
+<div class="section">
+<h1 id="IMPROVEMENTS">IMPROVEMENTS<a class="anchor" href="#IMPROVEMENTS">¶</a></h1><dl>
+<dt>
+•</dt>
+<dd>
+i3lock forks, so you can combine it with an alias to suspend to RAM (run &#34;i3lock &amp;&amp; echo mem &gt; /sys/power/state&#34; to get a locked screen after waking up your computer from suspend to RAM)</dd>
+</dl>
+<dl>
+<dt>
+•</dt>
+<dd>
+You can specify either a background color or a PNG image which will be displayed while your screen is locked.</dd>
+</dl>
+<dl>
+<dt>
+•</dt>
+<dd>
+You can specify whether i3lock should bell upon a wrong password.</dd>
+</dl>
+<dl>
+<dt>
+•</dt>
+<dd>
+i3lock uses PAM and therefore is compatible with LDAP, etc.<div style="height: 1.00em;">
  </div>
-References to <a href="testing/systemd/systemd.service.5.C">systemd.service(5)</a> contain a dot.<div style="height: 1.00em;">
+<div style="height: 1.00em;">
  </div>
-URLs in plain text, like <a href="http://debian.org">http://debian.org</a> are also recognized and converted.<div style="height: 1.00em;">
+</dd>
+</dl>
+</div>
+<div class="section">
+<h1 id="OPTIONS">OPTIONS<a class="anchor" href="#OPTIONS">¶</a></h1><dl>
+<dt>
+<b>-v, --version</b></dt>
+<dd>
+Display the version of your <b>i3lock</b><div style="height: 1.00em;">
  </div>
-Marked up URLs like <i><a href="http://gnome.org">http://gnome.org</a></i> are also converted.</div>
+</dd>
+</dl>
+<dl>
+<dt>
+<b>-c </b><i>rrggbb</i><b>, <b>--color=</b></b><i><b>rrggbb</b></i></dt>
+<dd>
+Turn the screen into the given color instead of white. Color must be given in 3-byte format: rrggbb (i.e. ff0000 is red).<div style="height: 1.00em;">
+ </div>
+</dd>
+</dl>
+</div>
+<div class="section">
+<h1 id="DPMS">DPMS<a class="anchor" href="#DPMS">¶</a></h1> The -d (--dpms) option.<div style="height: 1.00em;">
+ </div>
+<br/>
+	verbatim<br/>
+<div style="height: 1.00em;">
+ </div>
+</div>
+<div class="section">
+<h1 id="SEE_ALSO">SEE ALSO<a class="anchor" href="#SEE_ALSO">¶</a></h1> <i>xautolock(1)</i> - use i3lock as your screen saver<div style="height: 1.00em;">
+ </div>
+</div>
+<div class="section">
+<h1 id="AUTHOR">AUTHOR<a class="anchor" href="#AUTHOR">¶</a></h1> Michael Stapelberg &lt;michael+i3lock@example.invalid&gt;</div>
 <table class="foot">
 <tbody><tr>
 <td class="foot-date">
-2016-12-23</td>
+JANUARY 2012</td>
 <td class="foot-os">
-debiman</td>
+Linux</td>
 </tr>
 </tbody></table>
 </div>
