@@ -340,8 +340,25 @@ font-family: 'Roboto';
 min-width: 200px;
 }
 
+.otherversions {
+    /* Limit the content’s width */
+    width: 200px;
+}
+
+.otherversions li {
+    display: flex;
+}
+
+.otherversions a {
+    flex-shrink: 0;
+}
+
 .pkgversion {
-float: right;
+    margin-left: auto;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding-left: 1em;
+    white-space: nowrap;
 }
 
 /* mandoc styles */

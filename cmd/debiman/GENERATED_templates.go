@@ -402,8 +402,25 @@ font-family: 'Roboto';
 min-width: 200px;
 }
 
+.otherversions {
+    /* Limit the content’s width */
+    width: 200px;
+}
+
+.otherversions li {
+    display: flex;
+}
+
+.otherversions a {
+    flex-shrink: 0;
+}
+
 .pkgversion {
-float: right;
+    margin-left: auto;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    padding-left: 1em;
+    white-space: nowrap;
 }
 
 /* mandoc styles */
@@ -477,7 +494,7 @@ table of contents
 </details>
 </div>
 
-<div class="panel" role="complementary">
+<div class="panel otherversions" role="complementary">
 <div class="panel-heading" role="heading">
 other versions
 </div>
@@ -487,7 +504,7 @@ other versions
 <li class="list-group-item
 {{- if eq $man.Package.Suite $.Meta.Package.Suite }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion">{{ $man.Package.Version }}</span>
+<a href="/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
 </li>
 {{ end }}
 </ul>
@@ -594,7 +611,7 @@ table of contents
 </details>
 </div>
 
-<div class="panel" role="complementary">
+<div class="panel otherversions" role="complementary">
 <div class="panel-heading" role="heading">
 other versions
 </div>
@@ -604,7 +621,7 @@ other versions
 <li class="list-group-item
 {{- if eq $man.Package.Suite $.Meta.Package.Suite }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion">{{ $man.Package.Version }}</span>
+<a href="/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
 </li>
 {{ end }}
 </ul>
