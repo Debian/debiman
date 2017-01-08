@@ -242,15 +242,19 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 
 			destsp := findClosestFile(p, header.Name, resolved, contentByPath)
 			if destsp == "" {
-				log.Printf("WARNING: skipping symlink %q -> %q", header.Name, header.Linkname)
-				continue
+				// Try to extract the resolved file as non-manpage
+				// file. If the resolved file does not live in this
+				// package, this will result in a dangling symlink.
+				allRefs[resolved] = true
+				destsp = filepath.Join(filepath.Dir(m.ServingPath()), "aux", resolved)
+				log.Printf("WARNING: possibly dangling symlink %q -> %q", header.Name, header.Linkname)
 			}
 
 			// TODO(stapelberg): add a unit test for this entire function
 			// TODO(stapelberg): ganeti has an interesting twist: their manpages live outside of usr/share/man, and they only have symlinks. in this case, we should extract the file to aux/ and then mangle the symlink dest. problem: manpages actually are in a separate package (ganeti-2.15) and use an absolute symlink (/etc/ganeti/share), which is not shipped with the package.
 			rel, err := filepath.Rel(filepath.Dir(m.ServingPath()), destsp)
 			if err != nil {
-				log.Printf("WARNING: could not make %q relative to %q: %v", destsp, filepath.Dir(m.ServingPath()), err)
+				log.Printf("WARNING: %v", err)
 				continue
 			}
 			if err := os.Symlink(rel, destPath); err != nil {
