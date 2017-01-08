@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"bufio"
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -11,12 +12,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/manpage"
+	"github.com/Debian/debiman/internal/recode"
 
 	"pault.ag/go/debian/deb"
 	"pault.ag/go/debian/version"
@@ -138,7 +141,7 @@ func findFile(src, name string, contentByPath map[string][]contentEntry) (string
 	return name, "", false
 }
 
-func soElim(src string, r io.Reader, w io.Writer, p pkgEntry, contentByPath map[string][]contentEntry) ([]string, error) {
+func soElim(src string, r io.Reader, w io.Writer, contentByPath map[string][]contentEntry) ([]string, error) {
 	var refs []string
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -165,11 +168,21 @@ func soElim(src string, r io.Reader, w io.Writer, p pkgEntry, contentByPath map[
 	return refs, scanner.Err()
 }
 
-func writeManpage(src, dest string, r io.Reader, p pkgEntry, contentByPath map[string][]contentEntry) ([]string, error) {
+func writeManpage(src, dest string, r io.Reader, m *manpage.Meta, contentByPath map[string][]contentEntry) ([]string, error) {
 	var refs []string
-	err := writeAtomically(dest, true, func(w io.Writer) error {
+	content, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	if !utf8.Valid(content) {
+		content, err = ioutil.ReadAll(recode.Reader(bytes.NewReader(content), m.Language))
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = writeAtomically(dest, true, func(w io.Writer) error {
 		var err error
-		refs, err = soElim(src, r, w, p, contentByPath)
+		refs, err = soElim(src, bytes.NewReader(content), w, contentByPath)
 		return err
 	})
 	return refs, err
