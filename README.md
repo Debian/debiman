@@ -45,7 +45,10 @@ $GOPATH/bin/debiman -serving_dir=~/man -only_render_pkgs=qelectrotech,i3-wm,cron
 
 ### Test the output
 
-TODO: add debiman-minisrv, which eliminates the need to install an nginx and automatically starts debiman-auxserver
+To serve manpages from ~/man on localhost:8089, run:
+```
+$GOPATH/bin/debiman-minisrv -serving_dir=~/man
+```
 
 ### Recompile debiman
 

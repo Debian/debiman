@@ -3,15 +3,11 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 
+	"github.com/Debian/debiman/internal/aux"
 	"github.com/Debian/debiman/internal/redirect"
-	"github.com/golang/protobuf/proto"
-
-	pb "github.com/Debian/debiman/internal/proto"
 )
 
 var (
@@ -24,90 +20,20 @@ var (
 		"host:port address to listen on")
 )
 
-func loadIndex(path string) (redirect.Index, error) {
-	index := redirect.Index{
-		Langs:    make(map[string]bool),
-		Sections: make(map[string]bool),
-		Suites: map[string]bool{
-			"testing":  true,
-			"unstable": true,
-			"sid":      true,
-		},
-	}
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return index, err
-	}
-	var idx pb.Index
-	if err := proto.Unmarshal(b, &idx); err != nil {
-		return index, err
-	}
-	index.Entries = make(map[string][]redirect.IndexEntry, len(idx.Entry))
-	for _, e := range idx.Entry {
-		index.Entries[e.Name] = append(index.Entries[e.Name], redirect.IndexEntry{
-			Suite:     e.Suite,
-			Binarypkg: e.Binarypkg,
-			Section:   e.Section,
-			Language:  e.Language,
-		})
-	}
-	for _, l := range idx.Language {
-		index.Langs[l] = true
-	}
-	for _, l := range idx.Suite {
-		index.Suites[l] = true
-	}
-	for _, l := range idx.Section {
-		index.Sections[l] = true
-	}
-
-	return index, nil
-}
-
-var idx redirect.Index
-
-func handleRedirect(w http.ResponseWriter, r *http.Request) {
-	redir, err := idx.Redirect(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if redir == r.URL.Path {
-		http.Error(w, "The request path already identifies a fully qualified manpage, the request should have been handled by the webserver upstream of auxserver. Your webserver might be misconfigured.", http.StatusNotFound)
-		return
-	}
-
-	// StatusTemporaryRedirect (HTTP 307) means subsequent requests
-	// should use the old URI, which is what we want — the redirect
-	// target will likely change in the future.
-	http.Redirect(w, r, redir, http.StatusTemporaryRedirect)
-}
-
-func handleJump(w http.ResponseWriter, r *http.Request) {
-	q := r.FormValue("q")
-	if strings.TrimSpace(q) == "" {
-		http.Error(w, "No q= query parameter specified", http.StatusBadRequest)
-		return
-	}
-
-	r.URL.Path = "/" + q
-	handleRedirect(w, r)
-}
-
 func main() {
 	flag.Parse()
 
 	log.Printf("debiman auxserver loading index from %q", *indexPath)
 
-	http.HandleFunc("/jump", handleJump)
-	http.HandleFunc("/", handleRedirect)
-
-	var err error
-	idx, err = loadIndex(*indexPath)
+	idx, err := redirect.IndexFromProto(*indexPath)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	server := aux.NewServer(idx)
+
+	http.HandleFunc("/jump", server.HandleJump)
+	http.HandleFunc("/", server.HandleRedirect)
 
 	// TODO: implement index swapping. verify a dummy redirect works before swapping index
 

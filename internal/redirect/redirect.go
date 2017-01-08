@@ -2,13 +2,16 @@ package redirect
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	pb "github.com/Debian/debiman/internal/proto"
 	"github.com/Debian/debiman/internal/tag"
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/text/language"
 )
 
@@ -206,4 +209,44 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	}
 
 	return concat(), nil
+}
+
+func IndexFromProto(path string) (Index, error) {
+	index := Index{
+		Langs:    make(map[string]bool),
+		Sections: make(map[string]bool),
+		Suites: map[string]bool{
+			"testing":  true,
+			"unstable": true,
+			"sid":      true,
+		},
+	}
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return index, err
+	}
+	var idx pb.Index
+	if err := proto.Unmarshal(b, &idx); err != nil {
+		return index, err
+	}
+	index.Entries = make(map[string][]IndexEntry, len(idx.Entry))
+	for _, e := range idx.Entry {
+		index.Entries[e.Name] = append(index.Entries[e.Name], IndexEntry{
+			Suite:     e.Suite,
+			Binarypkg: e.Binarypkg,
+			Section:   e.Section,
+			Language:  e.Language,
+		})
+	}
+	for _, l := range idx.Language {
+		index.Langs[l] = true
+	}
+	for _, l := range idx.Suite {
+		index.Suites[l] = true
+	}
+	for _, l := range idx.Section {
+		index.Sections[l] = true
+	}
+
+	return index, nil
 }
