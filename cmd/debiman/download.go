@@ -151,7 +151,10 @@ func soElim(src string, r io.Reader, w io.Writer, p pkgEntry, contentByPath map[
 
 		resolved, ref, ok := findFile(src, so, contentByPath)
 		if !ok {
-			// TODO: error handling: throw an error if the referenced file is not there — it might be in other packages, or this might be a packaging bug (e.g. jessie/alliance)
+			// Omitting .so lines which cannot be found is consistent
+			// with what man(1) and other online man viewers do.
+			log.Printf("WARNING: could not find .so referenced file %q, omitting the .so line", so)
+			continue
 		}
 
 		fmt.Fprintf(w, ".so %s\n", resolved)
