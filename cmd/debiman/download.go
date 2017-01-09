@@ -191,7 +191,7 @@ func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.
 func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]contentEntry) error {
 	vPath := filepath.Join(*servingDir, p.suite, p.binarypkg, "VERSION")
 
-	if canSkip(p, vPath) {
+	if !*forceReextract && canSkip(p, vPath) {
 		return nil
 	}
 

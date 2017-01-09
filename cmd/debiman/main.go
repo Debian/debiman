@@ -38,6 +38,10 @@ var (
 		false,
 		"Forces all manpages to be re-rendered, even if they are up to date")
 
+	forceReextract = flag.Bool("force_reextract",
+		false,
+		"Forces all manpages to be re-extracted, even if there is no newer package version")
+
 	showVersion = flag.Bool("version",
 		false,
 		"Show debiman version and exit")
