@@ -44,8 +44,8 @@ func canSkip(p pkgEntry, vPath string) bool {
 
 // findClosestFile returns a manpage struct for name, if name exists in the same suite.
 // TODO(stapelberg): resolve multiple matches: consider dependencies of src
-func findClosestFile(p pkgEntry, src, name string, contentByPath map[string][]contentEntry) string {
-	log.Printf("findClosestFile(src=%q, name=%q)", src, name)
+func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentByPath map[string][]contentEntry) string {
+	logger.Printf("findClosestFile(src=%q, name=%q)", src, name)
 	c, ok := contentByPath[name]
 	if !ok {
 		return ""
@@ -84,7 +84,7 @@ func findClosestFile(p pkgEntry, src, name string, contentByPath map[string][]co
 			Binarypkg: c[0].binarypkg,
 			Suite:     c[0].suite,
 		})
-		log.Printf("parsing %q as man: %v", name, err)
+		logger.Printf("parsing %q as man: %v", name, err)
 		if err == nil {
 			return m.ServingPath() + ".gz"
 		}
@@ -92,7 +92,7 @@ func findClosestFile(p pkgEntry, src, name string, contentByPath map[string][]co
 	return ""
 }
 
-func findFile(src, name string, contentByPath map[string][]contentEntry) (string, string, bool) {
+func findFile(logger *log.Logger, src, name string, contentByPath map[string][]contentEntry) (string, string, bool) {
 	// TODO: where is searchPath defined canonically?
 	// TODO(later): why is "/"+ in front of src necessary?
 	searchPath := []string{
@@ -106,7 +106,7 @@ func findFile(src, name string, contentByPath map[string][]contentEntry) (string
 		"/usr/local/man",
 		"/usr/share/man",
 	}
-	log.Printf("searching reference so=%q", name)
+	logger.Printf("searching reference so=%q", name)
 	for _, search := range searchPath {
 		var check string
 		if filepath.IsAbs(name) {
@@ -129,7 +129,7 @@ func findFile(src, name string, contentByPath map[string][]contentEntry) (string
 			Binarypkg: c[0].binarypkg,
 			Suite:     c[0].suite,
 		})
-		log.Printf("parsing %q as man: %v", check, err)
+		logger.Printf("parsing %q as man: %v", check, err)
 		if err == nil {
 			return m.ServingPath() + ".gz", "", true
 		}
@@ -141,7 +141,7 @@ func findFile(src, name string, contentByPath map[string][]contentEntry) (string
 	return name, "", false
 }
 
-func soElim(src string, r io.Reader, w io.Writer, contentByPath map[string][]contentEntry) ([]string, error) {
+func soElim(logger *log.Logger, src string, r io.Reader, w io.Writer, contentByPath map[string][]contentEntry) ([]string, error) {
 	var refs []string
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -152,11 +152,11 @@ func soElim(src string, r io.Reader, w io.Writer, contentByPath map[string][]con
 		}
 		so := strings.TrimSpace(line[len(".so "):])
 
-		resolved, ref, ok := findFile(src, so, contentByPath)
+		resolved, ref, ok := findFile(logger, src, so, contentByPath)
 		if !ok {
 			// Omitting .so lines which cannot be found is consistent
 			// with what man(1) and other online man viewers do.
-			log.Printf("WARNING: could not find .so referenced file %q, omitting the .so line", so)
+			logger.Printf("WARNING: could not find .so referenced file %q, omitting the .so line", so)
 			continue
 		}
 
@@ -168,7 +168,7 @@ func soElim(src string, r io.Reader, w io.Writer, contentByPath map[string][]con
 	return refs, scanner.Err()
 }
 
-func writeManpage(src, dest string, r io.Reader, m *manpage.Meta, contentByPath map[string][]contentEntry) ([]string, error) {
+func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.Meta, contentByPath map[string][]contentEntry) ([]string, error) {
 	var refs []string
 	content, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -182,7 +182,7 @@ func writeManpage(src, dest string, r io.Reader, m *manpage.Meta, contentByPath 
 	}
 	err = writeAtomically(dest, true, func(w io.Writer) error {
 		var err error
-		refs, err = soElim(src, bytes.NewReader(content), w, contentByPath)
+		refs, err = soElim(logger, src, bytes.NewReader(content), w, contentByPath)
 		return err
 	})
 	return refs, err
@@ -194,6 +194,8 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 	if canSkip(p, vPath) {
 		return nil
 	}
+
+	logger := log.New(os.Stderr, p.suite+"/"+p.binarypkg+": ", log.LstdFlags)
 
 	tmp, err := ar.Get(p.filename, p.sha256)
 	if err != nil {
@@ -247,7 +249,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 		})
 
 		if err != nil {
-			log.Printf("WARNING: file name %q (underneath /usr/share/man) cannot be parsed: %v", header.Name, err)
+			logger.Printf("WARNING: file name %q (underneath /usr/share/man) cannot be parsed: %v", header.Name, err)
 			continue
 		}
 
@@ -256,21 +258,21 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 			// filepath.Join calls filepath.Abs
 			resolved := filepath.Join(filepath.Dir(strings.TrimPrefix(header.Name, ".")), header.Linkname)
 
-			destsp := findClosestFile(p, header.Name, resolved, contentByPath)
+			destsp := findClosestFile(logger, p, header.Name, resolved, contentByPath)
 			if destsp == "" {
 				// Try to extract the resolved file as non-manpage
 				// file. If the resolved file does not live in this
 				// package, this will result in a dangling symlink.
 				allRefs[resolved] = true
 				destsp = filepath.Join(filepath.Dir(m.ServingPath()), "aux", resolved)
-				log.Printf("WARNING: possibly dangling symlink %q -> %q", header.Name, header.Linkname)
+				logger.Printf("WARNING: possibly dangling symlink %q -> %q", header.Name, header.Linkname)
 			}
 
 			// TODO(stapelberg): add a unit test for this entire function
 			// TODO(stapelberg): ganeti has an interesting twist: their manpages live outside of usr/share/man, and they only have symlinks. in this case, we should extract the file to aux/ and then mangle the symlink dest. problem: manpages actually are in a separate package (ganeti-2.15) and use an absolute symlink (/etc/ganeti/share), which is not shipped with the package.
 			rel, err := filepath.Rel(filepath.Dir(m.ServingPath()), destsp)
 			if err != nil {
-				log.Printf("WARNING: %v", err)
+				logger.Printf("WARNING: %v", err)
 				continue
 			}
 			if err := os.Symlink(rel, destPath); err != nil {
@@ -287,7 +289,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 		if err != nil {
 			return err
 		}
-		refs, err := writeManpage(header.Name, destPath, r, p, contentByPath)
+		refs, err := writeManpage(logger, header.Name, destPath, r, m, contentByPath)
 		if err != nil {
 			return err
 		}
@@ -338,7 +340,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 			}
 
 			destPath := filepath.Join(*servingDir, p.suite, p.binarypkg, "aux", header.Name)
-			log.Printf("extracting referenced non-manpage file %q to %q", header.Name, destPath)
+			logger.Printf("extracting referenced non-manpage file %q to %q", header.Name, destPath)
 			if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
 				return err
 			}
