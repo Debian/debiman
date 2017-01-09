@@ -13,8 +13,10 @@ var testIdx = Index{
 	},
 
 	Sections: map[string]bool{
-		"1": true,
-		"5": true,
+		"1":     true,
+		"3":     true,
+		"3edit": true,
+		"5":     true,
 	},
 
 	Suites: map[string]bool{
@@ -100,6 +102,20 @@ var testIdx = Index{
 				Language:  "en",
 			},
 		},
+		"editline": []IndexEntry{
+			{
+				Suite:     "jessie",
+				Binarypkg: "libedit-dev",
+				Section:   "3edit",
+				Language:  "en",
+			},
+			{
+				Suite:     "jessie",
+				Binarypkg: "libeditline-dev",
+				Section:   "3",
+				Language:  "en",
+			},
+		},
 	},
 }
 
@@ -149,25 +165,30 @@ func TestUnderspecified(t *testing.T) {
 		{Case: 3, URL: "i3(1)", want: "jessie/i3-wm/i3.1.en.html"}, // default section
 		{Case: 3, URL: "systemd.service.5", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 3, URL: "systemd.service(5)", want: "jessie/systemd/systemd.service.5.en.html"},
-		{Case: 3, URL: "i3.5", want: "jessie/i3-wm/i3.5.en.html"}, // non-default section
+		{Case: 3, URL: "i3.5", want: "jessie/i3-wm/i3.5.en.html"},                           // non-default section
+		{Case: 3, URL: "editline.3", want: "jessie/libedit-dev/editline.3edit.en.html"},     // section with subsection
+		{Case: 3, URL: "editline.3edit", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
 		{Case: 4, URL: "i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},  // default section
 		{Case: 4, URL: "i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"},  // non-default section
 		{Case: 4, URL: "i3(5).fr", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
 		{Case: 4, URL: "systemd.service.5.en", want: "jessie/systemd/systemd.service.5.en.html"},
+		{Case: 4, URL: "editline.3.en", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
 		{Case: 5, URL: "i3-wm/i3", want: "jessie/i3-wm/i3.1.en.html"},
 
 		{Case: 6, URL: "i3-wm/i3.fr", want: "jessie/i3-wm/i3.1.fr.html"},
 
-		{Case: 7, URL: "i3-wm/i3.1", want: "jessie/i3-wm/i3.1.en.html"},  // default section
-		{Case: 7, URL: "i3-wm/i3.5", want: "jessie/i3-wm/i3.5.en.html"},  // non-default section
-		{Case: 7, URL: "i3-wm/i3(5)", want: "jessie/i3-wm/i3.5.en.html"}, // non-default section
+		{Case: 7, URL: "i3-wm/i3.1", want: "jessie/i3-wm/i3.1.en.html"},                             // default section
+		{Case: 7, URL: "i3-wm/i3.5", want: "jessie/i3-wm/i3.5.en.html"},                             // non-default section
+		{Case: 7, URL: "i3-wm/i3(5)", want: "jessie/i3-wm/i3.5.en.html"},                            // non-default section
+		{Case: 7, URL: "libedit-dev/editline.3", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
-		{Case: 8, URL: "i3-wm/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},  // default section
-		{Case: 8, URL: "i3-wm/i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"},  // non-default section
-		{Case: 8, URL: "i3-wm/i3(5).fr", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
-		{Case: 8, URL: "i3-wm/i3(5)fr", want: "jessie/i3-wm/i3.5.fr.html"},  // non-default section
+		{Case: 8, URL: "i3-wm/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},                             // default section
+		{Case: 8, URL: "i3-wm/i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"},                             // non-default section
+		{Case: 8, URL: "i3-wm/i3(5).fr", want: "jessie/i3-wm/i3.5.fr.html"},                            // non-default section
+		{Case: 8, URL: "i3-wm/i3(5)fr", want: "jessie/i3-wm/i3.5.fr.html"},                             // non-default section
+		{Case: 8, URL: "libedit-dev/editline.3.en", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
 		{Case: 9, URL: "jessie/i3", want: "jessie/i3-wm/i3.1.en.html"},   // default suite
 		{Case: 9, URL: "testing/i3", want: "testing/i3-wm/i3.1.en.html"}, // non-default suite
@@ -175,11 +196,13 @@ func TestUnderspecified(t *testing.T) {
 		{Case: 10, URL: "jessie/i3.fr", want: "jessie/i3-wm/i3.1.fr.html"},   // default suite
 		{Case: 10, URL: "testing/i3.fr", want: "testing/i3-wm/i3.1.fr.html"}, // non-default suite
 
-		{Case: 11, URL: "jessie/i3.1", want: "jessie/i3-wm/i3.1.en.html"},   // default suite, default section
-		{Case: 11, URL: "testing/i3.5", want: "testing/i3-wm/i3.5.en.html"}, // non-default suite, non-default section
+		{Case: 11, URL: "jessie/i3.1", want: "jessie/i3-wm/i3.1.en.html"},                                   // default suite, default section
+		{Case: 11, URL: "testing/i3.5", want: "testing/i3-wm/i3.5.en.html"},                                 // non-default suite, non-default section
+		{Case: 11, URL: "jessie/libedit-dev/editline.3", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
-		{Case: 12, URL: "jessie/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},   // default suite, default section
-		{Case: 12, URL: "testing/i3.5.fr", want: "testing/i3-wm/i3.5.fr.html"}, // non-default suite, non-default section
+		{Case: 12, URL: "jessie/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},                       // default suite, default section
+		{Case: 12, URL: "testing/i3.5.fr", want: "testing/i3-wm/i3.5.fr.html"},                     // non-default suite, non-default section
+		{Case: 12, URL: "jessie/editline.3.en", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
 		{Case: 13, URL: "jessie/i3-wm/i3", want: "jessie/i3-wm/i3.1.en.html"},   // default suite
 		{Case: 13, URL: "testing/i3-wm/i3", want: "testing/i3-wm/i3.1.en.html"}, // non-default suite
@@ -187,11 +210,13 @@ func TestUnderspecified(t *testing.T) {
 		{Case: 14, URL: "jessie/i3-wm/i3.fr", want: "jessie/i3-wm/i3.1.fr.html"},   // default suite
 		{Case: 14, URL: "testing/i3-wm/i3.fr", want: "testing/i3-wm/i3.1.fr.html"}, // non-default suite
 
-		{Case: 15, URL: "jessie/i3-wm/i3.1", want: "jessie/i3-wm/i3.1.en.html"},   // default suite, default section
-		{Case: 15, URL: "testing/i3-wm/i3.5", want: "testing/i3-wm/i3.5.en.html"}, // non-default suite, non-default section
+		{Case: 15, URL: "jessie/i3-wm/i3.1", want: "jessie/i3-wm/i3.1.en.html"},                             // default suite, default section
+		{Case: 15, URL: "testing/i3-wm/i3.5", want: "testing/i3-wm/i3.5.en.html"},                           // non-default suite, non-default section
+		{Case: 15, URL: "jessie/libedit-dev/editline.3", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
-		{Case: 16, URL: "jessie/i3-wm/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},   // default suite
-		{Case: 16, URL: "testing/i3-wm/i3.1.fr", want: "testing/i3-wm/i3.1.fr.html"}, // non-default suite
+		{Case: 16, URL: "jessie/i3-wm/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},                             // default suite
+		{Case: 16, URL: "testing/i3-wm/i3.1.fr", want: "testing/i3-wm/i3.1.fr.html"},                           // non-default suite
+		{Case: 16, URL: "jessie/libedit-dev/editline.3.en", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 	}
 	for _, entry := range table {
 		entry := entry // capture

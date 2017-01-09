@@ -41,6 +41,15 @@ func TestManpageFromManPath(t *testing.T) {
 			wantSection:     "3",
 			wantServingPath: "testing/libedit-dev/el_init.3.en",
 		},
+
+		// Verify subsections are parsed correctly.
+		{
+			path:            "man3/editline.3edit",
+			pkg:             PkgMeta{Binarypkg: "libedit-dev", Suite: "testing"},
+			wantLang:        "en",
+			wantSection:     "3edit",
+			wantServingPath: "testing/libedit-dev/editline.3edit.en",
+		},
 	}
 
 	for _, entry := range table {
@@ -58,7 +67,7 @@ func TestManpageFromManPath(t *testing.T) {
 				t.Fatalf("Unexpected section: got %q, want %q", got, want)
 			}
 			if got, want := m.ServingPath(), entry.wantServingPath; got != want {
-				t.Fatalf("Unexpected section: got %q, want %q", got, want)
+				t.Fatalf("Unexpected serving path: got %q, want %q", got, want)
 			}
 		})
 	}

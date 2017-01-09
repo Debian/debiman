@@ -82,9 +82,13 @@ func FromManPath(path string, p PkgMeta) (*Meta, error) {
 	}
 
 	section := strings.TrimPrefix(parts[0], "man")
-	re := regexp.MustCompile(fmt.Sprintf(`\.%s[^.]*\.gz$`, section))
-	if !re.MatchString(parts[1]) {
+	re := regexp.MustCompile(fmt.Sprintf(`\.%s([^.]*)\.gz$`, section))
+	matches := re.FindStringSubmatch(parts[1])
+	if matches == nil {
 		return nil, fmt.Errorf("file name (%q) does not match regexp %v", parts[1], re)
+	}
+	if len(matches) > 1 {
+		section = section + matches[1]
 	}
 
 	return &Meta{
@@ -156,4 +160,8 @@ func (m *Meta) RawPath() string {
 
 func (m *Meta) PermaLink() string {
 	return m.Package.Suite + "/" + m.Package.Binarypkg + "/" + m.Name + "." + m.Section
+}
+
+func (m *Meta) MainSection() string {
+	return m.Section[:1]
 }

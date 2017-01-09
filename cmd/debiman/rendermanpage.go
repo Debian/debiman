@@ -256,7 +256,7 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 			}
 			filtered := make([]*manpage.Meta, 0, len(related))
 			for _, r := range related {
-				if r.Section != section {
+				if r.MainSection() != section {
 					continue
 				}
 				if r.Package.Suite != meta.Package.Suite {
@@ -278,7 +278,7 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 		if v.Package.Binarypkg != meta.Package.Binarypkg {
 			continue
 		}
-		if v.Section != meta.Section {
+		if v.MainSection() != meta.MainSection() {
 			continue
 		}
 		// TODO(later): allow switching to a different suite even if
@@ -304,20 +304,20 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 		if v.Package.Suite != meta.Package.Suite {
 			continue
 		}
-		bySection[v.Section] = append(bySection[v.Section], v)
+		bySection[v.MainSection()] = append(bySection[v.MainSection()], v)
 	}
 	sections := make([]*manpage.Meta, 0, len(bySection))
 	for _, all := range bySection {
 		sections = append(sections, bestLanguageMatch(meta, all))
 	}
 	sort.SliceStable(sections, func(i, j int) bool {
-		return sections[i].Section < sections[j].Section
+		return sections[i].MainSection() < sections[j].MainSection()
 	})
 
 	conflicting := make(map[string]bool)
 	bins := make([]*manpage.Meta, 0, len(job.versions))
 	for _, v := range job.versions {
-		if v.Section != meta.Section {
+		if v.MainSection() != meta.MainSection() {
 			continue
 		}
 
@@ -346,7 +346,7 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 	ambiguous := make(map[*manpage.Meta]bool)
 	byLang := make(map[string][]*manpage.Meta)
 	for _, v := range job.versions {
-		if v.Section != meta.Section {
+		if v.MainSection() != meta.MainSection() {
 			continue
 		}
 		if v.Package.Suite != meta.Package.Suite {

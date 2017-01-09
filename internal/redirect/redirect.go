@@ -22,6 +22,10 @@ type IndexEntry struct {
 	Language  string // TODO: type: would it make sense to use language.Tag?
 }
 
+func (e IndexEntry) ServingPath(name string) string {
+	return "/" + e.Suite + "/" + e.Binarypkg + "/" + name + "." + e.Section + "." + e.Language + ".html"
+}
+
 type Index struct {
 	Entries  map[string][]IndexEntry
 	Suites   map[string]bool
@@ -106,6 +110,105 @@ func (i Index) splitBase(path string) (name string, section string, lang string)
 		lang
 }
 
+func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []IndexEntry) []IndexEntry {
+	t := template // for convenience
+	valid := make(map[string]bool, len(entries))
+	for _, e := range entries {
+		valid[e.Suite+"/"+e.Binarypkg+"/"+name+"/"+e.Section+"/"+e.Language] = true
+	}
+
+	fullyQualified := func() bool {
+		if t.Suite == "" || t.Binarypkg == "" || t.Section == "" || t.Language == "" {
+			return false
+		}
+		return valid[t.Suite+"/"+t.Binarypkg+"/"+name+"/"+t.Section+"/"+t.Language]
+	}
+
+	// TODO: use pointers
+	filtered := entries[:]
+
+	filter := func(keep func(e IndexEntry) bool) {
+		tmp := make([]IndexEntry, 0, len(filtered))
+		for _, e := range filtered {
+			if !keep(e) {
+				continue
+			}
+			tmp = append(tmp, e)
+		}
+		filtered = tmp
+	}
+
+	// Narrow down as much as possible upfront. The keep callback is
+	// the logical and of all the keep callbacks below:
+	filter(func(e IndexEntry) bool {
+		return (t.Suite == "" || e.Suite == t.Suite) &&
+			(t.Section == "" || e.Section[:1] == t.Section[:1]) &&
+			(t.Binarypkg == "" || e.Binarypkg == t.Binarypkg) &&
+			(t.Language == "" || e.Language == t.Language)
+	})
+
+	// suite
+
+	if t.Suite == "" {
+		t.Suite = defaultSuite
+	}
+
+	filter(func(e IndexEntry) bool { return t.Suite == "" || e.Suite == t.Suite })
+	if len(filtered) == 0 {
+		return nil
+	}
+	if fullyQualified() {
+		return filtered
+	}
+
+	// section
+
+	if t.Section == "" {
+		// TODO(later): respect the section preference cookie (+test)
+		sort.SliceStable(filtered, func(i, j int) bool {
+			return filtered[i].Section < filtered[j].Section
+		})
+		t.Section = filtered[0].Section
+	}
+
+	filter(func(e IndexEntry) bool { return t.Section == "" || e.Section[:1] == t.Section[:1] })
+	if len(filtered) == 0 {
+		return nil
+	}
+	if fullyQualified() {
+		return filtered
+	}
+
+	// binarypkg
+
+	if t.Binarypkg == "" {
+		t.Binarypkg = filtered[0].Binarypkg
+	}
+
+	filter(func(e IndexEntry) bool { return t.Binarypkg == "" || e.Binarypkg == t.Binarypkg })
+	if len(filtered) == 0 {
+		return nil
+	}
+	if fullyQualified() {
+		return filtered
+	}
+
+	// language
+
+	if t.Language == "" {
+		tags, _, _ := language.ParseAcceptLanguage(acceptLang)
+		// ignore err: tags == nil results in the default language
+		best := bestLanguageMatch(tags, filtered)
+		t.Language = best.Language
+	}
+
+	filter(func(e IndexEntry) bool { return t.Language == "" || e.Language == t.Language })
+	if len(filtered) == 0 {
+		return nil
+	}
+	return filtered
+}
+
 func (i Index) Redirect(r *http.Request) (string, error) {
 	path := r.URL.Path
 	for strings.HasSuffix(path, ".html") || strings.HasSuffix(path, ".gz") {
@@ -124,26 +227,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	suite, binarypkg := i.splitDir(path)
 	name, section, lang := i.splitBase(path)
 
-	fullyQualified := func() bool {
-		return suite != "" && binarypkg != "" && section != "" && lang != ""
-	}
-	concat := func() string {
-		return "/" + suite + "/" + binarypkg + "/" + name + "." + section + "." + lang + ".html"
-	}
-
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
-
-	if fullyQualified() {
-		return concat(), nil
-	}
-
-	if suite == "" {
-		suite = defaultSuite
-	}
-
-	if fullyQualified() {
-		return concat(), nil
-	}
 
 	entries, ok := i.Entries[name]
 	if !ok {
@@ -151,64 +235,19 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		return "", fmt.Errorf("No such man page: name=%q", name)
 	}
 
-	if fullyQualified() {
-		return concat(), nil
-	}
-
-	// TODO: use pointers
-	filtered := make([]IndexEntry, 0, len(entries))
-	for _, e := range entries {
-		if binarypkg != "" && e.Binarypkg != binarypkg {
-			continue
-		}
-		if e.Suite != suite {
-			continue
-		}
-		if section != "" && e.Section != section {
-			continue
-		}
-		filtered = append(filtered, e)
-	}
+	acceptLang := r.Header.Get("Accept-Language")
+	filtered := i.narrow(name, acceptLang, IndexEntry{
+		Suite:     suite,
+		Binarypkg: binarypkg,
+		Section:   section,
+		Language:  lang,
+	}, entries)
 
 	if len(filtered) == 0 {
 		return "", fmt.Errorf("No such manpage found")
 	}
 
-	if section == "" {
-		// TODO(later): respect the section preference cookie (+test)
-		sort.SliceStable(filtered, func(i, j int) bool {
-			return filtered[i].Section < filtered[j].Section
-		})
-		section = filtered[0].Section
-	}
-
-	if fullyQualified() {
-		return concat(), nil
-	}
-
-	if lang == "" {
-		lfiltered := make([]IndexEntry, 0, len(filtered))
-		for _, f := range filtered {
-			if f.Section != section {
-				continue
-			}
-			lfiltered = append(lfiltered, f)
-		}
-
-		t, _, _ := language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))
-		// ignore err: t == nil results in the default language
-		best := bestLanguageMatch(t, lfiltered)
-		lang = best.Language
-		if binarypkg == "" {
-			binarypkg = best.Binarypkg
-		}
-	}
-
-	if binarypkg == "" {
-		binarypkg = filtered[0].Binarypkg
-	}
-
-	return concat(), nil
+	return filtered[0].ServingPath(name), nil
 }
 
 func IndexFromProto(path string) (Index, error) {

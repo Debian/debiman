@@ -27,6 +27,7 @@ func writeIndex(dest string, gv globalView) error {
 			})
 			langs[m.Language] = true
 			sections[m.Section] = true
+			sections[m.MainSection()] = true
 		}
 	}
 
