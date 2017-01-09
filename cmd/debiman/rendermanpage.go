@@ -18,7 +18,6 @@ import (
 	"github.com/Debian/debiman/internal/manpage"
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
-	"golang.org/x/text/language/display"
 )
 
 const iso8601Format = "2006-01-02T15:04:05Z"
@@ -85,12 +84,6 @@ var longSections = map[string]string{
 
 var manpageTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage").
 	Funcs(map[string]interface{}{
-		"DisplayLang": func(tag language.Tag) string {
-			return display.Self.Name(tag)
-		},
-		"EnglishLang": func(tag language.Tag) string {
-			return display.English.Languages().Name(tag)
-		},
 		"ShortSection": func(section string) string {
 			return shortSections[section]
 		},
@@ -106,12 +99,6 @@ var manpageTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage"
 
 var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage-error").
 	Funcs(map[string]interface{}{
-		"DisplayLang": func(tag language.Tag) string {
-			return display.Self.Name(tag)
-		},
-		"EnglishLang": func(tag language.Tag) string {
-			return display.English.Languages().Name(tag)
-		},
 		"ShortSection": func(section string) string {
 			return shortSections[section]
 		},

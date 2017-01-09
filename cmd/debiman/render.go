@@ -13,6 +13,8 @@ import (
 	"github.com/Debian/debiman/internal/manpage"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/text/language"
+	"golang.org/x/text/language/display"
 )
 
 //go:generate go run gentmpl.go header footer style manpage manpageerror contents pkgindex index faq
@@ -30,6 +32,12 @@ func parseCommonTemplates() *template.Template {
 	t = template.Must(t.New("header").Parse(headerContent))
 	t = template.Must(t.New("footer").
 		Funcs(map[string]interface{}{
+			"DisplayLang": func(tag language.Tag) string {
+				return display.Self.Name(tag)
+			},
+			"EnglishLang": func(tag language.Tag) string {
+				return display.English.Languages().Name(tag)
+			},
 			"Now": func() string {
 				return time.Now().UTC().Format(iso8601Format)
 			}}).

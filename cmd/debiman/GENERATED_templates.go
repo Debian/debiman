@@ -771,7 +771,13 @@ var pkgindexContent = `{{ template "header" . }}
 <ul>
 {{ range $idx, $fn := .Mans }}
   {{ with $m := index $.ManpageByName $fn }}
-    <li><a href="/{{ $m.ServingPath }}.html">{{ $m.Name }}({{ $m.Section }})</a></li>
+<li>
+  <a href="/{{ $m.ServingPath }}.html">{{ $m.Name }}({{ $m.Section }})
+    {{ if ne $m.Language "en" }}
+      (<span title="{{ EnglishLang $m.LanguageTag }} ({{ $m.Language }})">{{ DisplayLang $m.LanguageTag }}</span>)
+    {{ end }}
+  </a>
+</li>
   {{ end }}
 {{ end }}
 </ul>
