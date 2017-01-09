@@ -257,6 +257,9 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 		if header.Typeflag == tar.TypeSymlink {
 			// filepath.Join calls filepath.Abs
 			resolved := filepath.Join(filepath.Dir(strings.TrimPrefix(header.Name, ".")), header.Linkname)
+			if !strings.HasSuffix(resolved, ".gz") {
+				resolved = resolved + ".gz"
+			}
 
 			destsp := findClosestFile(logger, p, header.Name, resolved, contentByPath)
 			if destsp == "" {

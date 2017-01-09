@@ -77,6 +77,10 @@ func FromManPath(path string, p PkgMeta) (*Meta, error) {
 		return nil, fmt.Errorf("Unexpected path format %q", path)
 	}
 
+	if !strings.HasSuffix(parts[1], ".gz") {
+		parts[1] = parts[1] + ".gz"
+	}
+
 	section := strings.TrimPrefix(parts[0], "man")
 	re := regexp.MustCompile(fmt.Sprintf(`\.%s[^.]*\.gz$`, section))
 	if !re.MatchString(parts[1]) {
