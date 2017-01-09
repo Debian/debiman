@@ -150,7 +150,21 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 	// suite
 
 	if t.Suite == "" {
-		t.Suite = defaultSuite
+		// Prefer redirecting to defaultSuite
+		for _, e := range filtered {
+			if e.Suite == defaultSuite {
+				t.Suite = defaultSuite
+				break
+			}
+		}
+		// If the manpage is not contained in defaultSuite, use the
+		// first suite we can find for which the manpage is available.
+		if t.Suite == "" {
+			for _, e := range filtered {
+				t.Suite = e.Suite
+				break
+			}
+		}
 	}
 
 	filter(func(e IndexEntry) bool { return t.Suite == "" || e.Suite == t.Suite })

@@ -116,6 +116,14 @@ var testIdx = Index{
 				Language:  "en",
 			},
 		},
+		"javafxpackager": []IndexEntry{
+			{
+				Suite:     "testing",
+				Binarypkg: "openjfx",
+				Section:   "1",
+				Language:  "en",
+			},
+		},
 	},
 }
 
@@ -156,6 +164,7 @@ func TestUnderspecified(t *testing.T) {
 	}{
 		{Case: 1, URL: "i3", want: "jessie/i3-wm/i3.1.en.html"},
 		{Case: 1, URL: "systemd.service", want: "jessie/systemd/systemd.service.5.en.html"},
+		{Case: 1, URL: "javafxpackager", want: "testing/openjfx/javafxpackager.1.en.html"}, // not available in jessie
 
 		{Case: 2, URL: "i3.en", want: "jessie/i3-wm/i3.1.en.html"}, // default language
 		{Case: 2, URL: "systemd.service.en", want: "jessie/systemd/systemd.service.5.en.html"},
