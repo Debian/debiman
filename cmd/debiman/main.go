@@ -42,6 +42,10 @@ var (
 		false,
 		"Forces all manpages to be re-extracted, even if there is no newer package version")
 
+	localMirror = flag.String("local_mirror",
+		"",
+		"If non-empty, a file system path to a Debian mirror, e.g. /auto.dsa/debian on DSA-maintained machines")
+
 	showVersion = flag.Bool("version",
 		false,
 		"Show debiman version and exit")
@@ -58,6 +62,7 @@ var debimanVersion = "HEAD"
 func logic() error {
 	ar := &archive.Getter{
 		ConnectionsPerMirror: 10,
+		LocalMirror:          *localMirror,
 	}
 
 	// Stage 1: all Debian packages of all architectures of the

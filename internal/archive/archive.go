@@ -44,6 +44,7 @@ type Getter struct {
 	ConnectionsPerMirror int
 	RetriesTransient     int
 	Mirrors              []string
+	LocalMirror          string
 
 	once       sync.Once
 	pool       *pool
@@ -89,20 +90,32 @@ func (g *Getter) maybeByHashPath(path string, sha256sum []byte) string {
 // retry.
 func (g *Getter) download(path string, f *os.File, sha256sum []byte) error {
 	byHash := g.maybeByHashPath(path, sha256sum)
-	r, err := http.Get("http://deb.debian.org/debian/" + byHash)
-	if err != nil {
-		return transientError{err}
-	}
-	defer func() {
-		ioutil.ReadAll(r.Body)
-		r.Body.Close()
-	}()
-	if got, want := r.StatusCode, http.StatusOK; got != want {
-		err := fmt.Errorf("download(%q): Unexpected HTTP status code: got %d, want %d", path, got, want)
-		if r.StatusCode < 400 || r.StatusCode >= 500 {
+
+	var r io.Reader
+	if g.LocalMirror != "" {
+		f, err := os.Open(filepath.Join(g.LocalMirror, byHash))
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		r = f
+	} else {
+		resp, err := http.Get("http://deb.debian.org/debian/" + byHash)
+		if err != nil {
 			return transientError{err}
 		}
-		return err
+		defer func() {
+			ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+		}()
+		if got, want := resp.StatusCode, http.StatusOK; got != want {
+			err := fmt.Errorf("download(%q): Unexpected HTTP status code: got %d, want %d", path, got, want)
+			if resp.StatusCode < 400 || resp.StatusCode >= 500 {
+				return transientError{err}
+			}
+			return err
+		}
+		r = resp.Body
 	}
 
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
@@ -110,7 +123,8 @@ func (g *Getter) download(path string, f *os.File, sha256sum []byte) error {
 	}
 
 	h := sha256.New()
-	rd := io.Reader(io.TeeReader(r.Body, h))
+	rd := io.Reader(io.TeeReader(r, h))
+	var err error
 	if strings.HasSuffix(path, ".gz") {
 		rd, err = gzip.NewReader(rd)
 		if err != nil {
@@ -213,23 +227,35 @@ func (g *Getter) GetRelease(suite string) (*archive.Release, error) {
 	// TODO: retry
 	// TODO: use correct mirror
 
-	// TODO: switch to /InRelease for $TODO-debian-version
-	path := "http://ftp.ch.debian.org/debian/dists/" + suite + "/Release"
-	resp, err := http.Get(path)
-	if err != nil {
-		return nil, err
+	var r io.Reader
+	if g.LocalMirror != "" {
+		f, err := os.Open(filepath.Join(g.LocalMirror, "dists", suite, "Release"))
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		r = f
+	} else {
+		// TODO: switch to /InRelease for $TODO-debian-version
+		path := "http://ftp.ch.debian.org/debian/dists/" + suite + "/Release"
+		resp, err := http.Get(path)
+		if err != nil {
+			return nil, err
+		}
+
+		defer func() {
+			ioutil.ReadAll(resp.Body)
+			resp.Body.Close()
+		}()
+
+		if got, want := resp.StatusCode, http.StatusOK; got != want {
+			return nil, fmt.Errorf("GetRelease(%q): Unexpected HTTP status code: got %d, want %d", path, got, want)
+		}
+
+		r = resp.Body
 	}
 
-	defer func() {
-		ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
-	}()
-
-	if got, want := resp.StatusCode, http.StatusOK; got != want {
-		return nil, fmt.Errorf("GetRelease(%q): Unexpected HTTP status code: got %d, want %d", path, got, want)
-	}
-
-	release, err := archive.LoadInRelease(resp.Body, &g.keyring)
+	release, err := archive.LoadInRelease(r, &g.keyring)
 	if err != nil {
 		return nil, err
 	}
