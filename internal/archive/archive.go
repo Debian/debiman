@@ -46,21 +46,22 @@ type Getter struct {
 	Mirrors              []string
 	LocalMirror          string
 
-	once       sync.Once
-	pool       *pool
-	keyring    openpgp.EntityList
-	releases   map[string]*archive.Release
-	releasesMu sync.RWMutex
+	once    sync.Once
+	pool    *pool
+	keyring openpgp.EntityList
+
+	byHash   map[string]bool
+	byHashMu sync.RWMutex
 }
 
 type transientError struct {
 	error
 }
 
-func (g *Getter) releaseFor(suite string) *archive.Release {
-	g.releasesMu.RLock()
-	defer g.releasesMu.RUnlock()
-	return g.releases[suite]
+func (g *Getter) byHashFor(suite string) bool {
+	g.byHashMu.RLock()
+	defer g.byHashMu.RUnlock()
+	return g.byHash[suite]
 }
 
 func (g *Getter) maybeByHashPath(path string, sha256sum []byte) string {
@@ -72,12 +73,7 @@ func (g *Getter) maybeByHashPath(path string, sha256sum []byte) string {
 	if len(parts) < 2 {
 		return path
 	}
-	release := g.releaseFor(parts[1])
-	if release == nil {
-		return path
-	}
-	acquireByHash := release.Values["Acquire-By-Hash"]
-	if acquireByHash != "yes" {
+	if !g.byHashFor(parts[1]) {
 		return path
 	}
 
@@ -200,7 +196,7 @@ func (g *Getter) init() error {
 	g.once.Do(func() {
 		g.pool = newPool(g.ConnectionsPerMirror)
 		err = g.loadArchiveKeyrings()
-		g.releases = make(map[string]*archive.Release)
+		g.byHash = make(map[string]bool)
 	})
 	return err
 }
@@ -260,10 +256,10 @@ func (g *Getter) GetRelease(suite string) (*archive.Release, error) {
 		return nil, err
 	}
 
-	g.releasesMu.Lock()
-	defer g.releasesMu.Unlock()
-	g.releases[release.Codename] = release
-	g.releases[release.Suite] = release
+	g.byHashMu.Lock()
+	defer g.byHashMu.Unlock()
+	g.byHash[release.Codename] = release.Values["Acquire-By-Hash"] == "yes"
+	g.byHash[release.Suite] = release.Values["Acquire-By-Hash"] == "yes"
 
 	return release, err
 }
