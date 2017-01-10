@@ -172,8 +172,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 			content = dedupContent(content)
 
 			for _, c := range content {
-				filename := "/" + c.filename
-				res.contentByPath[filename] = append(res.contentByPath[filename], c)
+				res.contentByPath[c.filename] = append(res.contentByPath[c.filename], c)
 			}
 
 			latestVersion := make(map[string]*manpage.PkgMeta)

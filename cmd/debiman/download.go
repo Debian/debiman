@@ -46,7 +46,7 @@ func canSkip(p pkgEntry, vPath string) bool {
 // TODO(stapelberg): resolve multiple matches: consider dependencies of src
 func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentByPath map[string][]*contentEntry) string {
 	logger.Printf("findClosestFile(src=%q, name=%q)", src, name)
-	c, ok := contentByPath[name]
+	c, ok := contentByPath[strings.TrimPrefix(name, "/usr/share/man/")]
 	if !ok {
 		return ""
 	}
@@ -119,7 +119,7 @@ func findFile(logger *log.Logger, src, name string, contentByPath map[string][]*
 			check = check + ".gz"
 		}
 
-		c, ok := contentByPath[check]
+		c, ok := contentByPath[strings.TrimPrefix(check, "/usr/share/man/")]
 		if !ok {
 			log.Printf("%q does not exist", check)
 			continue

@@ -41,10 +41,10 @@ func getContents(ar *archive.Getter, suite string, arch string, path string, has
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		text := scanner.Text()
-		// TODO: strip the usr/share/man prefix to save memory
 		if !strings.HasPrefix(text, "usr/share/man/") {
 			continue
 		}
+		text = strings.TrimPrefix(text, "usr/share/man/")
 		idx := strings.LastIndex(text, " ")
 		if idx == -1 {
 			continue
