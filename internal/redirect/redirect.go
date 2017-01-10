@@ -37,11 +37,14 @@ type Index struct {
 const defaultSuite = "jessie"
 const defaultLanguage = "en"
 
-// bestLanguageMatch is like bestLanguageMatch in render.go, but for the redirector index. TODO: can we de-duplicate the code?
+// bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
 func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
 	sort.SliceStable(options, func(i, j int) bool {
+		if options[i].Language == options[j].Language {
+			return options[i].Binarypkg < options[j].Binarypkg
+		}
 		// ensure that en comes first, so that language.Matcher treats it as default
-		if options[i].Language == "en" && options[j].Language != "en" {
+		if options[i].Language == "en" {
 			return true
 		}
 		return options[i].Language < options[j].Language
@@ -143,8 +146,8 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 	filter(func(e IndexEntry) bool {
 		return (t.Suite == "" || e.Suite == t.Suite) &&
 			(t.Section == "" || e.Section[:1] == t.Section[:1]) &&
-			(t.Binarypkg == "" || e.Binarypkg == t.Binarypkg) &&
-			(t.Language == "" || e.Language == t.Language)
+			(t.Language == "" || e.Language == t.Language) &&
+			(t.Binarypkg == "" || e.Binarypkg == t.Binarypkg)
 	})
 
 	// suite
@@ -193,20 +196,6 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 		return filtered
 	}
 
-	// binarypkg
-
-	if t.Binarypkg == "" {
-		t.Binarypkg = filtered[0].Binarypkg
-	}
-
-	filter(func(e IndexEntry) bool { return t.Binarypkg == "" || e.Binarypkg == t.Binarypkg })
-	if len(filtered) == 0 {
-		return nil
-	}
-	if fullyQualified() {
-		return filtered
-	}
-
 	// language
 
 	if t.Language == "" {
@@ -217,6 +206,20 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 	}
 
 	filter(func(e IndexEntry) bool { return t.Language == "" || e.Language == t.Language })
+	if len(filtered) == 0 {
+		return nil
+	}
+	if fullyQualified() {
+		return filtered
+	}
+
+	// binarypkg
+
+	if t.Binarypkg == "" {
+		t.Binarypkg = filtered[0].Binarypkg
+	}
+
+	filter(func(e IndexEntry) bool { return t.Binarypkg == "" || e.Binarypkg == t.Binarypkg })
 	if len(filtered) == 0 {
 		return nil
 	}

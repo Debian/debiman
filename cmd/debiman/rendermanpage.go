@@ -145,7 +145,7 @@ func bestLanguageMatch(current *manpage.Meta, options []*manpage.Meta) *manpage.
 			}
 		}
 		// ensure that en comes first, so that language.Matcher treats it as default
-		if options[i].Language == "en" && options[j].Language != "en" {
+		if options[i].Language == "en" {
 			return true
 		}
 		return options[i].Language < options[j].Language

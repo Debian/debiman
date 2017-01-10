@@ -124,6 +124,20 @@ var testIdx = Index{
 				Language:  "en",
 			},
 		},
+		"dup": []IndexEntry{
+			{
+				Suite:     "jessie",
+				Binarypkg: "manpages-pl-dev",
+				Section:   "2",
+				Language:  "pl",
+			},
+			{
+				Suite:     "jessie",
+				Binarypkg: "manpages-dev",
+				Section:   "2",
+				Language:  "en",
+			},
+		},
 	},
 }
 
@@ -260,6 +274,11 @@ func TestAcceptLanguage(t *testing.T) {
 		{
 			URL:  "i3",
 			want: "jessie/i3-wm/i3.1.fr.html",
+			lang: "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+		},
+		{
+			URL:  "dup",
+			want: "jessie/manpages-dev/dup.2.en.html",
 			lang: "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
 		},
 	}
