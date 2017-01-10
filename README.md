@@ -3,6 +3,14 @@
 ## Prerequisites
 
 * mandoc
+* a number of Go packages (which `go get` will automatically get for you, see below)
+    * pault.ag/go/debian
+    * pault.ag/go/archive
+    * github.com/golang/protobuf/proto
+    * golang.org/x/crypto/openpgp
+    * golang.org/x/net/html
+    * golang.org/x/sync/errgroup
+    * golang.org/x/text
 
 ## Architecture overview
 
@@ -49,6 +57,9 @@ To serve manpages from ~/man on localhost:8089, run:
 ```
 $GOPATH/bin/debiman-minisrv -serving_dir=~/man
 ```
+
+Note that for a production setup, you should not use debiman-minisrv. Instead,
+refer to the web server example configuration files in example/.
 
 ### Recompile debiman
 
