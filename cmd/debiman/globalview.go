@@ -21,36 +21,37 @@ type globalView struct {
 	pkgs          []pkgEntry
 	suites        map[string]bool
 	idxSuites     []string
-	contentByPath map[string][]contentEntry
+	contentByPath map[string][]*contentEntry
 	xref          map[string][]*manpage.Meta
 }
 
-func dedupContent(content []contentEntry) []contentEntry {
-	bestArch := make(map[string][]contentEntry, len(content))
+func dedupContent(content []*contentEntry) []*contentEntry {
+	byArch := make(map[string][]*contentEntry, len(content))
 	for _, c := range content {
 		key := c.suite + "/" + c.binarypkg + "/" + c.filename
-		bestArch[key] = append(bestArch[key], c)
+		byArch[key] = append(byArch[key], c)
 	}
-	dedup := make([]contentEntry, 0, len(bestArch))
-	for _, variants := range bestArch {
+
+	dedup := make([]*contentEntry, 0, len(byArch))
+	for _, variants := range byArch {
 		var best *contentEntry
-		for idx, v := range variants {
+		for _, v := range variants {
 			if v.arch == mostPopularArchitecture {
-				best = &(variants[idx])
+				best = v
 				break
 			}
 		}
 		if best == nil {
-			best = &(variants[0])
+			best = variants[0]
 		}
 
-		dedup = append(dedup, *best)
+		dedup = append(dedup, best)
 	}
 	return dedup
 }
 
-func dedupPackages(pkgs []pkgEntry) (dedup []pkgEntry, latestVersion map[string]version.Version) {
-	latestVersion = make(map[string]version.Version)
+func dedupPackages(pkgs []pkgEntry) (dedup []pkgEntry, latestVersion map[string]*manpage.PkgMeta) {
+	latestVersion = make(map[string]*manpage.PkgMeta)
 	log.Printf("%d package entries before architecture de-duplication", len(pkgs))
 	bestArch := make(map[string][]*pkgEntry, len(pkgs))
 	for idx, p := range pkgs {
@@ -65,7 +66,11 @@ func dedupPackages(pkgs []pkgEntry) (dedup []pkgEntry, latestVersion map[string]
 				newest = v.version
 			}
 		}
-		latestVersion[key] = newest
+		latestVersion[key] = &manpage.PkgMeta{
+			Binarypkg: variants[0].binarypkg,
+			Suite:     variants[0].suite,
+			Version:   newest,
+		}
 		var best *pkgEntry
 		for _, v := range variants {
 			if v.version != newest {
@@ -133,7 +138,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 	res := globalView{
 		suites:        make(map[string]bool, len(dists)),
 		idxSuites:     make([]string, 0, len(dists)),
-		contentByPath: make(map[string][]contentEntry),
+		contentByPath: make(map[string][]*contentEntry),
 		xref:          make(map[string][]*manpage.Meta),
 	}
 
@@ -164,7 +169,6 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 			if err != nil {
 				return res, err
 			}
-
 			content = dedupContent(content)
 
 			for _, c := range content {
@@ -172,7 +176,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 				res.contentByPath[filename] = append(res.contentByPath[filename], c)
 			}
 
-			latestVersion := make(map[string]version.Version)
+			latestVersion := make(map[string]*manpage.PkgMeta)
 			{
 				// Collect package download work units
 				pkgs, err := getAllPackages(ar, suite, release, hashByFilename, buildContainsMains(content))
@@ -191,11 +195,13 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 			// Build a global view of all the manpages (required for cross-referencing).
 			// TODO(issue): edge case: packages which got renamed between releases
 			for _, c := range content {
-				m, err := manpage.FromManPath(strings.TrimPrefix(c.filename, "usr/share/man/"), manpage.PkgMeta{
-					Binarypkg: c.binarypkg,
-					Suite:     c.suite,
-					Version:   latestVersion[c.suite+"/"+c.binarypkg],
-				})
+				if _, ok := latestVersion[c.suite+"/"+c.binarypkg]; !ok {
+					key := c.suite + "/" + c.binarypkg
+					knownIssues[key] = append(knownIssues[key],
+						fmt.Errorf("Could not determine latest version"))
+					continue
+				}
+				m, err := manpage.FromManPath(strings.TrimPrefix(c.filename, "usr/share/man/"), latestVersion[c.suite+"/"+c.binarypkg])
 				if err != nil {
 					key := c.suite + "/" + c.binarypkg
 					knownIssues[key] = append(knownIssues[key],

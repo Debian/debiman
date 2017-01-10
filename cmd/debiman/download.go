@@ -44,7 +44,7 @@ func canSkip(p pkgEntry, vPath string) bool {
 
 // findClosestFile returns a manpage struct for name, if name exists in the same suite.
 // TODO(stapelberg): resolve multiple matches: consider dependencies of src
-func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentByPath map[string][]contentEntry) string {
+func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentByPath map[string][]*contentEntry) string {
 	logger.Printf("findClosestFile(src=%q, name=%q)", src, name)
 	c, ok := contentByPath[name]
 	if !ok {
@@ -52,7 +52,7 @@ func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentBy
 	}
 
 	// Ensure we only consider choices within the same suite.
-	filtered := make([]contentEntry, 0, len(c))
+	filtered := make([]*contentEntry, 0, len(c))
 	for _, e := range c {
 		if e.suite != p.suite {
 			continue
@@ -64,7 +64,7 @@ func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentBy
 	// We still have more than one choice. In case the candidate is in
 	// the same package as the source link, we take it.
 	if len(c) > 1 {
-		var last contentEntry
+		var last *contentEntry
 		cnt := 0
 		for _, e := range c {
 			if e.binarypkg != p.binarypkg {
@@ -76,11 +76,11 @@ func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentBy
 			}
 		}
 		if cnt == 1 {
-			c = []contentEntry{last}
+			c = []*contentEntry{last}
 		}
 	}
 	if len(c) == 1 {
-		m, err := manpage.FromManPath(strings.TrimPrefix(name, "/usr/share/man/"), manpage.PkgMeta{
+		m, err := manpage.FromManPath(strings.TrimPrefix(name, "/usr/share/man/"), &manpage.PkgMeta{
 			Binarypkg: c[0].binarypkg,
 			Suite:     c[0].suite,
 		})
@@ -92,7 +92,7 @@ func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentBy
 	return ""
 }
 
-func findFile(logger *log.Logger, src, name string, contentByPath map[string][]contentEntry) (string, string, bool) {
+func findFile(logger *log.Logger, src, name string, contentByPath map[string][]*contentEntry) (string, string, bool) {
 	// TODO: where is searchPath defined canonically?
 	// TODO(later): why is "/"+ in front of src necessary?
 	searchPath := []string{
@@ -125,7 +125,7 @@ func findFile(logger *log.Logger, src, name string, contentByPath map[string][]c
 			continue
 		}
 
-		m, err := manpage.FromManPath(strings.TrimPrefix(check, "/usr/share/man/"), manpage.PkgMeta{
+		m, err := manpage.FromManPath(strings.TrimPrefix(check, "/usr/share/man/"), &manpage.PkgMeta{
 			Binarypkg: c[0].binarypkg,
 			Suite:     c[0].suite,
 		})
@@ -141,7 +141,7 @@ func findFile(logger *log.Logger, src, name string, contentByPath map[string][]c
 	return name, "", false
 }
 
-func soElim(logger *log.Logger, src string, r io.Reader, w io.Writer, contentByPath map[string][]contentEntry) ([]string, error) {
+func soElim(logger *log.Logger, src string, r io.Reader, w io.Writer, contentByPath map[string][]*contentEntry) ([]string, error) {
 	var refs []string
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -168,7 +168,7 @@ func soElim(logger *log.Logger, src string, r io.Reader, w io.Writer, contentByP
 	return refs, scanner.Err()
 }
 
-func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.Meta, contentByPath map[string][]contentEntry) ([]string, error) {
+func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.Meta, contentByPath map[string][]*contentEntry) ([]string, error) {
 	var refs []string
 	content, err := ioutil.ReadAll(r)
 	if err != nil {
@@ -188,7 +188,7 @@ func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.
 	return refs, err
 }
 
-func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]contentEntry) error {
+func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*contentEntry) error {
 	vPath := filepath.Join(*servingDir, p.suite, p.binarypkg, "VERSION")
 
 	if !*forceReextract && canSkip(p, vPath) {
@@ -243,7 +243,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]cont
 		}
 
 		// TODO: return m?
-		m, err := manpage.FromManPath(strings.TrimPrefix(header.Name, "./usr/share/man/"), manpage.PkgMeta{
+		m, err := manpage.FromManPath(strings.TrimPrefix(header.Name, "./usr/share/man/"), &manpage.PkgMeta{
 			Binarypkg: p.binarypkg,
 			Suite:     p.suite,
 		})

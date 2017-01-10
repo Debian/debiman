@@ -28,7 +28,7 @@ type Meta struct {
 
 	// Package is the Debian binary package from which this manpage
 	// was extracted.
-	Package PkgMeta
+	Package *PkgMeta
 
 	// Section is the man section to which this manpage belongs,
 	// e.g. 1, 3pm, …
@@ -43,7 +43,7 @@ type Meta struct {
 }
 
 // FromManPath constructs a manpage, gathering details from path (relative underneath /usr/share/man).
-func FromManPath(path string, p PkgMeta) (*Meta, error) {
+func FromManPath(path string, p *PkgMeta) (*Meta, error) {
 	// man pages are in /usr/share/man/(<lang>/|)man<section>/<name>.<section>.gz
 
 	lang := "C"
@@ -133,7 +133,7 @@ func FromServingPath(servingDir, path string) (*Meta, error) {
 
 	return &Meta{
 		Name: bparts[0],
-		Package: PkgMeta{
+		Package: &PkgMeta{
 			Binarypkg: pparts[1],
 			Suite:     pparts[0],
 		},

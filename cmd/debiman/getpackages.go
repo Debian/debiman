@@ -89,7 +89,7 @@ func getPackages(ar *archive.Getter, suite string, arch string, path string, has
 // that /usr/share is reserved for architecture independent files, see
 // http://www.pathname.com/fhs/pub/fhs-2.3.html#USRSHAREARCHITECTUREINDEPENDENTDATA
 // TODO(later): find out which packages are affected and file bugs
-func buildContainsMains(content []contentEntry) map[string]map[string]bool {
+func buildContainsMains(content []*contentEntry) map[string]map[string]bool {
 	containsMans := make(map[string]map[string]bool)
 	for _, entry := range content {
 		if _, ok := containsMans[entry.binarypkg]; !ok {

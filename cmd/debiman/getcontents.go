@@ -67,13 +67,14 @@ func getContents(ar *archive.Getter, suite string, arch string, path string, has
 	return scanner.Err()
 }
 
-func getAllContents(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash) ([]contentEntry, error) {
+func getAllContents(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
 	contentChan := make(chan contentEntry, 10) // 10 is arbitrary to reduce goroutine switches
 	complete := make(chan bool)
-	var content []contentEntry
+	var content []*contentEntry
 	go func() {
 		for entry := range contentChan {
-			content = append(content, entry)
+			entry := entry // copy
+			content = append(content, &entry)
 		}
 		complete <- true
 	}()
