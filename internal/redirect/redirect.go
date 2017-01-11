@@ -39,16 +39,15 @@ const defaultLanguage = "en"
 
 // bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
 func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
-	sort.SliceStable(options, func(i, j int) bool {
-		if options[i].Language == options[j].Language {
-			return options[i].Binarypkg < options[j].Binarypkg
+	// ensure that en comes first, so that language.Matcher treats it as default
+	if options[0].Language != "en" {
+		for i := 1; i < len(options); i++ {
+			if options[i].Language == "en" {
+				options = append([]IndexEntry{options[i]}, options...)
+				break
+			}
 		}
-		// ensure that en comes first, so that language.Matcher treats it as default
-		if options[i].Language == "en" {
-			return true
-		}
-		return options[i].Language < options[j].Language
-	})
+	}
 
 	tags := make([]language.Tag, len(options))
 	for idx, m := range options {
@@ -180,11 +179,33 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 
 	// section
 
-	if t.Section == "" {
-		// TODO(later): respect the section preference cookie (+test)
+	if len(t.Section) > 1 {
+		// A subsection was specified. Sort by section, but prefer
+		// subsections so that they get matched first (e.g. “3” will
+		// come after “3edit”).
+		sort.SliceStable(filtered, func(i, j int) bool {
+			// Compare main sections first
+			mi := filtered[i].Section[:1]
+			mj := filtered[j].Section[:1]
+			if mi < mj {
+				return true
+			}
+			if mi > mj {
+				return false
+			}
+			return len(filtered[i].Section) > len(filtered[j].Section)
+		})
+	} else {
+		// No subsection was specified. Sort by section so that
+		// subsections are matched later (e.g. “3edit” will come after
+		// “3”).
 		sort.SliceStable(filtered, func(i, j int) bool {
 			return filtered[i].Section < filtered[j].Section
 		})
+	}
+
+	if t.Section == "" {
+		// TODO(later): respect the section preference cookie (+test)
 		t.Section = filtered[0].Section
 	}
 

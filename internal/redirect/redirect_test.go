@@ -189,14 +189,14 @@ func TestUnderspecified(t *testing.T) {
 		{Case: 3, URL: "systemd.service.5", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 3, URL: "systemd.service(5)", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 3, URL: "i3.5", want: "jessie/i3-wm/i3.5.en.html"},                           // non-default section
-		{Case: 3, URL: "editline.3", want: "jessie/libedit-dev/editline.3edit.en.html"},     // section with subsection
+		{Case: 3, URL: "editline.3", want: "jessie/libeditline-dev/editline.3.en.html"},     // section with subsection
 		{Case: 3, URL: "editline.3edit", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
 
 		{Case: 4, URL: "i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},  // default section
 		{Case: 4, URL: "i3.5.fr", want: "jessie/i3-wm/i3.5.fr.html"},  // non-default section
 		{Case: 4, URL: "i3(5).fr", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
 		{Case: 4, URL: "systemd.service.5.en", want: "jessie/systemd/systemd.service.5.en.html"},
-		{Case: 4, URL: "editline.3.en", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
+		{Case: 4, URL: "editline.3.en", want: "jessie/libeditline-dev/editline.3.en.html"}, // section with subsection
 
 		{Case: 5, URL: "i3-wm/i3", want: "jessie/i3-wm/i3.1.en.html"},
 
@@ -225,7 +225,7 @@ func TestUnderspecified(t *testing.T) {
 
 		{Case: 12, URL: "jessie/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},                       // default suite, default section
 		{Case: 12, URL: "testing/i3.5.fr", want: "testing/i3-wm/i3.5.fr.html"},                     // non-default suite, non-default section
-		{Case: 12, URL: "jessie/editline.3.en", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
+		{Case: 12, URL: "jessie/editline.3.en", want: "jessie/libeditline-dev/editline.3.en.html"}, // section with subsection
 
 		{Case: 13, URL: "jessie/i3-wm/i3", want: "jessie/i3-wm/i3.1.en.html"},   // default suite
 		{Case: 13, URL: "testing/i3-wm/i3", want: "testing/i3-wm/i3.1.en.html"}, // non-default suite
