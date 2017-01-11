@@ -44,7 +44,7 @@ var (
 
 	localMirror = flag.String("local_mirror",
 		"",
-		"If non-empty, a file system path to a Debian mirror, e.g. /auto.dsa/debian on DSA-maintained machines")
+		"If non-empty, a file system path to a Debian mirror, e.g. /srv/mirrors/debian on DSA-maintained machines")
 
 	showVersion = flag.Bool("version",
 		false,
