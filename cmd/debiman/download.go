@@ -202,13 +202,13 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 		return err
 	}
 
-	if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+	if _, err := tmp.Seek(0, os.SEEK_SET); err != nil {
 		return err
 	}
 
 	allRefs := make(map[string]bool)
 
-	if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+	if _, err := tmp.Seek(0, os.SEEK_SET); err != nil {
 		return err
 	}
 
@@ -311,7 +311,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 	// Extract all non-manpage files which were referenced via .so
 	// statements, if any.
 	if len(allRefs) > 0 {
-		if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+		if _, err := tmp.Seek(0, os.SEEK_SET); err != nil {
 			return err
 		}
 

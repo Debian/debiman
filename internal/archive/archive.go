@@ -114,7 +114,7 @@ func (g *Getter) download(path string, f *os.File, sha256sum []byte) error {
 		r = resp.Body
 	}
 
-	if _, err := f.Seek(0, io.SeekStart); err != nil {
+	if _, err := f.Seek(0, os.SEEK_SET); err != nil {
 		return err
 	}
 
@@ -184,7 +184,7 @@ func (g *Getter) Get(path string, sha256sum []byte) (*os.File, error) {
 		}
 	}
 
-	if _, err := f.Seek(0, io.SeekStart); err != nil {
+	if _, err := f.Seek(0, os.SEEK_SET); err != nil {
 		return nil, err
 	}
 
