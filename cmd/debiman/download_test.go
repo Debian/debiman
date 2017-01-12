@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"log"
+	"os"
 	"strings"
 	"testing"
 )
@@ -13,7 +15,7 @@ func TestWriteManpage(t *testing.T) {
 		want          string
 		wantRefs      []string
 		pkg           pkgEntry
-		contentByPath map[string][]contentEntry
+		contentByPath map[string][]*contentEntry
 	}{
 		{
 			src:           "/usr/share/man/man1/noref.1",
@@ -21,7 +23,7 @@ func TestWriteManpage(t *testing.T) {
 			want:          "no ref in here\n",
 			wantRefs:      nil,
 			pkg:           pkgEntry{},
-			contentByPath: make(map[string][]contentEntry),
+			contentByPath: make(map[string][]*contentEntry),
 		},
 
 		{
@@ -30,7 +32,7 @@ func TestWriteManpage(t *testing.T) {
 			want:          "",
 			wantRefs:      nil,
 			pkg:           pkgEntry{},
-			contentByPath: make(map[string][]contentEntry),
+			contentByPath: make(map[string][]*contentEntry),
 		},
 
 		{
@@ -42,9 +44,9 @@ func TestWriteManpage(t *testing.T) {
 				binarypkg: "bash",
 				suite:     "jessie",
 			},
-			contentByPath: map[string][]contentEntry{
-				"/usr/share/man/man1/samepkg.1.gz": []contentEntry{
-					{
+			contentByPath: map[string][]*contentEntry{
+				"man1/samepkg.1.gz": []*contentEntry{
+					&contentEntry{
 						binarypkg: "bash",
 						suite:     "jessie",
 					},
@@ -63,9 +65,9 @@ func TestWriteManpage(t *testing.T) {
 				binarypkg: "bash",
 				suite:     "jessie",
 			},
-			contentByPath: map[string][]contentEntry{
-				"/usr/share/man/man1/samepkgaux.inc.gz": []contentEntry{
-					{
+			contentByPath: map[string][]*contentEntry{
+				"man1/samepkgaux.inc.gz": []*contentEntry{
+					&contentEntry{
 						binarypkg: "bash",
 						suite:     "jessie",
 					},
@@ -84,9 +86,9 @@ func TestWriteManpage(t *testing.T) {
 				binarypkg: "bash",
 				suite:     "jessie",
 			},
-			contentByPath: map[string][]contentEntry{
-				"/usr/share/man/man1/samedir.inc.gz": []contentEntry{
-					{
+			contentByPath: map[string][]*contentEntry{
+				"man1/samedir.inc.gz": []*contentEntry{
+					&contentEntry{
 						binarypkg: "bash",
 						suite:     "jessie",
 					},
@@ -104,9 +106,9 @@ func TestWriteManpage(t *testing.T) {
 				binarypkg: "bash",
 				suite:     "jessie",
 			},
-			contentByPath: map[string][]contentEntry{
-				"/usr/share/man/man8/absolute.8.gz": []contentEntry{
-					{
+			contentByPath: map[string][]*contentEntry{
+				"man8/absolute.8.gz": []*contentEntry{
+					&contentEntry{
 						binarypkg: "extra",
 						suite:     "jessie",
 					},
@@ -123,7 +125,7 @@ func TestWriteManpage(t *testing.T) {
 				binarypkg: "bash",
 				suite:     "jessie",
 			},
-			contentByPath: map[string][]contentEntry{},
+			contentByPath: map[string][]*contentEntry{},
 		},
 
 		{
@@ -135,15 +137,15 @@ func TestWriteManpage(t *testing.T) {
 				binarypkg: "manpages-fr-extra",
 				suite:     "jessie",
 			},
-			contentByPath: map[string][]contentEntry{
-				"/usr/share/man/man1/bash.1.gz": []contentEntry{
-					{
+			contentByPath: map[string][]*contentEntry{
+				"man1/bash.1.gz": []*contentEntry{
+					&contentEntry{
 						binarypkg: "bash",
 						suite:     "jessie",
 					},
 				},
-				"/usr/share/man/fr/man1/bash.1.gz": []contentEntry{
-					{
+				"fr/man1/bash.1.gz": []*contentEntry{
+					&contentEntry{
 						binarypkg: "manpages-fr-extra",
 						suite:     "jessie",
 					},
@@ -158,7 +160,8 @@ func TestWriteManpage(t *testing.T) {
 
 			r := strings.NewReader(entry.manpage)
 			var buf bytes.Buffer
-			refs, err := soElim(entry.src, r, &buf, entry.pkg, entry.contentByPath)
+			logger := log.New(os.Stderr, "", log.LstdFlags)
+			refs, err := soElim(logger, entry.src, r, &buf, entry.contentByPath)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -56,7 +56,7 @@ func TestManpageFromManPath(t *testing.T) {
 		entry := entry // capture
 		t.Run(entry.path, func(t *testing.T) {
 			t.Parallel()
-			m, err := FromManPath(entry.path, entry.pkg)
+			m, err := FromManPath(entry.path, &entry.pkg)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -103,7 +103,7 @@ func TestLanguageTag(t *testing.T) {
 		entry := entry // capture
 		t.Run(entry.path, func(t *testing.T) {
 			t.Parallel()
-			m, err := FromManPath(entry.path, entry.pkg)
+			m, err := FromManPath(entry.path, &entry.pkg)
 			if err != nil {
 				t.Fatal(err)
 			}

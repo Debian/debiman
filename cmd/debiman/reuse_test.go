@@ -37,7 +37,7 @@ baz
 		Name:     "test",
 		Section:  "1",
 		Language: "en",
-		Package: manpage.PkgMeta{
+		Package: &manpage.PkgMeta{
 			Binarypkg: "test",
 			Suite:     "jessie",
 		},
