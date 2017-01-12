@@ -281,6 +281,9 @@ func (p *Process) ToHTML(r io.Reader, resolve func(ref string) string) (doc stri
 	if stderr != "" {
 		return "", nil, fmt.Errorf("mandoc failed: %v", stderr)
 	}
+	if err != nil {
+		return "", nil, fmt.Errorf("running mandoc failed: %v", err)
+	}
 
 	parsed, err := html.Parse(strings.NewReader(stdout))
 	if err != nil {
