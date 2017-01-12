@@ -1,5 +1,7 @@
 # debiman
 
+[![Build Status](https://travis-ci.org/Debian/debiman.svg?branch=master)](https://travis-ci.org/Debian/debiman)
+
 ## Prerequisites
 
 * mandoc
