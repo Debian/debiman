@@ -27,7 +27,7 @@ func TestWriteManpage(t *testing.T) {
 		{
 			src:           "/usr/share/man/man1/unresolved.1",
 			manpage:       ".so notfound.1\n",
-			want:          ".so notfound.1\n",
+			want:          "",
 			wantRefs:      nil,
 			pkg:           pkgEntry{},
 			contentByPath: make(map[string][]contentEntry),
@@ -117,7 +117,7 @@ func TestWriteManpage(t *testing.T) {
 		{
 			src:      "/usr/share/man/man1/absolutenotfound.1",
 			manpage:  ".so /usr/share/man/man8/absolute.8\n",
-			want:     ".so /usr/share/man/man8/absolute.8\n",
+			want:     "",
 			wantRefs: nil,
 			pkg: pkgEntry{
 				binarypkg: "bash",
