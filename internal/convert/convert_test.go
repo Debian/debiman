@@ -59,12 +59,17 @@ func TestToHTML(t *testing.T) {
 		d := d // copy
 		t.Run(d, func(t *testing.T) {
 			t.Parallel()
+
+			converter, err := NewProcess()
+			if err != nil {
+				t.Fatal(err)
+			}
 			f, err := os.Open("../../testdata/" + d + ".1")
 			if err != nil {
 				t.Fatal(err)
 			}
 			defer f.Close()
-			got, _, err := ToHTML(f, func(ref string) string {
+			got, _, err := converter.ToHTML(f, func(ref string) string {
 				return refs[ref]
 			})
 			if err != nil {

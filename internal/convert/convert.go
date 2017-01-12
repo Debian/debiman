@@ -4,15 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net"
 	"net/url"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
-	"syscall"
 
 	"golang.org/x/net/html"
 )
@@ -275,81 +270,19 @@ func postprocess(resolve func(ref string) string, n *html.Node, toc *[]string) e
 
 }
 
-var (
-	unixConn     *net.UnixConn
-	unixConnOnce sync.Once
-)
-
-func mandoc(r io.Reader) (string, error) {
-	unixConnOnce.Do(func() {
-		// TODO: configurable, error handling, parallelism
-		var err error
-		unixConn, err = net.DialUnix("unix", nil, &net.UnixAddr{
-			Name: "/tmp/foo.sock",
-			Net:  "unix"})
-		if err != nil {
-			panic(err)
-		}
-	})
-	manr, manw, err := os.Pipe()
-	if err != nil {
-		return "", err
-	}
-	defer manr.Close()
-	defer manw.Close()
-	outr, outw, err := os.Pipe()
-	if err != nil {
-		return "", err
-	}
-	defer outr.Close()
-	defer outw.Close()
-	scm := syscall.UnixRights(int(manr.Fd()), int(outw.Fd()))
-	if _, _, err := unixConn.WriteMsgUnix(nil, scm, nil); err != nil {
-		return "", err
-	}
-	// Now that the remote process has them, close our duplicate file
-	// descriptors to make EOF signaling work.
-	manr.Close()
-	outw.Close()
-
-	if _, err := io.Copy(manw, r); err != nil {
-		return "", nil
-	}
-	if err := manw.Close(); err != nil {
-		return "", nil
-	}
-
-	b, err := ioutil.ReadAll(outr)
-	if len(b) == 0 {
-		return "", fmt.Errorf("mandoc returned an empty document")
-	}
-	return string(b), err
-}
-
 // TODO(stapelberg): ToHTML’s output currently is used directly as
 // (html/template).HTML, i.e. “known safe HTML document fragment”. We
 // should be more aggressive in whitelisting the allowed tags.
 //
 // resolve, if non-nil, will be called to resolve a reference (like
 // “rm(1)”) into a URL.
-func ToHTML(r io.Reader, resolve func(ref string) string) (doc string, toc []string, err error) {
-	// TODO: add table of contents
-	// TODO: add paragraph signs next to each header for permalinks
-
-	out, err := mandoc(r)
-	if err != nil {
-		return "", nil, err
+func (p *Process) ToHTML(r io.Reader, resolve func(ref string) string) (doc string, toc []string, err error) {
+	stdout, stderr, err := p.mandoc(r)
+	if stderr != "" {
+		return "", nil, fmt.Errorf("mandoc failed: %v", stderr)
 	}
-	// var out bytes.Buffer
-	// cmd := exec.Command("mandoc", "-Ofragment", "-Thtml")
-	// cmd.Stdin = r
-	// cmd.Stdout = &out
-	// cmd.Stderr = os.Stderr
-	// if err := cmd.Run(); err != nil {
-	// 	return "", err
-	// }
 
-	parsed, err := html.Parse(strings.NewReader(out))
+	parsed, err := html.Parse(strings.NewReader(stdout))
 	if err != nil {
 		return "", nil, err
 	}

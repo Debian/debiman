@@ -57,7 +57,11 @@ baz
 		t.Fatal(err)
 	}
 
-	docWant, tocWant, err := convert.ToHTML(strings.NewReader(manContents), nil)
+	converter, err := convert.NewProcess()
+	if err != nil {
+		t.Fatal(err)
+	}
+	docWant, tocWant, err := converter.ToHTML(strings.NewReader(manContents), nil)
 	if err != nil {
 		t.Fatal(err)
 	}

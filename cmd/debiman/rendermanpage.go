@@ -112,6 +112,9 @@ var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("man
 	}).
 	Parse(manpageerrorContent))
 
+// TODO: create this in main
+var converter = convert.Must(convert.NewProcess())
+
 func convertFile(src string, resolve func(ref string) string) (doc string, toc []string, err error) {
 	f, err := os.Open(src)
 	if err != nil {
@@ -127,7 +130,7 @@ func convertFile(src string, resolve func(ref string) string) (doc string, toc [
 		return "", nil, err
 	}
 	defer r.Close()
-	out, toc, err := convert.ToHTML(r, resolve)
+	out, toc, err := converter.ToHTML(r, resolve)
 	if err != nil {
 		return "", nil, fmt.Errorf("convert(%q): %v", src, err)
 	}
