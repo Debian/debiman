@@ -11,19 +11,25 @@ import (
 var indexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("index").Parse(indexContent))
 var faqTmpl = template.Must(template.Must(commonTmpls.Clone()).New("faq").Parse(faqContent))
 
+type bySuiteStr []string
+
+func (p bySuiteStr) Len() int      { return len(p) }
+func (p bySuiteStr) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p bySuiteStr) Less(i, j int) bool {
+	orderi, oki := sortOrder[p[i]]
+	orderj, okj := sortOrder[p[j]]
+	if !oki || !okj {
+		panic(fmt.Sprintf("either %q or %q is an unknown suite. known: %+v", p[i], p[j], sortOrder))
+	}
+	return orderi < orderj
+}
+
 func renderAux(destDir string, gv globalView) error {
 	suites := make([]string, 0, len(gv.suites))
 	for suite := range gv.suites {
 		suites = append(suites, suite)
 	}
-	sort.SliceStable(suites, func(i, j int) bool {
-		orderi, oki := sortOrder[suites[i]]
-		orderj, okj := sortOrder[suites[j]]
-		if !oki || !okj {
-			panic(fmt.Sprintf("either %q or %q is an unknown suite. known: %+v", suites[i], suites[j], sortOrder))
-		}
-		return orderi < orderj
-	})
+	sort.Stable(bySuiteStr(suites))
 
 	if err := writeAtomically(filepath.Join(destDir, "index.html.gz"), true, func(w io.Writer) error {
 		return indexTmpl.Execute(w, struct {

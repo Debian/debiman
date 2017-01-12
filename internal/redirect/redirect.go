@@ -112,6 +112,29 @@ func (i Index) splitBase(path string) (name string, section string, lang string)
 		lang
 }
 
+type byMainSection []IndexEntry
+
+func (p byMainSection) Len() int      { return len(p) }
+func (p byMainSection) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byMainSection) Less(i, j int) bool {
+	// Compare main sections first
+	mi := p[i].Section[:1]
+	mj := p[j].Section[:1]
+	if mi < mj {
+		return true
+	}
+	if mi > mj {
+		return false
+	}
+	return len(p[i].Section) > len(p[j].Section)
+}
+
+type bySection []IndexEntry
+
+func (p bySection) Len() int           { return len(p) }
+func (p bySection) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p bySection) Less(i, j int) bool { return p[i].Section < p[j].Section }
+
 func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []IndexEntry) []IndexEntry {
 	t := template // for convenience
 	valid := make(map[string]bool, len(entries))
@@ -183,25 +206,12 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 		// A subsection was specified. Sort by section, but prefer
 		// subsections so that they get matched first (e.g. “3” will
 		// come after “3edit”).
-		sort.SliceStable(filtered, func(i, j int) bool {
-			// Compare main sections first
-			mi := filtered[i].Section[:1]
-			mj := filtered[j].Section[:1]
-			if mi < mj {
-				return true
-			}
-			if mi > mj {
-				return false
-			}
-			return len(filtered[i].Section) > len(filtered[j].Section)
-		})
+		sort.Stable(byMainSection(filtered))
 	} else {
 		// No subsection was specified. Sort by section so that
 		// subsections are matched later (e.g. “3edit” will come after
 		// “3”).
-		sort.SliceStable(filtered, func(i, j int) bool {
-			return filtered[i].Section < filtered[j].Section
-		})
+		sort.Stable(bySection(filtered))
 	}
 
 	if t.Section == "" {

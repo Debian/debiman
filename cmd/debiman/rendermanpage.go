@@ -134,22 +134,36 @@ func convertFile(src string, resolve func(ref string) string) (doc string, toc [
 	return out, toc, nil
 }
 
+type byPkgAndLanguage struct {
+	opts       []*manpage.Meta
+	currentpkg string
+}
+
+func (p byPkgAndLanguage) Len() int      { return len(p.opts) }
+func (p byPkgAndLanguage) Swap(i, j int) { p.opts[i], p.opts[j] = p.opts[j], p.opts[i] }
+func (p byPkgAndLanguage) Less(i, j int) bool {
+	// prefer manpages from the same package
+	if p.opts[i].Package.Binarypkg != p.opts[j].Package.Binarypkg {
+		if p.opts[i].Package.Binarypkg == p.currentpkg {
+			return true
+		}
+	}
+	return p.opts[i].Language < p.opts[j].Language
+}
+
 // bestLanguageMatch returns the best manpage out of options (coming
 // from current) based on text/language’s matching.
 func bestLanguageMatch(current *manpage.Meta, options []*manpage.Meta) *manpage.Meta {
-	sort.SliceStable(options, func(i, j int) bool {
-		// prefer manpages from the same package
-		if options[i].Package.Binarypkg != options[j].Package.Binarypkg {
-			if options[i].Package.Binarypkg == current.Package.Binarypkg {
-				return true
+	sort.Stable(byPkgAndLanguage{options, current.Package.Binarypkg})
+
+	if options[0].Language != "en" {
+		for i := 1; i < len(options); i++ {
+			if options[i].Language == "en" {
+				options = append([]*manpage.Meta{options[i]}, options...)
+				break
 			}
 		}
-		// ensure that en comes first, so that language.Matcher treats it as default
-		if options[i].Language == "en" {
-			return true
-		}
-		return options[i].Language < options[j].Language
-	})
+	}
 
 	tags := make([]language.Tag, len(options))
 	for idx, m := range options {
@@ -218,6 +232,31 @@ type manpagePrepData struct {
 	Content        template.HTML
 	Error          error
 }
+
+type bySuite []*manpage.Meta
+
+func (p bySuite) Len() int      { return len(p) }
+func (p bySuite) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p bySuite) Less(i, j int) bool {
+	orderi, oki := sortOrder[p[i].Package.Suite]
+	orderj, okj := sortOrder[p[j].Package.Suite]
+	if !oki || !okj {
+		panic(fmt.Sprintf("either %q or %q is an unknown suite. known: %+v", p[i].Package.Suite, p[j].Package.Suite, sortOrder))
+	}
+	return orderi < orderj
+}
+
+type byMainSection []*manpage.Meta
+
+func (p byMainSection) Len() int           { return len(p) }
+func (p byMainSection) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p byMainSection) Less(i, j int) bool { return p[i].MainSection() < p[j].MainSection() }
+
+type byBinarypkg []*manpage.Meta
+
+func (p byBinarypkg) Len() int           { return len(p) }
+func (p byBinarypkg) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p byBinarypkg) Less(i, j int) bool { return p[i].Package.Binarypkg < p[j].Package.Binarypkg }
 
 func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, error) {
 	meta := job.meta // for convenience
@@ -290,14 +329,7 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 		suites = append(suites, v)
 	}
 
-	sort.SliceStable(suites, func(i, j int) bool {
-		orderi, oki := sortOrder[suites[i].Package.Suite]
-		orderj, okj := sortOrder[suites[j].Package.Suite]
-		if !oki || !okj {
-			panic(fmt.Sprintf("either %q or %q is an unknown suite. known: %+v", suites[i].Package.Suite, suites[j].Package.Suite, sortOrder))
-		}
-		return orderi < orderj
-	})
+	sort.Stable(bySuite(suites))
 
 	bySection := make(map[string][]*manpage.Meta)
 	for _, v := range job.versions {
@@ -310,9 +342,7 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 	for _, all := range bySection {
 		sections = append(sections, bestLanguageMatch(meta, all))
 	}
-	sort.SliceStable(sections, func(i, j int) bool {
-		return sections[i].MainSection() < sections[j].MainSection()
-	})
+	sort.Stable(byMainSection(sections))
 
 	conflicting := make(map[string]bool)
 	bins := make([]*manpage.Meta, 0, len(job.versions))
@@ -339,9 +369,7 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 		}
 		bins = append(bins, v)
 	}
-	sort.SliceStable(bins, func(i, j int) bool {
-		return bins[i].Package.Binarypkg < bins[j].Package.Binarypkg
-	})
+	sort.Stable(byBinarypkg(bins))
 
 	ambiguous := make(map[*manpage.Meta]bool)
 	byLang := make(map[string][]*manpage.Meta)
