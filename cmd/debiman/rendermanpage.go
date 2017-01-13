@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
 	"golang.org/x/text/collate"
@@ -95,7 +96,7 @@ var manpageTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage"
 			return u.String()
 		},
 	}).
-	Parse(manpageContent))
+	Parse(bundled.Asset("manpage.tmpl")))
 
 var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage-error").
 	Funcs(map[string]interface{}{
@@ -110,7 +111,7 @@ var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("man
 			return u.String()
 		},
 	}).
-	Parse(manpageerrorContent))
+	Parse(bundled.Asset("manpageerror.tmpl")))
 
 // TODO: create this in main
 var converter = convert.Must(convert.NewProcess())

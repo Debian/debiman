@@ -6,10 +6,13 @@ import (
 	"io"
 	"path/filepath"
 	"sort"
+	"strings"
+
+	"github.com/Debian/debiman/internal/bundled"
 )
 
-var indexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("index").Parse(indexContent))
-var faqTmpl = template.Must(template.Must(commonTmpls.Clone()).New("faq").Parse(faqContent))
+var indexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("index").Parse(bundled.Asset("index.tmpl")))
+var faqTmpl = template.Must(template.Must(commonTmpls.Clone()).New("faq").Parse(bundled.Asset("faq.tmpl")))
 
 type bySuiteStr []string
 
@@ -61,9 +64,11 @@ func renderAux(destDir string, gv globalView) error {
 		return err
 	}
 
-	for name, content := range bundled {
+	for name, content := range bundled.AssetsFiltered(func(fn string) bool {
+		return !strings.HasSuffix(fn, ".tmpl") && !strings.HasSuffix(fn, ".css")
+	}) {
 		if err := writeAtomically(filepath.Join(destDir, filepath.Base(name)+".gz"), true, func(w io.Writer) error {
-			_, err := w.Write(content)
+			_, err := io.WriteString(w, content)
 			return err
 		}); err != nil {
 			return err

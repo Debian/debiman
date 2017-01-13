@@ -10,15 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/manpage"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
 )
-
-//go:generate go run gentmpl.go header footer style manpage manpageerror contents pkgindex index faq
-//go:generate go run genbundled.go static/Inconsolata.woff static/Inconsolata.woff2 static/openlogo-50.svg static/opensearch.xml static/Roboto-Bold.woff static/Roboto-Bold.woff2 static/Roboto-Regular.woff static/Roboto-Regular.woff2
 
 type breadcrumb struct {
 	Link string
@@ -29,7 +27,7 @@ var commonTmpls = parseCommonTemplates()
 
 func parseCommonTemplates() *template.Template {
 	t := template.New("root")
-	t = template.Must(t.New("header").Parse(headerContent))
+	t = template.Must(t.New("header").Parse(bundled.Asset("header.tmpl")))
 	t = template.Must(t.New("footer").
 		Funcs(map[string]interface{}{
 			"DisplayLang": func(tag language.Tag) string {
@@ -41,8 +39,8 @@ func parseCommonTemplates() *template.Template {
 			"Now": func() string {
 				return time.Now().UTC().Format(iso8601Format)
 			}}).
-		Parse(footerContent))
-	t = template.Must(t.New("style").Parse(styleContent))
+		Parse(bundled.Asset("footer.tmpl")))
+	t = template.Must(t.New("style").Parse(bundled.Asset("style.css")))
 	return t
 }
 

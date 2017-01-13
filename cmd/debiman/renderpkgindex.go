@@ -6,10 +6,11 @@ import (
 	"io"
 	"sort"
 
+	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/manpage"
 )
 
-var pkgindexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("pkgindex").Parse(pkgindexContent))
+var pkgindexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("pkgindex").Parse(bundled.Asset("pkgindex.tmpl")))
 
 func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 	var first *manpage.Meta
