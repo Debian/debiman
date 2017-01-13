@@ -13,6 +13,6 @@ message IndexEntry {
 message Index {
   repeated IndexEntry entry = 1;
   repeated string language = 2;
-  repeated string suite = 3;
+  map<string,string> suite = 3;
   repeated string section = 4;
 }

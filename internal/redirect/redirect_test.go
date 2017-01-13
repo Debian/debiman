@@ -19,19 +19,23 @@ var testIdx = Index{
 		"5":     true,
 	},
 
-	Suites: map[string]bool{
-		"testing":  true,
-		"unstable": true,
-		"sid":      true,
+	Suites: map[string]string{
+		"testing":  "testing",
+		"unstable": "unstable",
+		"sid":      "sid",
 
 		// TODO: add a test, these are not indexed
-		"experimental": true,
-		"rc-buggy":     true,
+		"experimental": "experimental",
+		"rc-buggy":     "rc-buggy",
 
 		// These are loaded at runtime.
-		"jessie":  true,
-		"wheezy":  true,
-		"stretch": true,
+		"jessie": "jessie",
+		"stable": "jessie",
+
+		"wheezy":    "wheezy",
+		"oldstable": "wheezy",
+
+		"stretch": "testing",
 
 		// TODO: where can we get historical release names from?
 	},
@@ -170,7 +174,6 @@ func TestUnderspecified(t *testing.T) {
 	// 15 contains   t         t       t               http://man.debian.org/testing/i3-wm/i3.1
 	// 16 contains   t         t       t       t       http://man.debian.org/testing/i3-wm/i3.1.fr
 
-	// TODO: suite redirects, e.g. stable → jessie
 	table := []struct {
 		Case int
 		URL  string
@@ -215,6 +218,7 @@ func TestUnderspecified(t *testing.T) {
 
 		{Case: 9, URL: "jessie/i3", want: "jessie/i3-wm/i3.1.en.html"},   // default suite
 		{Case: 9, URL: "testing/i3", want: "testing/i3-wm/i3.1.en.html"}, // non-default suite
+		{Case: 9, URL: "stable/i3", want: "jessie/i3-wm/i3.1.en.html"},   // suite alias
 
 		{Case: 10, URL: "jessie/i3.fr", want: "jessie/i3-wm/i3.1.fr.html"},   // default suite
 		{Case: 10, URL: "testing/i3.fr", want: "testing/i3-wm/i3.1.fr.html"}, // non-default suite

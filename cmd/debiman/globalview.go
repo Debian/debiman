@@ -20,7 +20,7 @@ const mostPopularArchitecture = "amd64"
 type globalView struct {
 	pkgs          []pkgEntry
 	suites        map[string]bool
-	idxSuites     []string
+	idxSuites     map[string]string
 	contentByPath map[string][]*contentEntry
 	xref          map[string][]*manpage.Meta
 }
@@ -137,7 +137,7 @@ func distributions(codenames []string, suites []string) []distribution {
 func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, error) {
 	res := globalView{
 		suites:        make(map[string]bool, len(dists)),
-		idxSuites:     make([]string, 0, len(dists)),
+		idxSuites:     make(map[string]string, len(dists)),
 		contentByPath: make(map[string][]*contentEntry),
 		xref:          make(map[string][]*manpage.Meta),
 	}
@@ -156,7 +156,8 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 		}
 
 		res.suites[suite] = true
-		res.idxSuites = append(res.idxSuites, release.Codename)
+		res.idxSuites[release.Suite] = suite
+		res.idxSuites[release.Codename] = suite
 
 		{
 			hashByFilename := make(map[string]*control.SHA256FileHash, len(release.SHA256))

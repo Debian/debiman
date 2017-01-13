@@ -19,8 +19,8 @@ var i3OnlyIdx = redirect.Index{
 			},
 		},
 	},
-	Suites: map[string]bool{
-		"jessie": true,
+	Suites: map[string]string{
+		"jessie": "jessie",
 	},
 	Langs: map[string]bool{
 		"en": true,
@@ -79,8 +79,8 @@ func TestIndexSwapSucceed(t *testing.T) {
 				},
 			},
 		},
-		Suites: map[string]bool{
-			"jessie": true,
+		Suites: map[string]string{
+			"jessie": "jessie",
 		},
 		Langs: map[string]bool{
 			"en": true,

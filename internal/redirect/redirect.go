@@ -28,7 +28,7 @@ func (e IndexEntry) ServingPath(name string) string {
 
 type Index struct {
 	Entries  map[string][]IndexEntry
-	Suites   map[string]bool
+	Suites   map[string]string
 	Langs    map[string]bool
 	Sections map[string]bool
 }
@@ -73,8 +73,8 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 	parts := strings.Split(dir, "/")
 	if len(parts) > 0 {
 		if len(parts) == 1 {
-			if i.Suites[parts[0]] {
-				suite = parts[0]
+			if rewrite, ok := i.Suites[parts[0]]; ok {
+				suite = rewrite
 			} else if i.Sections[parts[0]] {
 				// legacy manpages.debian.org
 				section = parts[0]
@@ -314,11 +314,7 @@ func IndexFromProto(path string) (Index, error) {
 	index := Index{
 		Langs:    make(map[string]bool),
 		Sections: make(map[string]bool),
-		Suites: map[string]bool{
-			"testing":  true,
-			"unstable": true,
-			"sid":      true,
-		},
+		Suites:   make(map[string]string),
 	}
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -340,9 +336,7 @@ func IndexFromProto(path string) (Index, error) {
 	for _, l := range idx.Language {
 		index.Langs[l] = true
 	}
-	for _, l := range idx.Suite {
-		index.Suites[l] = true
-	}
+	index.Suites = idx.Suite
 	for _, l := range idx.Section {
 		index.Sections[l] = true
 	}
