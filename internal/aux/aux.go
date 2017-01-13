@@ -1,14 +1,18 @@
 package aux
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/Debian/debiman/internal/redirect"
 )
 
 type Server struct {
-	idx redirect.Index
+	idx   redirect.Index
+	idxMu sync.RWMutex
 }
 
 func NewServer(idx redirect.Index) *Server {
@@ -17,8 +21,34 @@ func NewServer(idx redirect.Index) *Server {
 	}
 }
 
+func (s *Server) SwapIndex(idx redirect.Index) error {
+	u, err := url.Parse("/i3")
+	if err != nil {
+		return err
+	}
+	redir, err := idx.Redirect(&http.Request{
+		URL: u,
+	})
+	if err != nil {
+		return fmt.Errorf("idx.Redirect: %v", err)
+	}
+	if !strings.HasSuffix(redir, "i3.1.en.html") {
+		return fmt.Errorf("Redirect(/i3) does not lead to i3.1.en.html: got %q", redir)
+	}
+	s.idxMu.Lock()
+	defer s.idxMu.Unlock()
+	s.idx = idx
+	return nil
+}
+
+func (s *Server) redirect(r *http.Request) (string, error) {
+	s.idxMu.RLock()
+	defer s.idxMu.RUnlock()
+	return s.idx.Redirect(r)
+}
+
 func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
-	redir, err := s.idx.Redirect(r)
+	redir, err := s.redirect(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

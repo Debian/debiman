@@ -5,6 +5,9 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/Debian/debiman/internal/aux"
 	"github.com/Debian/debiman/internal/redirect"
@@ -32,10 +35,32 @@ func main() {
 
 	server := aux.NewServer(idx)
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP)
+	go func() {
+		for _ = range c {
+			log.Printf("SIGHUP received, trying to reload index")
+
+			newidx, err := redirect.IndexFromProto(*indexPath)
+			if err != nil {
+				log.Printf("Could not load new index from %q: %v", *indexPath, err)
+				continue
+			}
+
+			log.Printf("Loaded %d manpage entries, %d suites, %d languages from new index %q",
+				len(newidx.Entries), len(newidx.Suites), len(newidx.Langs), *indexPath)
+
+			if err := server.SwapIndex(newidx); err != nil {
+				log.Printf("Swapping index failed: %v", err)
+				continue
+			}
+
+			log.Printf("Index swapped")
+		}
+	}()
+
 	http.HandleFunc("/jump", server.HandleJump)
 	http.HandleFunc("/", server.HandleRedirect)
-
-	// TODO: implement index swapping. verify a dummy redirect works before swapping index
 
 	log.Printf("Loaded %d manpage entries, %d suites, %d languages from index %q",
 		len(idx.Entries), len(idx.Suites), len(idx.Langs), *indexPath)
