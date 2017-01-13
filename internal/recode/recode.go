@@ -33,9 +33,8 @@ var encodingForLang = map[string]encoding.Encoding{
 	"sl":       charmap.ISO8859_2,
 	"sr@latin": charmap.ISO8859_2,
 	"sr":       charmap.ISO8859_5,
-	// TODO: add ISO8859-9 to x/text.
-	// "tr":       charmap.ISO8859_9,
-	"uk": charmap.KOI8U,
+	"tr":       charmap.ISO8859_9,
+	"uk":       charmap.KOI8U,
 	// TODO(later, all vi manpages in Debian are UTF-8):
 	// "vi": TODO,
 	"zh_CN": simplifiedchinese.GBK,
