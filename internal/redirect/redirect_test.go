@@ -265,6 +265,71 @@ func TestUnderspecified(t *testing.T) {
 	}
 }
 
+func TestLegacyManpagesDebianOrgRedirects(t *testing.T) {
+	// The following truth table outlines all possibilities we need to cover:
+	// (numbers kept, binarypkg unsupported by legacy manpages.debian.org)
+	//              suite  --------- section language
+	// 01 contains                                     http://man.debian.org/i3
+	// 02 contains                             t       http://man.debian.org/i3.fr
+	// 03 contains                     t               http://man.debian.org/i3.1
+	// 04 contains                     t       t       http://man.debian.org/i3.1.fr
+
+	// 09 contains   t                                 http://man.debian.org/testing/i3
+	// 10 contains   t                         t       http://man.debian.org/testing/i3.fr
+	// 11 contains   t                 t               http://man.debian.org/testing/i3.1
+	// 12 contains   t                 t       t       http://man.debian.org/testing/i3.1.fr
+	table := []struct {
+		Case int
+		URL  string
+		want string
+	}{
+		{Case: 1, URL: "man/i3", want: "jessie/i3-wm/i3.1.en.html"},
+
+		{Case: 2, URL: "man/fr/i3", want: "jessie/i3-wm/i3.1.fr.html"},
+
+		{Case: 3, URL: "man/1/i3", want: "jessie/i3-wm/i3.1.en.html"},
+		{Case: 3, URL: "man1/i3", want: "jessie/i3-wm/i3.1.en.html"},
+		{Case: 3, URL: "man5/i3", want: "jessie/i3-wm/i3.5.en.html"},
+		{Case: 3, URL: "1/i3", want: "jessie/i3-wm/i3.1.en.html"},
+		{Case: 3, URL: "5/i3", want: "jessie/i3-wm/i3.5.en.html"},
+
+		{Case: 4, URL: "fr/man1/i3", want: "jessie/i3-wm/i3.1.fr.html"}, // default section
+		{Case: 4, URL: "fr/man5/i3", want: "jessie/i3-wm/i3.5.fr.html"}, // non-default section
+
+		{Case: 9, URL: "jessie/i3", want: "jessie/i3-wm/i3.1.en.html"},   // default suite
+		{Case: 9, URL: "testing/i3", want: "testing/i3-wm/i3.1.en.html"}, // non-default suite
+
+		{Case: 10, URL: "jessie/i3.fr", want: "jessie/i3-wm/i3.1.fr.html"},   // default suite
+		{Case: 10, URL: "testing/i3.fr", want: "testing/i3-wm/i3.1.fr.html"}, // non-default suite
+
+		{Case: 11, URL: "man/testing/5/i3", want: "testing/i3-wm/i3.5.en.html"},
+
+		{Case: 12, URL: "man/testing/fr/5/i3", want: "testing/i3-wm/i3.5.fr.html"},
+	}
+	for _, entry := range table {
+		entry := entry // capture
+		t.Run(entry.URL, func(t *testing.T) {
+			t.Parallel()
+
+			u, err := url.Parse("http://man.debian.org/" + entry.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req := &http.Request{
+				URL: u,
+			}
+			got, err := testIdx.Redirect(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "/" + entry.want
+			if got != want {
+				t.Fatalf("Unexpected redirect: got %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 func TestAcceptLanguage(t *testing.T) {
 	table := []struct {
 		URL  string

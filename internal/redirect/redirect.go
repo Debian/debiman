@@ -68,28 +68,34 @@ func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
 	return options[0]
 }
 
-func (i Index) splitDir(path string) (suite string, binarypkg string) {
+func (i Index) split(path string) (suite string, binarypkg string, name string, section string, lang string) {
 	dir := strings.TrimPrefix(filepath.Dir(path), "/")
 	parts := strings.Split(dir, "/")
-	if len(parts) == 0 {
-		return "", ""
-	}
-	if len(parts) == 1 {
-		if i.Suites[parts[0]] {
-			return parts[0], ""
-		} else {
-			return "", parts[0]
+	if len(parts) > 0 {
+		if len(parts) == 1 {
+			if i.Suites[parts[0]] {
+				suite = parts[0]
+			} else if i.Sections[parts[0]] {
+				// legacy manpages.debian.org
+				section = parts[0]
+			} else {
+				binarypkg = parts[0]
+			}
+		} else if len(parts) == 2 && strings.HasPrefix(parts[1], "man") {
+			// legacy manpages.debian.org
+			lang = parts[0]
+			section = strings.TrimPrefix(parts[1], "man")
+		} else if len(parts) == 2 {
+			suite = parts[0]
+			binarypkg = parts[1]
 		}
 	}
-	return parts[0], parts[1]
-}
 
-func (i Index) splitBase(path string) (name string, section string, lang string) {
 	base := filepath.Base(path)
 	// the first part can contain dots, so we need to “split from the right”
-	parts := strings.Split(base, ".")
+	parts = strings.Split(base, ".")
 	if len(parts) == 1 {
-		return base, "", ""
+		return suite, binarypkg, base, section, lang
 	}
 
 	// The last part can either be a language or a section
@@ -107,7 +113,9 @@ func (i Index) splitBase(path string) (name string, section string, lang string)
 		}
 	}
 
-	return strings.Join(parts[:len(parts)-consumed], "."),
+	return suite,
+		binarypkg,
+		strings.Join(parts[:len(parts)-consumed], "."),
 		section,
 		lang
 }
@@ -272,8 +280,12 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	path = strings.Replace(path, "..", ".", -1)
 	path = strings.TrimSuffix(path, ".")
 
-	suite, binarypkg := i.splitDir(path)
-	name, section, lang := i.splitBase(path)
+	var suite, binarypkg, name, section, lang string
+	if strings.HasPrefix(path, "/man") {
+		suite, binarypkg, name, section, lang = i.splitLegacy(path)
+	} else {
+		suite, binarypkg, name, section, lang = i.split(path)
+	}
 
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
 
