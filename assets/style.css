@@ -19,9 +19,6 @@
 }
 
 body {
-	background-image: linear-gradient(to bottom, #d7d9e2, #fff 70px);
-	background-position: 0 0;
-	background-repeat: repeat-x;
 	font-family: 'Roboto', sans-serif;
 	font-size: 100%;
 	line-height: 1.2;
@@ -59,6 +56,11 @@ body {
 	border: 0;
 }
 
+#header h1 {
+    font-size: 100%;
+    margin: 0;
+}
+
 p.section {
 	margin: 0;
 	padding: 0 5px 0 5px;
@@ -93,10 +95,6 @@ p.section a {
 	font-size: .75em;
 }
 
-#navbar {
-	border-bottom: 1px solid #c70036;
-}
-
 #navbar ul {
 	margin: 0;
 	padding: 0;
@@ -110,7 +108,6 @@ p.section a {
 
 #navbar a {
 	display: block;
-	padding: 1.75em .5em .25em .5em;
 	color: #0035c7;
 	text-decoration: none;
 	border-left: 1px solid transparent;
@@ -119,9 +116,6 @@ p.section a {
 
 #navbar a:hover
 , #navbar a:visited:hover {
-	background-color: #f5f6f7;
-	border-left: 1px solid  #d2d3d7;
-	border-right: 1px solid #d2d3d7;
 	text-decoration: underline;
 }
 
@@ -139,7 +133,6 @@ a:visited {
 	margin: 0;
 	padding: 0;
 	font-size: 0.75em;
-	background-color: #f5f6f7;
 	border-bottom: 1px solid #d2d3d7;
 }
 

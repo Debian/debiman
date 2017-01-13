@@ -83,35 +83,43 @@ var longSections = map[string]string{
 	"9": "Kernel routines [Non standard]",
 }
 
-var manpageTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage").
-	Funcs(map[string]interface{}{
-		"ShortSection": func(section string) string {
-			return shortSections[section]
-		},
-		"LongSection": func(section string) string {
-			return longSections[section]
-		},
-		"FragmentLink": func(fragment string) string {
-			u := url.URL{Fragment: fragment}
-			return u.String()
-		},
-	}).
-	Parse(bundled.Asset("manpage.tmpl")))
+var manpageTmpl = mustParseManpageTmpl()
 
-var manpageerrorTmpl = template.Must(template.Must(commonTmpls.Clone()).New("manpage-error").
-	Funcs(map[string]interface{}{
-		"ShortSection": func(section string) string {
-			return shortSections[section]
-		},
-		"LongSection": func(section string) string {
-			return longSections[section]
-		},
-		"FragmentLink": func(fragment string) string {
-			u := url.URL{Fragment: fragment}
-			return u.String()
-		},
-	}).
-	Parse(bundled.Asset("manpageerror.tmpl")))
+func mustParseManpageTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("manpage").
+		Funcs(map[string]interface{}{
+			"ShortSection": func(section string) string {
+				return shortSections[section]
+			},
+			"LongSection": func(section string) string {
+				return longSections[section]
+			},
+			"FragmentLink": func(fragment string) string {
+				u := url.URL{Fragment: fragment}
+				return u.String()
+			},
+		}).
+		Parse(bundled.Asset("manpage.tmpl")))
+}
+
+var manpageerrorTmpl = mustParseManpageerrorTmpl()
+
+func mustParseManpageerrorTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("manpage-error").
+		Funcs(map[string]interface{}{
+			"ShortSection": func(section string) string {
+				return shortSections[section]
+			},
+			"LongSection": func(section string) string {
+				return longSections[section]
+			},
+			"FragmentLink": func(fragment string) string {
+				u := url.URL{Fragment: fragment}
+				return u.String()
+			},
+		}).
+		Parse(bundled.Asset("manpageerror.tmpl")))
+}
 
 // TODO: create this in main
 var converter = convert.Must(convert.NewProcess())

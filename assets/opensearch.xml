@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
- <ShortName>Debian Manpages</ShortName>
- <Description>Debian Manpages</Description>
+ <ShortName>some debiman installation</ShortName>
+ <Description>some debiman installation</Description>
  <Url type="text/html" method="get" template="http://manpages.debian.org/jump?q={searchTerms}"/>
  <Query role="example" searchTerms="wget"/>
 </OpenSearchDescription>

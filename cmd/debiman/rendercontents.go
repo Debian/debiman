@@ -9,7 +9,11 @@ import (
 	"github.com/Debian/debiman/internal/bundled"
 )
 
-var contentsTmpl = template.Must(template.Must(commonTmpls.Clone()).New("contents").Parse(bundled.Asset("contents.tmpl")))
+var contentsTmpl = mustParseContentsTmpl()
+
+func mustParseContentsTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("contents").Parse(bundled.Asset("contents.tmpl")))
+}
 
 func renderContents(dest, suite string, bins []string) error {
 	sort.Strings(bins)

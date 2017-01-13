@@ -23,9 +23,9 @@ type breadcrumb struct {
 	Text string
 }
 
-var commonTmpls = parseCommonTemplates()
+var commonTmpls = mustParseCommonTmpls()
 
-func parseCommonTemplates() *template.Template {
+func mustParseCommonTmpls() *template.Template {
 	t := template.New("root")
 	t = template.Must(t.New("header").Parse(bundled.Asset("header.tmpl")))
 	t = template.Must(t.New("footer").

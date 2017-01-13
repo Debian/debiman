@@ -11,6 +11,7 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/Debian/debiman/internal/archive"
+	"github.com/Debian/debiman/internal/bundled"
 )
 
 var (
@@ -45,6 +46,10 @@ var (
 	localMirror = flag.String("local_mirror",
 		"",
 		"If non-empty, a file system path to a Debian mirror, e.g. /srv/mirrors/debian on DSA-maintained machines")
+
+	injectAssets = flag.String("inject_assets",
+		"",
+		"If non-empty, a file system path to a directory containing assets to overwrite")
 
 	showVersion = flag.Bool("version",
 		false,
@@ -114,6 +119,20 @@ func main() {
 	if *showVersion {
 		fmt.Printf("debiman %s\n", debimanVersion)
 		return
+	}
+
+	if *injectAssets != "" {
+		if err := bundled.Inject(*injectAssets); err != nil {
+			log.Fatal(err)
+		}
+
+		commonTmpls = mustParseCommonTmpls()
+		contentsTmpl = mustParseContentsTmpl()
+		pkgindexTmpl = mustParsePkgindexTmpl()
+		indexTmpl = mustParseIndexTmpl()
+		faqTmpl = mustParseFaqTmpl()
+		manpageTmpl = mustParseManpageTmpl()
+		manpageerrorTmpl = mustParseManpageerrorTmpl()
 	}
 
 	// All of our .so references are relative to *servingDir. For

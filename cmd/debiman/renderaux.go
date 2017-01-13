@@ -11,8 +11,17 @@ import (
 	"github.com/Debian/debiman/internal/bundled"
 )
 
-var indexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("index").Parse(bundled.Asset("index.tmpl")))
-var faqTmpl = template.Must(template.Must(commonTmpls.Clone()).New("faq").Parse(bundled.Asset("faq.tmpl")))
+var indexTmpl = mustParseIndexTmpl()
+
+func mustParseIndexTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("index").Parse(bundled.Asset("index.tmpl")))
+}
+
+var faqTmpl = mustParseFaqTmpl()
+
+func mustParseFaqTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("faq").Parse(bundled.Asset("faq.tmpl")))
+}
 
 type bySuiteStr []string
 

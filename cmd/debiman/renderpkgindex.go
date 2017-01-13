@@ -10,7 +10,11 @@ import (
 	"github.com/Debian/debiman/internal/manpage"
 )
 
-var pkgindexTmpl = template.Must(template.Must(commonTmpls.Clone()).New("pkgindex").Parse(bundled.Asset("pkgindex.tmpl")))
+var pkgindexTmpl = mustParsePkgindexTmpl()
+
+func mustParsePkgindexTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("pkgindex").Parse(bundled.Asset("pkgindex.tmpl")))
+}
 
 func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 	var first *manpage.Meta
