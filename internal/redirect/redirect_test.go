@@ -24,7 +24,6 @@ var testIdx = Index{
 		"unstable": "unstable",
 		"sid":      "sid",
 
-		// TODO: add a test, these are not indexed
 		"experimental": "experimental",
 		"rc-buggy":     "rc-buggy",
 
@@ -143,6 +142,16 @@ var testIdx = Index{
 			},
 		},
 	},
+}
+
+func TestNotIndexed(t *testing.T) {
+	u, err := url.Parse("http://man.debian.org/experimental/i3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testIdx.Redirect(&http.Request{URL: u}); err == nil {
+		t.Fatalf("Redirect for /experimental/i3 unexpectedly succeeded")
+	}
 }
 
 func TestUnderspecified(t *testing.T) {
