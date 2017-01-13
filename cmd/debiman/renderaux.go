@@ -82,6 +82,13 @@ func renderAux(destDir string, gv globalView) error {
 		}); err != nil {
 			return err
 		}
+
+		if err := writeAtomically(filepath.Join(destDir, filepath.Base(name)), false, func(w io.Writer) error {
+			_, err := io.WriteString(w, content)
+			return err
+		}); err != nil {
+			return err
+		}
 	}
 
 	return nil
