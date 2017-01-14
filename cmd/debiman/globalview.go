@@ -87,76 +87,74 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 		res.idxSuites[release.Suite] = suite
 		res.idxSuites[release.Codename] = suite
 
-		{
-			hashByFilename := make(map[string]*control.SHA256FileHash, len(release.SHA256))
-			for idx, fh := range release.SHA256 {
-				// fh.Filename contains e.g. “non-free/source/Sources”
-				hashByFilename[fh.Filename] = &(release.SHA256[idx])
-			}
+		hashByFilename := make(map[string]*control.SHA256FileHash, len(release.SHA256))
+		for idx, fh := range release.SHA256 {
+			// fh.Filename contains e.g. “non-free/source/Sources”
+			hashByFilename[fh.Filename] = &(release.SHA256[idx])
+		}
 
-			content, err := getAllContents(ar, suite, release, hashByFilename)
+		content, err := getAllContents(ar, suite, release, hashByFilename)
+		if err != nil {
+			return res, err
+		}
+
+		for _, c := range content {
+			res.contentByPath[c.filename] = append(res.contentByPath[c.filename], c)
+		}
+
+		var latestVersion map[string]*manpage.PkgMeta
+		{
+			// Collect package download work units
+			var pkgs []*pkgEntry
+			var err error
+			pkgs, latestVersion, err = getAllPackages(ar, suite, release, hashByFilename, buildContainsMains(content))
 			if err != nil {
 				return res, err
 			}
 
-			for _, c := range content {
-				res.contentByPath[c.filename] = append(res.contentByPath[c.filename], c)
+			log.Printf("Adding %d packages from suite %q", len(pkgs), suite)
+			res.pkgs = append(res.pkgs, pkgs...)
+		}
+
+		knownIssues := make(map[string][]error)
+
+		// Build a global view of all the manpages (required for cross-referencing).
+		// TODO(issue): edge case: packages which got renamed between releases
+		for _, c := range content {
+			if _, ok := latestVersion[c.suite+"/"+c.binarypkg]; !ok {
+				key := c.suite + "/" + c.binarypkg
+				knownIssues[key] = append(knownIssues[key],
+					fmt.Errorf("Could not determine latest version"))
+				continue
 			}
-
-			var latestVersion map[string]*manpage.PkgMeta
-			{
-				// Collect package download work units
-				var pkgs []*pkgEntry
-				var err error
-				pkgs, latestVersion, err = getAllPackages(ar, suite, release, hashByFilename, buildContainsMains(content))
-				if err != nil {
-					return res, err
-				}
-
-				log.Printf("Adding %d packages from suite %q", len(pkgs), suite)
-				res.pkgs = append(res.pkgs, pkgs...)
+			m, err := manpage.FromManPath(strings.TrimPrefix(c.filename, "usr/share/man/"), latestVersion[c.suite+"/"+c.binarypkg])
+			if err != nil {
+				key := c.suite + "/" + c.binarypkg
+				knownIssues[key] = append(knownIssues[key],
+					fmt.Errorf("Trying to interpret path %q: ", c.filename, err))
+				continue
 			}
-
-			knownIssues := make(map[string][]error)
-
-			// Build a global view of all the manpages (required for cross-referencing).
-			// TODO(issue): edge case: packages which got renamed between releases
-			for _, c := range content {
-				if _, ok := latestVersion[c.suite+"/"+c.binarypkg]; !ok {
-					key := c.suite + "/" + c.binarypkg
-					knownIssues[key] = append(knownIssues[key],
-						fmt.Errorf("Could not determine latest version"))
-					continue
-				}
-				m, err := manpage.FromManPath(strings.TrimPrefix(c.filename, "usr/share/man/"), latestVersion[c.suite+"/"+c.binarypkg])
-				if err != nil {
-					key := c.suite + "/" + c.binarypkg
-					knownIssues[key] = append(knownIssues[key],
-						fmt.Errorf("Trying to interpret path %q: ", c.filename, err))
-					continue
-				}
-				// NOTE(stapelberg): this additional verification step
-				// is necessary because manpages such as the French
-				// manpage for qelectrotech(1) are present in multiple
-				// encodings. manpageFromManPath ignores encodings, so
-				// if we didn’t filter, we would end up with what
-				// looks like duplicates.
-				present := false
-				for _, x := range res.xref[m.Name] {
-					if x.ServingPath() == m.ServingPath() {
-						present = true
-						break
-					}
-				}
-				if !present {
-					res.xref[m.Name] = append(res.xref[m.Name], m)
+			// NOTE(stapelberg): this additional verification step
+			// is necessary because manpages such as the French
+			// manpage for qelectrotech(1) are present in multiple
+			// encodings. manpageFromManPath ignores encodings, so
+			// if we didn’t filter, we would end up with what
+			// looks like duplicates.
+			present := false
+			for _, x := range res.xref[m.Name] {
+				if x.ServingPath() == m.ServingPath() {
+					present = true
+					break
 				}
 			}
-
-			for key, errors := range knownIssues {
-				// TODO: write these to a known-issues file, parse bug numbers from an auxilliary file
-				log.Printf("package %q has errors: %v", key, errors)
+			if !present {
+				res.xref[m.Name] = append(res.xref[m.Name], m)
 			}
+		}
+
+		for key, errors := range knownIssues {
+			// TODO: write these to a known-issues file, parse bug numbers from an auxilliary file
+			log.Printf("package %q has errors: %v", key, errors)
 		}
 	}
 	return res, nil
