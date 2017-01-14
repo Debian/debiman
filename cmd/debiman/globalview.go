@@ -114,9 +114,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 				}
 
 				log.Printf("Adding %d packages from suite %q", len(pkgs), suite)
-				for _, d := range pkgs {
-					res.pkgs = append(res.pkgs, d)
-				}
+				res.pkgs = append(res.pkgs, pkgs...)
 			}
 
 			knownIssues := make(map[string][]error)
