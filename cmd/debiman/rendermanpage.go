@@ -121,10 +121,7 @@ func mustParseManpageerrorTmpl() *template.Template {
 		Parse(bundled.Asset("manpageerror.tmpl")))
 }
 
-// TODO: create this in main
-var converter = convert.Must(convert.NewProcess())
-
-func convertFile(src string, resolve func(ref string) string) (doc string, toc []string, err error) {
+func convertFile(converter *convert.Process, src string, resolve func(ref string) string) (doc string, toc []string, err error) {
 	f, err := os.Open(src)
 	if err != nil {
 		return "", nil, err
@@ -270,7 +267,7 @@ func (p byBinarypkg) Len() int           { return len(p) }
 func (p byBinarypkg) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p byBinarypkg) Less(i, j int) bool { return p[i].Package.Binarypkg < p[j].Package.Binarypkg }
 
-func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, error) {
+func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Template, manpagePrepData, error) {
 	meta := job.meta // for convenience
 	// TODO(issue): document fundamental limitation: “other languages” is imprecise: e.g. crontab(1) — are the languages for package:systemd-cron or for package:cron?
 	// TODO(later): to boost confidence in detecting cross-references, can we add to testdata the entire list of man page names from debian to have a good test?
@@ -294,7 +291,7 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 		}
 	}
 	if renderErr != nil {
-		content, toc, renderErr = convertFile(job.src, func(ref string) string {
+		content, toc, renderErr = convertFile(converter, job.src, func(ref string) string {
 			idx := strings.LastIndex(ref, "(")
 			if idx == -1 {
 				return ""
@@ -451,8 +448,8 @@ func rendermanpageprep(job renderJob) (*template.Template, manpagePrepData, erro
 	}, nil
 }
 
-func rendermanpage(job renderJob) error {
-	t, data, err := rendermanpageprep(job)
+func rendermanpage(converter *convert.Process, job renderJob) error {
+	t, data, err := rendermanpageprep(converter, job)
 	if err != nil {
 		return err
 	}

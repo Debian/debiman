@@ -2,7 +2,6 @@ package convert
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,20 +15,22 @@ import (
 
 // Process starts a mandoc process to convert manpages to HTML.
 type Process struct {
-	mandocConn *net.UnixConn
-}
-
-// TODO(stapelberg): remove once unused
-func Must(p *Process, err error) *Process {
-	if err != nil {
-		panic(fmt.Sprintf("converter init: %v", err))
-	}
-	return p
+	mandocConn    *net.UnixConn
+	mandocProcess *os.Process
+	stopWait      chan bool
 }
 
 func NewProcess() (*Process, error) {
 	p := &Process{}
 	return p, p.initMandoc()
+}
+
+func (p *Process) Kill() error {
+	if p.mandocProcess == nil {
+		return nil
+	}
+	p.stopWait <- true
+	return p.mandocProcess.Kill()
 }
 
 func (p *Process) initMandoc() error {
@@ -55,9 +56,21 @@ func (p *Process) initMandoc() error {
 	if err := cmd.Start(); err != nil {
 		return err
 	}
+	p.stopWait = make(chan bool)
 	go func() {
-		log.Fatalf("mandoc unexpectedly exited: %v", cmd.Wait())
+		wait := make(chan error, 1)
+		go func() {
+			wait <- cmd.Wait()
+		}()
+		select {
+		case <-p.stopWait:
+			return
+		case err := <-wait:
+			log.Fatalf("mandoc unexpectedly exited: %v", err)
+		}
 	}()
+
+	p.mandocProcess = cmd.Process
 
 	conn, err := net.DialUnix("unix", nil, l.Addr().(*net.UnixAddr))
 	if err != nil {

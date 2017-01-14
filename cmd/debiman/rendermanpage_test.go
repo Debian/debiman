@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
 )
 
@@ -75,7 +76,12 @@ baz
 	cron := mustParseFromServingPath(t, "jessie/cron/crontab.5.en")
 	bcronRun := mustParseFromServingPath(t, "jessie/bcron-run/crontab.5.en")
 
-	_, data, err := rendermanpageprep(renderJob{
+	converter, err := convert.NewProcess()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, data, err := rendermanpageprep(converter, renderJob{
 		dest: f.Name(),
 		src:  f.Name(),
 		meta: manpagesFrExtra5,

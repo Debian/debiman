@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Debian/debiman/internal/commontmpl"
+	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
@@ -22,6 +23,10 @@ var (
 	manwalkConcurrency = flag.Int("concurrency_manwalk",
 		1000, // below the default 1024 open file descriptor limit
 		"Concurrency level for walking through binary package man directories (ulimit -n must be higher!)")
+
+	renderConcurrency = flag.Int("concurrency_render",
+		5,
+		"Concurrency level for rendering manpages using mandoc")
 )
 
 type breadcrumb struct {
@@ -254,11 +259,15 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 func renderAll(gv globalView) error {
 	eg, ctx := errgroup.WithContext(context.Background())
 	renderChan := make(chan renderJob)
-	// TODO: flag for parallelism level
-	for i := 0; i < 5; i++ {
+	for i := 0; i < *renderConcurrency; i++ {
 		eg.Go(func() error {
+			converter, err := convert.NewProcess()
+			if err != nil {
+				return err
+			}
+			defer converter.Kill()
 			for r := range renderChan {
-				if err := rendermanpage(r); err != nil {
+				if err := rendermanpage(converter, r); err != nil {
 					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file
 					// system full) and should lead to termination.

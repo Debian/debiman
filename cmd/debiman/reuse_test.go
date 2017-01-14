@@ -43,7 +43,12 @@ baz
 		},
 	}
 
-	if err := rendermanpage(renderJob{
+	converter, err := convert.NewProcess()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := rendermanpage(converter, renderJob{
 		dest:     f.Name(),
 		src:      f.Name(),
 		meta:     meta,
@@ -57,10 +62,6 @@ baz
 		t.Fatal(err)
 	}
 
-	converter, err := convert.NewProcess()
-	if err != nil {
-		t.Fatal(err)
-	}
 	docWant, tocWant, err := converter.ToHTML(strings.NewReader(manContents), nil)
 	if err != nil {
 		t.Fatal(err)
