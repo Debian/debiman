@@ -1,18 +1,27 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/manpage"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
+)
+
+var (
+	manwalkConcurrency = flag.Int("concurrency_manwalk",
+		1000, // below the default 1024 open file descriptor limit
+		"Concurrency level for walking through binary package man directories (ulimit -n must be higher!)")
 )
 
 type breadcrumb struct {
@@ -30,61 +39,96 @@ const (
 	packageIndex
 )
 
-func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map[string][]os.FileInfo, whitelist map[string]bool, mode renderingMode, gv globalView) error {
+// walkManContents walks over all entries in dir and, depending on mode, does:
+// 1. send a renderJob for each regular file
+// 2. send a renderJob for each symlink
+// 3. renders a directory index
+func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir string, mode renderingMode, gv globalView, newestModTime time.Time) (time.Time, error) {
 	// the invariant is: each file ending in .gz must have a corresponding .html.gz file
 	// the .html.gz must have a modtime that is >= the modtime of the .gz file
-	for dir, files := range contents {
-		if whitelist != nil && !whitelist[filepath.Base(dir)] {
-			continue
+
+	var manpageByName map[string]*manpage.Meta
+	if mode == packageIndex {
+		manpageByName = make(map[string]*manpage.Meta)
+	}
+
+	files, err := os.Open(dir)
+	if err != nil {
+		return newestModTime, err
+	}
+	defer files.Close()
+
+	var predictedEof bool
+	for {
+		if predictedEof {
+			break
 		}
 
-		fileByName := make(map[string]os.FileInfo, len(files))
-		for _, f := range files {
-			fileByName[f.Name()] = f
+		names, err := files.Readdirnames(2048)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				// We avoid an additional stat syscalls for each
+				// binary package directory by just optimistically
+				// calling readdir and handling the ENOTDIR error.
+				if sce, ok := err.(*os.SyscallError); ok && sce.Err == syscall.ENOTDIR {
+					return newestModTime, nil
+				}
+				return newestModTime, err
+			}
 		}
 
-		manpageByName := make(map[string]*manpage.Meta, len(files))
+		// When len(names) < 2048 the next Readdirnames() call will
+		// result in io.EOF and can be skipped to reduce getdents(2)
+		// syscalls by half.
+		predictedEof = len(names) < 2048
 
-		var indexModTime time.Time
-		if fi, ok := fileByName["index.html.gz"]; ok {
-			indexModTime = fi.ModTime()
-		}
-		var indexNeedsUpdate bool
+		for _, fn := range names {
+			if !strings.HasSuffix(fn, ".gz") ||
+				strings.HasSuffix(fn, ".html.gz") {
+				continue
+			}
+			full := filepath.Join(dir, fn)
+			if mode == packageIndex {
+				m, err := manpage.FromServingPath(*servingDir, full)
+				if err != nil {
+					// If we run into this case, our code cannot correctly
+					// interpret the result of ServingPath().
+					log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
+					continue
+				}
 
-		for _, f := range files {
-			full := filepath.Join(dir, f.Name())
-			if !strings.HasSuffix(full, ".gz") ||
-				strings.HasSuffix(full, ".html.gz") {
+				manpageByName[fn] = m
 				continue
 			}
 
-			symlink := f.Mode()&os.ModeSymlink != 0
+			st, err := os.Lstat(full)
+			if err != nil {
+				continue
+			}
+			if st.ModTime().After(newestModTime) {
+				newestModTime = st.ModTime()
+			}
+
+			symlink := st.Mode()&os.ModeSymlink != 0
 
 			if mode == regularFiles && symlink ||
 				mode == symlinks && !symlink {
 				continue
 			}
 
-			if !indexNeedsUpdate && f.ModTime().After(indexModTime) {
-				indexNeedsUpdate = true
-			}
+			n := strings.TrimSuffix(fn, ".gz") + ".html.gz"
+			htmlst, err := os.Stat(filepath.Join(dir, n))
+			if err != nil || htmlst.ModTime().Before(st.ModTime()) {
+				m, err := manpage.FromServingPath(*servingDir, full)
+				if err != nil {
+					// If we run into this case, our code cannot correctly
+					// interpret the result of ServingPath().
+					log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
+					continue
+				}
 
-			m, err := manpage.FromServingPath(*servingDir, full)
-			if err != nil {
-				// If we run into this case, our code cannot correctly
-				// interpret the result of ServingPath().
-				log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
-				continue
-			}
-
-			manpageByName[f.Name()] = m
-			if mode == packageIndex {
-				continue
-			}
-
-			n := strings.TrimSuffix(f.Name(), ".gz") + ".html.gz"
-			html, ok := fileByName[n]
-			if !ok || html.ModTime().Before(f.ModTime()) || *forceRerender {
 				versions := gv.xref[m.Name]
 				// Replace m with its corresponding entry in versions
 				// so that rendermanpage() can use pointer equality to
@@ -102,7 +146,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 					meta:     m,
 					versions: versions,
 					xref:     gv.xref,
-					modTime:  f.ModTime(),
+					modTime:  st.ModTime(),
 					symlink:  symlink,
 				}:
 				case <-ctx.Done():
@@ -110,37 +154,34 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, contents map
 				}
 			}
 		}
-
-		if mode != packageIndex {
-			continue
-		}
-
-		if !indexNeedsUpdate && !*forceRerender {
-			continue
-		}
-
-		if len(manpageByName) == 0 {
-			log.Printf("WARNING: empty directory %q, not generating package index", dir)
-			continue
-		}
-
-		if err := renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName); err != nil {
-			return err
-		}
 	}
 
-	return nil
+	if mode != packageIndex {
+		return newestModTime, nil
+	}
+
+	st, err := os.Stat(filepath.Join(dir, "index.html.gz"))
+	if err == nil && st.ModTime().After(newestModTime) {
+		return newestModTime, nil
+	}
+
+	if len(manpageByName) == 0 {
+		log.Printf("WARNING: empty directory %q, not generating package index", dir)
+		return newestModTime, nil
+	}
+
+	if err := renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName); err != nil {
+		return newestModTime, err
+	}
+
+	return newestModTime, nil
 }
 
-func renderAll(gv globalView) error {
-	binsBySuite := make(map[string][]string)
-
+func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist map[string]bool, gv globalView) error {
 	suitedirs, err := ioutil.ReadDir(*servingDir)
 	if err != nil {
 		return err
 	}
-	// To minimize I/O, gather all FileInfos in one pass.
-	contents := make(map[string][]os.FileInfo)
 	for _, sfi := range suitedirs {
 		if !sfi.IsDir() {
 			continue
@@ -148,26 +189,73 @@ func renderAll(gv globalView) error {
 		if !gv.suites[sfi.Name()] {
 			continue
 		}
-		bins, err := ioutil.ReadDir(filepath.Join(*servingDir, sfi.Name()))
+		bins, err := os.Open(filepath.Join(*servingDir, sfi.Name()))
 		if err != nil {
 			return err
 		}
-		names := make([]string, len(bins))
-		for idx, bfi := range bins {
-			names[idx] = bfi.Name()
-			dir := filepath.Join(*servingDir, sfi.Name(), bfi.Name())
-			contents[dir], err = ioutil.ReadDir(dir)
+		defer bins.Close()
+
+		for {
+			names, err := bins.Readdirnames(*manwalkConcurrency)
 			if err != nil {
+				if err == io.EOF {
+					break
+				} else {
+					return err
+				}
+			}
+
+			var wg errgroup.Group
+			for _, bfn := range names {
+				if whitelist != nil && !whitelist[bfn] {
+					continue
+				}
+
+				dir := filepath.Join(*servingDir, sfi.Name(), bfn)
+				wg.Go(func() error {
+					// Iterating through the same directory in all
+					// modes increases the chance for the dirents to
+					// still be cached. This is important for machines
+					// like manziarly.debian.org, which do not have
+					// enough RAM to keep all dirents cached over the
+					// runtime of this code path.
+
+					var newestModTime time.Time
+					var err error
+					// Render all regular files first
+					newestModTime, err = walkManContents(ctx, renderChan, dir, regularFiles, gv, newestModTime)
+					if err != nil {
+						return err
+					}
+
+					// then render all symlinks, re-using the rendered fragments
+					newestModTime, err = walkManContents(ctx, renderChan, dir, symlinks, gv, newestModTime)
+					if err != nil {
+						return err
+					}
+
+					// and finally render the package index files which need to
+					// consider both regular files and symlinks.
+					if _, err := walkManContents(ctx, renderChan, dir, packageIndex, gv, newestModTime); err != nil {
+						return err
+					}
+					return nil
+				})
+			}
+			if err := wg.Wait(); err != nil {
 				return err
 			}
 		}
-		binsBySuite[sfi.Name()] = names
+		bins.Close()
 	}
+	return nil
+}
 
+func renderAll(gv globalView) error {
 	eg, ctx := errgroup.WithContext(context.Background())
 	renderChan := make(chan renderJob)
 	// TODO: flag for parallelism level
-	for i := 0; i < 30; i++ {
+	for i := 0; i < 5; i++ {
 		eg.Go(func() error {
 			for r := range renderChan {
 				if err := rendermanpage(r); err != nil {
@@ -180,6 +268,7 @@ func renderAll(gv globalView) error {
 			return nil
 		})
 	}
+
 	var whitelist map[string]bool
 	if *onlyRender != "" {
 		whitelist = make(map[string]bool)
@@ -191,19 +280,7 @@ func renderAll(gv globalView) error {
 		log.Printf("(total: %d whitelist entries)", len(whitelist))
 	}
 
-	// Render all regular files first
-	if err := walkContents(ctx, renderChan, contents, whitelist, regularFiles, gv); err != nil {
-		return err
-	}
-
-	// then render all symlinks, re-using the rendered fragments
-	if err := walkContents(ctx, renderChan, contents, whitelist, symlinks, gv); err != nil {
-		return err
-	}
-
-	// and finally render the package index files which need to
-	// consider both regular files and symlinks.
-	if err := walkContents(ctx, renderChan, contents, whitelist, packageIndex, gv); err != nil {
+	if err := walkContents(ctx, renderChan, whitelist, gv); err != nil {
 		return err
 	}
 
@@ -212,10 +289,33 @@ func renderAll(gv globalView) error {
 		return err
 	}
 
-	for suite, bins := range binsBySuite {
-		if err := renderContents(filepath.Join(*servingDir, fmt.Sprintf("contents-%s.html.gz", suite)), suite, bins); err != nil {
+	suitedirs, err := ioutil.ReadDir(*servingDir)
+	if err != nil {
+		return err
+	}
+	for _, sfi := range suitedirs {
+		if !sfi.IsDir() {
+			continue
+		}
+		if !gv.suites[sfi.Name()] {
+			continue
+		}
+		bins, err := os.Open(filepath.Join(*servingDir, sfi.Name()))
+		if err != nil {
 			return err
 		}
+		defer bins.Close()
+
+		names, err := bins.Readdirnames(-1)
+		if err != nil {
+			return err
+		}
+
+		if err := renderContents(filepath.Join(*servingDir, fmt.Sprintf("contents-%s.html.gz", sfi.Name())), sfi.Name(), names); err != nil {
+			return err
+		}
+
+		bins.Close()
 	}
 
 	return nil
