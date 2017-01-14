@@ -2,13 +2,16 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
-	"strings"
+	"os"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Debian/debiman/internal/archive"
-	"golang.org/x/sync/errgroup"
 	ptarchive "pault.ag/go/archive"
 	"pault.ag/go/debian/control"
 )
@@ -20,82 +23,173 @@ type contentEntry struct {
 	filename  string
 }
 
-func getContents(ar *archive.Getter, suite string, arch string, path string, hashByFilename map[string]*control.SHA256FileHash, contentChan chan<- contentEntry) error {
-	fh, ok := hashByFilename[path]
-	if !ok {
-		return fmt.Errorf("ERROR: expected path %q not found in Release file", path)
-	}
+var manPrefix = []byte("usr/share/man/")
 
-	h, err := hex.DecodeString(fh.Hash)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("getting %q (hash %v)", path, hex.EncodeToString(h))
-	r, err := ar.Get("dists/"+suite+"/"+path, h)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	scanner := bufio.NewScanner(r)
+func parseContentsEntry(scanner *bufio.Scanner) ([]*contentEntry, error) {
 	for scanner.Scan() {
-		text := scanner.Text()
-		if !strings.HasPrefix(text, "usr/share/man/") {
+		text := scanner.Bytes()
+		if !bytes.HasPrefix(text, manPrefix) {
 			continue
 		}
-		text = strings.TrimPrefix(text, "usr/share/man/")
-		idx := strings.LastIndex(text, " ")
+
+		idx := bytes.LastIndexByte(text, ' ')
 		if idx == -1 {
 			continue
 		}
-		parts := strings.Split(text[idx:], ",")
+		parts := bytes.Split(text[idx:], []byte{','})
+		entries := make([]*contentEntry, 0, len(parts))
 		for _, part := range parts {
-			nparts := strings.Split(part, "/")
-			if len(nparts) != 2 {
+			idx2 := bytes.IndexByte(part, '/')
+			if idx2 == -1 {
+				continue
+			}
+			entries = append(entries, &contentEntry{
+				binarypkg: string(part[idx2+1:]),
+				filename:  string(bytes.TrimSpace(text[len(manPrefix):idx])),
+			})
+		}
+		if len(entries) > 0 {
+			return entries, nil
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return nil, io.EOF
+}
+
+func getContents(ar *archive.Getter, suite string, component string, archs []string, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
+	files := make([]*os.File, len(archs))
+	scanners := make([]*bufio.Scanner, len(archs))
+	contents := make([][]*contentEntry, len(archs))
+	advance := make([]bool, len(archs))
+	exhausted := make([]bool, len(archs))
+	var eg errgroup.Group
+	for idx, arch := range archs {
+		idx := idx   // copy
+		arch := arch // copy
+		eg.Go(func() error {
+			path := component + "/Contents-" + arch + ".gz"
+			fh, ok := hashByFilename[path]
+			if !ok {
+				return fmt.Errorf("ERROR: expected path %q not found in Release file", path)
+			}
+
+			h, err := hex.DecodeString(fh.Hash)
+			if err != nil {
+				return err
+			}
+
+			log.Printf("getting %q (hash %v)", suite+"/"+path, fh.Hash)
+			r, err := ar.Get("dists/"+suite+"/"+path, h)
+			if err != nil {
+				return err
+			}
+
+			files[idx] = r
+			scanners[idx] = bufio.NewScanner(r)
+			contents[idx], err = parseContentsEntry(scanners[idx])
+			if err != nil {
+				return err
+			}
+			advance[idx] = false
+			return nil
+		})
+	}
+	defer func() {
+		for _, f := range files {
+			if f != nil {
+				f.Close()
+			}
+		}
+	}()
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	var entries []*contentEntry
+	for {
+		for idx, move := range advance {
+			if !move {
+				continue
+			}
+			var err error
+			contents[idx], err = parseContentsEntry(scanners[idx])
+			if err != nil {
+				if err == io.EOF {
+					exhausted[idx] = true
+				} else {
+					return nil, err
+				}
+			}
+		}
+		// TODO: unit test for edge cases: can this loop indefinitely or can packages be skipped here?
+		if done(exhausted) {
+			break
+		}
+
+		// find the filename which is the least advanced in the sort order
+		var lowest int
+		var sum int
+		for idx := range archs {
+			sum += len(contents[idx])
+			if exhausted[idx] {
+				continue
+			}
+			if contents[idx][0].filename < contents[lowest][0].filename {
+				lowest = idx
+			}
+		}
+
+		for idx := range advance {
+			advance[idx] = !exhausted[idx] && contents[lowest][0].filename == contents[idx][0].filename
+		}
+
+		binarypkgs := make(map[string]string, sum)
+		for idx := range archs {
+			if !advance[idx] {
 				continue
 			}
 
-			contentChan <- contentEntry{
-				suite:     suite,
-				arch:      arch,
-				binarypkg: nparts[1],
-				filename:  strings.TrimSpace(text[:idx]),
+			for _, e := range contents[idx] {
+				// first arch (amd64) wins
+				if _, ok := binarypkgs[e.binarypkg]; !ok {
+					binarypkgs[e.binarypkg] = archs[idx]
+				}
 			}
 		}
-	}
-	return scanner.Err()
-}
 
-func getAllContents(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
-	contentChan := make(chan contentEntry, 10) // 10 is arbitrary to reduce goroutine switches
-	complete := make(chan bool)
-	var content []*contentEntry
-	go func() {
-		for entry := range contentChan {
-			entry := entry // copy
-			content = append(content, &entry)
-		}
-		complete <- true
-	}()
-	var wg errgroup.Group
-	// We skip archAll, because there is no Contents-all file. The
-	// contents of Architecture: all packages are included in the
-	// architecture-specific Contents-* files.
-	for _, arch := range release.Architectures {
-		a := arch.String()
-		for _, component := range []string{"main"} {
-			path := component + "/Contents-" + a + ".gz"
-			wg.Go(func() error {
-				return getContents(ar, suite, a, path, hashByFilename, contentChan)
+		for pkg, arch := range binarypkgs {
+			entries = append(entries, &contentEntry{
+				binarypkg: pkg,
+				arch:      arch,
+				filename:  contents[lowest][0].filename,
+				suite:     suite,
 			})
 		}
 	}
 
-	if err := wg.Wait(); err != nil {
-		return nil, err
+	return entries, nil
+}
+
+func getAllContents(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
+	// We skip archAll, because there is no Contents-all file. The
+	// contents of Architecture: all packages are included in the
+	// architecture-specific Contents-* files.
+
+	// TODO(later): make this code work with all components once it’s
+	// confirmed that we are interested in serving more than just
+	// main.
+	for _, component := range []string{"main"} {
+		archs := make([]string, len(release.Architectures))
+		for idx, arch := range release.Architectures {
+			archs[idx] = arch.String()
+		}
+
+		return getContents(ar, suite, component, archs, hashByFilename)
 	}
-	close(contentChan)
-	<-complete
-	return content, nil
+
+	return nil, nil
 }

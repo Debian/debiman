@@ -24,31 +24,6 @@ type globalView struct {
 	xref          map[string][]*manpage.Meta
 }
 
-func dedupContent(content []*contentEntry) []*contentEntry {
-	byArch := make(map[string][]*contentEntry, len(content))
-	for _, c := range content {
-		key := c.suite + "/" + c.binarypkg + "/" + c.filename
-		byArch[key] = append(byArch[key], c)
-	}
-
-	dedup := make([]*contentEntry, 0, len(byArch))
-	for _, variants := range byArch {
-		var best *contentEntry
-		for _, v := range variants {
-			if v.arch == mostPopularArchitecture {
-				best = v
-				break
-			}
-		}
-		if best == nil {
-			best = variants[0]
-		}
-
-		dedup = append(dedup, best)
-	}
-	return dedup
-}
-
 type distributionIdentifier int
 
 const (
@@ -123,7 +98,6 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 			if err != nil {
 				return res, err
 			}
-			content = dedupContent(content)
 
 			for _, c := range content {
 				res.contentByPath[c.filename] = append(res.contentByPath[c.filename], c)
