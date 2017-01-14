@@ -131,7 +131,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 			if err != nil {
 				key := c.suite + "/" + c.binarypkg
 				knownIssues[key] = append(knownIssues[key],
-					fmt.Errorf("Trying to interpret path %q: ", c.filename, err))
+					fmt.Errorf("Trying to interpret path %q: %v", c.filename, err))
 				continue
 			}
 			// NOTE(stapelberg): this additional verification step
