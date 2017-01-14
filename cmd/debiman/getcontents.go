@@ -32,7 +32,7 @@ func parseContentsEntry(scanner *bufio.Scanner) ([]*contentEntry, error) {
 			continue
 		}
 
-		idx := bytes.LastIndexByte(text, ' ')
+		idx := bytes.LastIndex(text, []byte{' '})
 		if idx == -1 {
 			continue
 		}
