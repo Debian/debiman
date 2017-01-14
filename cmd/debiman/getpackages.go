@@ -1,20 +1,27 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"strconv"
+	"strings"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Debian/debiman/internal/archive"
-	"golang.org/x/sync/errgroup"
+	"github.com/Debian/debiman/internal/manpage"
 	ptarchive "pault.ag/go/archive"
 	"pault.ag/go/debian/control"
-	"pault.ag/go/debian/dependency"
 	"pault.ag/go/debian/version"
 )
 
 type pkgEntry struct {
+	source    string // only used during getPackages
 	suite     string
 	binarypkg string
 	arch      string
@@ -22,61 +29,6 @@ type pkgEntry struct {
 	version   version.Version
 	sha256    []byte
 	bytes     int64
-}
-
-func getPackages(ar *archive.Getter, suite string, arch string, path string, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool, pkgChan chan<- pkgEntry) error {
-	fh, ok := hashByFilename[path]
-	if !ok {
-		return fmt.Errorf("ERROR: expected path %q not found in Release file", path)
-	}
-
-	h, err := hex.DecodeString(fh.Hash)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("getting %q (hash %v)", path, hex.EncodeToString(h))
-	r, err := ar.Get("dists/"+suite+"/"+path, h)
-	if err != nil {
-		return err
-	}
-
-	var pkgs []control.BinaryIndex
-	decoder, err := control.NewDecoder(r, nil)
-	if err != nil {
-		return err
-	}
-	if err := decoder.Decode(&pkgs); err != nil {
-		return err
-	}
-
-	// Explicitly close r to free memory ASAP.
-	r.Close()
-
-	for _, p := range pkgs {
-		if !containsMans[p.Package][arch] {
-			continue
-		}
-
-		i, err := strconv.ParseInt(p.Size, 0, 64)
-		if err != nil {
-			return err
-		}
-		h, err := hex.DecodeString(p.SHA256)
-		if err != nil {
-			return err
-		}
-		pkgChan <- pkgEntry{
-			binarypkg: p.Package,
-			version:   p.Version,
-			filename:  p.Filename,
-			arch:      arch,
-			sha256:    h,
-			bytes:     i,
-			suite:     suite,
-		}
-	}
-	return nil
 }
 
 // TODO(later): containsMans could be a map[string]bool, if only all
@@ -101,36 +53,262 @@ func buildContainsMains(content []*contentEntry) map[string]map[string]bool {
 	return containsMans
 }
 
-func getAllPackages(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]pkgEntry, error) {
-	pkgChan := make(chan pkgEntry, 10) // 10 is an arbitrary buffer size to reduce goroutine switches
-	complete := make(chan bool)
-	var pkgs []pkgEntry
-	go func() {
-		for entry := range pkgChan {
-			pkgs = append(pkgs, entry)
+var emptyVersion version.Version
+var (
+	prefixPackage  = []byte("Package")
+	prefixSource   = []byte("Source")
+	prefixVersion  = []byte("Version")
+	prefixFilename = []byte("Filename")
+	prefixSize     = []byte("Size")
+	prefixSHA256   = []byte("SHA256")
+)
+
+func parsePackageParagraph(scanner *bufio.Scanner, arch string, containsMans map[string]map[string]bool) (pkgEntry, error) {
+	var entry pkgEntry
+	for scanner.Scan() {
+		text := scanner.Bytes()
+		if len(text) == 0 {
+			entry = pkgEntry{}
+			continue
 		}
-		complete <- true
+		idx := bytes.IndexByte(text, ':')
+		if idx == -1 {
+			continue
+		}
+
+		key := text[:idx]
+		if bytes.Equal(key, prefixPackage) {
+			entry.binarypkg = string(text[idx+2:])
+		} else if bytes.Equal(key, prefixSource) {
+			entry.source = string(text[idx+2:])
+		} else if bytes.Equal(key, prefixVersion) {
+			v, err := version.Parse(string(text[idx+2:]))
+			if err != nil {
+				return entry, err
+			}
+			entry.version = v
+		} else if bytes.Equal(key, prefixFilename) {
+			entry.filename = string(text[idx+2:])
+		} else if bytes.Equal(key, prefixSize) {
+			i, err := strconv.ParseInt(string(text[idx+2:]), 0, 64)
+			if err != nil {
+				return entry, err
+			}
+			entry.bytes = i
+		} else if bytes.Equal(key, prefixSHA256) {
+			h := make([]byte, hex.DecodedLen(len(text[idx+2:])))
+			n, err := hex.Decode(h, text[idx+2:])
+			if err != nil {
+				return entry, err
+			}
+			entry.sha256 = h[:n]
+		}
+
+		if entry.binarypkg != "" &&
+			entry.version != emptyVersion &&
+			entry.filename != "" &&
+			entry.bytes > 0 &&
+			entry.sha256 != nil {
+			if !containsMans[entry.binarypkg][arch] {
+				entry = pkgEntry{}
+				continue
+			}
+			if entry.source == "" {
+				entry.source = entry.binarypkg
+			}
+			idx := strings.Index(entry.source, " ")
+			if idx > -1 {
+				entry.source = entry.source[:idx]
+			}
+			return entry, nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return entry, err
+	}
+	entry = pkgEntry{}
+	return entry, io.EOF
+}
+
+func less(a, b pkgEntry) bool {
+	if a.source == b.source {
+		return a.binarypkg < b.binarypkg
+	}
+	return a.source < b.source
+}
+
+func done(exhausted []bool) bool {
+	for idx := range exhausted {
+		if !exhausted[idx] {
+			return false
+		}
+	}
+	return true
+}
+
+func getPackages(ar *archive.Getter, suite string, component string, archs []string, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]*pkgEntry, map[string]*manpage.PkgMeta, error) {
+	files := make([]*os.File, len(archs))
+	scanners := make([]*bufio.Scanner, len(archs))
+	pkgs := make([]pkgEntry, len(archs))
+	advance := make([]bool, len(archs))
+	exhausted := make([]bool, len(archs))
+	var eg errgroup.Group
+	for idx, arch := range archs {
+		idx := idx   // copy
+		arch := arch // copy
+		eg.Go(func() error {
+			path := component + "/binary-" + arch + "/Packages.gz"
+			fh, ok := hashByFilename[path]
+			if !ok {
+				return fmt.Errorf("ERROR: expected path %q not found in Release file", path)
+			}
+
+			h, err := hex.DecodeString(fh.Hash)
+			if err != nil {
+				return err
+			}
+
+			log.Printf("getting %q (hash %v)", suite+"/"+path, fh.Hash)
+			r, err := ar.Get("dists/"+suite+"/"+path, h)
+			if err != nil {
+				return err
+			}
+
+			files[idx] = r
+			scanners[idx] = bufio.NewScanner(r)
+			advance[idx] = true
+			return nil
+		})
+	}
+	defer func() {
+		for _, f := range files {
+			if f != nil {
+				f.Close()
+			}
+		}
 	}()
-
-	archAll, err := dependency.ParseArch("all")
-	if err != nil {
-		return nil, err
+	if err := eg.Wait(); err != nil {
+		return nil, nil, err
 	}
 
-	var wg errgroup.Group
-	for _, arch := range append(release.Architectures, *archAll) {
-		a := arch.String()
-		for _, component := range []string{"main"} {
-			path := component + "/binary-" + a + "/Packages.gz"
-			wg.Go(func() error {
-				return getPackages(ar, suite, a, path, hashByFilename, containsMans, pkgChan)
-			})
+	byVersion := make(map[string]*pkgEntry)
+	for {
+		for idx, move := range advance {
+			if !move {
+				continue
+			}
+			arch := archs[idx]
+			p, err := parsePackageParagraph(scanners[idx], arch, containsMans)
+			if err != nil {
+				if err == io.EOF {
+					exhausted[idx] = true
+				} else {
+					return nil, nil, err
+				}
+			}
+			p.arch = arch
+			p.suite = suite
+			pkgs[idx] = p
+		}
+		// TODO: unit test for edge cases: can this loop indefinitely or can packages be skipped here?
+		if done(exhausted) {
+			break
+		}
+
+		// find the package which is the least advanced in the sort order
+		lowest := -1
+		for idx := range archs {
+			if exhausted[idx] {
+				continue
+			}
+			if lowest == -1 || less(pkgs[idx], pkgs[lowest]) {
+				lowest = idx
+			}
+		}
+
+		for idx := range advance {
+			advance[idx] = !exhausted[idx] && !less(pkgs[lowest], pkgs[idx])
+		}
+
+		// find the best architecture for that package
+		var newest *pkgEntry
+		for idx := range archs {
+			if exhausted[idx] {
+				continue
+			}
+			if less(pkgs[lowest], pkgs[idx]) {
+				continue
+			}
+			if newest == nil || version.Compare(pkgs[idx].version, newest.version) > 0 {
+				newest = &(pkgs[idx])
+			}
+		}
+
+		key := suite + "/" + newest.binarypkg
+		if v, ok := byVersion[key]; ok && version.Compare(v.version, newest.version) > 0 {
+			continue
+		}
+
+		var best *pkgEntry
+		for idx, p := range pkgs {
+			if exhausted[idx] {
+				continue
+			}
+			if less(pkgs[lowest], pkgs[idx]) {
+				continue
+			}
+			if p.version != newest.version {
+				continue
+			}
+			if p.arch == mostPopularArchitecture {
+				best = &(pkgs[idx])
+				break
+			}
+		}
+		if best == nil {
+			for idx, p := range pkgs {
+				if exhausted[idx] {
+					continue
+				}
+				if less(pkgs[lowest], pkgs[idx]) {
+					continue
+				}
+				if p.version != newest.version {
+					continue
+				}
+				best = &(pkgs[idx])
+				break
+			}
+		}
+
+		entry := *best // copy
+		byVersion[key] = &entry
+	}
+
+	result := make([]*pkgEntry, 0, len(byVersion))
+	latestVersion := make(map[string]*manpage.PkgMeta, len(byVersion))
+	for key, p := range byVersion {
+		result = append(result, p)
+		latestVersion[key] = &manpage.PkgMeta{
+			Binarypkg: p.binarypkg,
+			Suite:     p.suite,
+			Version:   p.version,
 		}
 	}
-	if err := wg.Wait(); err != nil {
-		return nil, err
+
+	return result, latestVersion, nil
+}
+
+func getAllPackages(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]*pkgEntry, map[string]*manpage.PkgMeta, error) {
+	// TODO(later): make this code work with all components once it’s
+	// confirmed that we are interested in serving more than just
+	// main.
+	for _, component := range []string{"main"} {
+		archs := make([]string, len(release.Architectures))
+		for idx, arch := range release.Architectures {
+			archs[idx] = arch.String()
+		}
+		return getPackages(ar, suite, component, archs, hashByFilename, containsMans)
 	}
-	close(pkgChan)
-	<-complete
-	return pkgs, nil
+	return nil, nil, nil
 }

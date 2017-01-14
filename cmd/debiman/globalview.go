@@ -8,7 +8,6 @@ import (
 	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/manpage"
 	"pault.ag/go/debian/control"
-	"pault.ag/go/debian/version"
 )
 
 // mostPopularArchitecture is used as preferred architecture when we
@@ -18,7 +17,7 @@ import (
 const mostPopularArchitecture = "amd64"
 
 type globalView struct {
-	pkgs          []pkgEntry
+	pkgs          []*pkgEntry
 	suites        map[string]bool
 	idxSuites     map[string]string
 	contentByPath map[string][]*contentEntry
@@ -48,52 +47,6 @@ func dedupContent(content []*contentEntry) []*contentEntry {
 		dedup = append(dedup, best)
 	}
 	return dedup
-}
-
-func dedupPackages(pkgs []pkgEntry) (dedup []pkgEntry, latestVersion map[string]*manpage.PkgMeta) {
-	latestVersion = make(map[string]*manpage.PkgMeta)
-	log.Printf("%d package entries before architecture de-duplication", len(pkgs))
-	bestArch := make(map[string][]*pkgEntry, len(pkgs))
-	for idx, p := range pkgs {
-		key := p.suite + "/" + p.binarypkg
-		bestArch[key] = append(bestArch[key], &(pkgs[idx]))
-	}
-	dedup = make([]pkgEntry, 0, len(bestArch))
-	for key, variants := range bestArch {
-		var newest version.Version
-		for _, v := range variants {
-			if newest.Version == "" || version.Compare(v.version, newest) > 0 {
-				newest = v.version
-			}
-		}
-		latestVersion[key] = &manpage.PkgMeta{
-			Binarypkg: variants[0].binarypkg,
-			Suite:     variants[0].suite,
-			Version:   newest,
-		}
-		var best *pkgEntry
-		for _, v := range variants {
-			if v.version != newest {
-				continue
-			}
-			if v.arch == mostPopularArchitecture {
-				best = v
-				break
-			}
-		}
-		if best == nil {
-			for _, v := range variants {
-				if v.version != newest {
-					continue
-				}
-				best = variants[0]
-				break
-			}
-		}
-		dedup = append(dedup, *best)
-	}
-	log.Printf("%d packages\n", len(dedup))
-	return dedup, latestVersion
 }
 
 type distributionIdentifier int
@@ -176,15 +129,17 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 				res.contentByPath[c.filename] = append(res.contentByPath[c.filename], c)
 			}
 
-			latestVersion := make(map[string]*manpage.PkgMeta)
+			var latestVersion map[string]*manpage.PkgMeta
 			{
 				// Collect package download work units
-				pkgs, err := getAllPackages(ar, suite, release, hashByFilename, buildContainsMains(content))
+				var pkgs []*pkgEntry
+				var err error
+				pkgs, latestVersion, err = getAllPackages(ar, suite, release, hashByFilename, buildContainsMains(content))
 				if err != nil {
 					return res, err
 				}
 
-				pkgs, latestVersion = dedupPackages(pkgs)
+				log.Printf("Adding %d packages from suite %q", len(pkgs), suite)
 				for _, d := range pkgs {
 					res.pkgs = append(res.pkgs, d)
 				}

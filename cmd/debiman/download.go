@@ -375,7 +375,7 @@ func parallelDownload(ar *archive.Getter, gv globalView) error {
 	}
 	for _, p := range gv.pkgs {
 		select {
-		case downloadChan <- p:
+		case downloadChan <- *p:
 		case <-ctx.Done():
 			break
 		}
