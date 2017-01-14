@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"os"
@@ -10,12 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Debian/debiman/internal/bundled"
+	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/manpage"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/text/language"
-	"golang.org/x/text/language/display"
 )
 
 type breadcrumb struct {
@@ -23,26 +20,7 @@ type breadcrumb struct {
 	Text string
 }
 
-var commonTmpls = mustParseCommonTmpls()
-
-func mustParseCommonTmpls() *template.Template {
-	t := template.New("root")
-	t = template.Must(t.New("header").Parse(bundled.Asset("header.tmpl")))
-	t = template.Must(t.New("footer").
-		Funcs(map[string]interface{}{
-			"DisplayLang": func(tag language.Tag) string {
-				return display.Self.Name(tag)
-			},
-			"EnglishLang": func(tag language.Tag) string {
-				return display.English.Languages().Name(tag)
-			},
-			"Now": func() string {
-				return time.Now().UTC().Format(iso8601Format)
-			}}).
-		Parse(bundled.Asset("footer.tmpl")))
-	t = template.Must(t.New("style").Parse(bundled.Asset("style.css")))
-	return t
-}
+var commonTmpls = commontmpl.MustParseCommonTmpls()
 
 type renderingMode int
 

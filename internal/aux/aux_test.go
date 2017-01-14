@@ -52,7 +52,7 @@ func TestIndexSwapSucceed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s := NewServer(i3OnlyIdx)
+	s := NewServer(i3OnlyIdx, nil, "")
 	mustRedirectI3(t, s)
 
 	redir, err := s.redirect(&http.Request{URL: u})
@@ -110,7 +110,7 @@ func TestIndexSwapFail(t *testing.T) {
 
 	emptyIdx := redirect.Index{}
 
-	s := NewServer(i3OnlyIdx)
+	s := NewServer(i3OnlyIdx, nil, "")
 	mustRedirectI3(t, s)
 
 	if err := s.SwapIndex(emptyIdx); err == nil {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/bundled"
+	"github.com/Debian/debiman/internal/commontmpl"
 )
 
 var (
@@ -126,7 +127,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		commonTmpls = mustParseCommonTmpls()
+		commonTmpls = commontmpl.MustParseCommonTmpls()
 		contentsTmpl = mustParseContentsTmpl()
 		pkgindexTmpl = mustParsePkgindexTmpl()
 		indexTmpl = mustParseIndexTmpl()

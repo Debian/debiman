@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"errors"
 	"flag"
+	"html/template"
 	"io"
 	"log"
 	"mime"
@@ -15,6 +16,8 @@ import (
 	"strings"
 
 	"github.com/Debian/debiman/internal/aux"
+	"github.com/Debian/debiman/internal/bundled"
+	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/redirect"
 )
 
@@ -27,6 +30,9 @@ var (
 		"localhost:8089",
 		"host:port on which to serve manpages")
 )
+
+// use go build -ldflags "-X main.debimanVersion=<version>" to set the version
+var debimanVersion = "HEAD"
 
 var fileNotFound = errors.New("File not found")
 
@@ -80,7 +86,9 @@ func main() {
 		log.Fatalf("Could not load auxserver index: %v", err)
 	}
 
-	server := aux.NewServer(idx)
+	commonTmpls := commontmpl.MustParseCommonTmpls()
+	notFoundTmpl := template.Must(commonTmpls.New("notfound").Parse(bundled.Asset("notfound.tmpl")))
+	server := aux.NewServer(idx, notFoundTmpl, debimanVersion)
 
 	http.HandleFunc("/jump", server.HandleJump)
 

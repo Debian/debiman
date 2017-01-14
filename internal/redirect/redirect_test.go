@@ -154,6 +154,49 @@ func TestNotIndexed(t *testing.T) {
 	}
 }
 
+func TestNotFoundWrongSuite(t *testing.T) {
+	u, err := url.Parse("http://man.debian.org/experimental/i3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = testIdx.Redirect(&http.Request{URL: u})
+	if err == nil {
+		t.Fatalf("Redirect for /experimental/i3 unexpectedly succeeded")
+	}
+	e, ok := err.(*NotFoundError)
+	if !ok {
+		t.Fatalf("Error unexpectedly not of type redirect.NotFoundError")
+	}
+	if got, want := e.Manpage, "i3"; got != want {
+		t.Fatalf("Unexpected e.Manpage: got %q, want %q", got, want)
+	}
+	if got, want := e.BestChoice.ServingPath(e.Manpage), "/jessie/i3-wm/i3.1.en.html"; got != want {
+		t.Fatalf("Unexpected e.BestChoice.ServingPath(): got %q, want %q", got, want)
+	}
+}
+
+func TestNotFoundFullySpecified(t *testing.T) {
+	u, err := url.Parse("http://man.debian.org/oi3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = testIdx.Redirect(&http.Request{URL: u})
+	if err == nil {
+		t.Fatalf("Redirect for /experimental/i3 unexpectedly succeeded")
+	}
+	e, ok := err.(*NotFoundError)
+	if !ok {
+		t.Fatalf("Error unexpectedly not of type redirect.NotFoundError")
+	}
+	if got, want := e.Manpage, "oi3"; got != want {
+		t.Fatalf("Unexpected e.Manpage: got %q, want %q", got, want)
+	}
+	var empty IndexEntry
+	if got, want := e.BestChoice, empty; got != want {
+		t.Fatalf("Unexpected e.BestChoice: got %q, want %q", got, want)
+	}
+}
+
 func TestUnderspecified(t *testing.T) {
 
 	// man.debian.net/<obsolete-suite>/… → 404, mit manpage-übersicht

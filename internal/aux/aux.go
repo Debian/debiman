@@ -1,7 +1,10 @@
 package aux
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,13 +14,17 @@ import (
 )
 
 type Server struct {
-	idx   redirect.Index
-	idxMu sync.RWMutex
+	idx            redirect.Index
+	idxMu          sync.RWMutex
+	notFoundTmpl   *template.Template
+	debimanVersion string
 }
 
-func NewServer(idx redirect.Index) *Server {
+func NewServer(idx redirect.Index, notFoundTmpl *template.Template, debimanVersion string) *Server {
 	return &Server{
-		idx: idx,
+		idx:            idx,
+		notFoundTmpl:   notFoundTmpl,
+		debimanVersion: debimanVersion,
 	}
 }
 
@@ -50,6 +57,30 @@ func (s *Server) redirect(r *http.Request) (string, error) {
 func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 	redir, err := s.redirect(r)
 	if err != nil {
+		if nf, ok := err.(*redirect.NotFoundError); ok {
+			var buf bytes.Buffer
+			err = s.notFoundTmpl.Execute(&buf, struct {
+				Title          string
+				DebimanVersion string
+				Breadcrumbs    []string // incorrect type, but empty anyway
+				FooterExtra    string
+				Manpage        string
+				BestChoice     redirect.IndexEntry
+			}{
+				Title:          "Not Found",
+				DebimanVersion: s.debimanVersion,
+				Manpage:        nf.Manpage,
+				BestChoice:     nf.BestChoice,
+			})
+			if err == nil {
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				w.Header().Set("X-Content-Type-Options", "nosniff")
+				w.WriteHeader(http.StatusNotFound)
+				io.Copy(w, &buf)
+				return
+			}
+			/* fallthrough */
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

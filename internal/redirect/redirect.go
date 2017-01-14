@@ -265,6 +265,15 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 	return filtered
 }
 
+type NotFoundError struct {
+	Manpage    string
+	BestChoice IndexEntry
+}
+
+func (e *NotFoundError) Error() string {
+	return "No such man page"
+}
+
 func (i Index) Redirect(r *http.Request) (string, error) {
 	path := r.URL.Path
 	for strings.HasSuffix(path, ".html") || strings.HasSuffix(path, ".gz") {
@@ -291,8 +300,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	entries, ok := i.Entries[name]
 	if !ok {
-		// TODO: this should result in a good 404 page.
-		return "", fmt.Errorf("No such man page: name=%q", name)
+		return "", &NotFoundError{Manpage: name}
 	}
 
 	acceptLang := r.Header.Get("Accept-Language")
@@ -304,7 +312,10 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	}, entries)
 
 	if len(filtered) == 0 {
-		return "", fmt.Errorf("No such manpage found")
+		return "", &NotFoundError{
+			Manpage: name,
+			// Present the user with another choice for this manpage.
+			BestChoice: i.narrow(name, acceptLang, IndexEntry{}, entries)[0]}
 	}
 
 	return filtered[0].ServingPath(name), nil
