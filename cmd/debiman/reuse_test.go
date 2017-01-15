@@ -49,7 +49,12 @@ baz
 	}
 	defer converter.Kill()
 
-	if err := rendermanpage(converter, renderJob{
+	gzipw, err = gzip.NewWriterLevel(nil, gzip.BestCompression)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := rendermanpage(gzipw, converter, renderJob{
 		dest:     f.Name(),
 		src:      f.Name(),
 		meta:     meta,

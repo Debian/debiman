@@ -448,13 +448,13 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 	}, nil
 }
 
-func rendermanpage(converter *convert.Process, job renderJob) error {
+func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob) error {
 	t, data, err := rendermanpageprep(converter, job)
 	if err != nil {
 		return err
 	}
 
-	if err := writeAtomically(job.dest, true, func(w io.Writer) error {
+	if err := writeAtomicallyWithGz(job.dest, gzipw, func(w io.Writer) error {
 		return t.Execute(w, data)
 	}); err != nil {
 		return err

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"flag"
 	"fmt"
 	"io"
@@ -266,8 +267,17 @@ func renderAll(gv globalView) error {
 				return err
 			}
 			defer converter.Kill()
+
+			// NOTE(stapelberg): gzip’s decompression phase takes the same
+			// time, regardless of compression level. Hence, we invest the
+			// maximum CPU time once to achieve the best compression.
+			gzipw, err := gzip.NewWriterLevel(nil, gzip.BestCompression)
+			if err != nil {
+				return err
+			}
+
 			for r := range renderChan {
-				if err := rendermanpage(converter, r); err != nil {
+				if err := rendermanpage(gzipw, converter, r); err != nil {
 					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file
 					// system full) and should lead to termination.

@@ -59,3 +59,39 @@ func writeAtomically(dest string, compress bool, write func(w io.Writer) error) 
 
 	return os.Rename(f.Name(), dest)
 }
+
+func writeAtomicallyWithGz(dest string, gzipw *gzip.Writer, write func(w io.Writer) error) error {
+	f, err := ioutil.TempFile(filepath.Dir(dest), "debiman-")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	// TODO: defer os.Remove() in case we return before the tempfile is destroyed
+
+	// TODO(later): benchmark/support other compression algorithms. zopfli gets dos2unix from 9659B to 9274B (4% win)
+
+	bufw := bufio.NewWriter(f)
+	gzipw.Reset(bufw)
+
+	if err := write(gzipw); err != nil {
+		return err
+	}
+
+	if err := gzipw.Close(); err != nil {
+		return err
+	}
+
+	if err := bufw.Flush(); err != nil {
+		return err
+	}
+
+	if err := f.Chmod(0644); err != nil {
+		return err
+	}
+
+	if err := f.Close(); err != nil {
+		return err
+	}
+
+	return os.Rename(f.Name(), dest)
+}
