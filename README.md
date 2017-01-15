@@ -119,7 +119,7 @@ re-use rendered manpages (for symlinked manpages):
 
 1. In assets/manpage.tmpl and assets/manpageerror.tmpl, the string `<a
    class="toclink"` is used to find table of content links.
-2. `</div>\n<div id="footer">` is used to delimit the mandoc output
+2. `</div>\n</div>\n<div id="footer">` is used to delimit the mandoc output
    from the rest of the page.
 
 ## interesting test cases

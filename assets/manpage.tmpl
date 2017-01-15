@@ -1,5 +1,6 @@
 {{ template "header" . }}
 
+<div class="panels" id="panels">
 <div class="panel" role="complementary">
 <div class="panel-heading" role="heading">
 links
@@ -112,8 +113,10 @@ conflicting packages
 </div>
 </div>
 {{ end }}
+</div>
 
-
+<div class="maincontent">
+<p class="paneljump"><a href="#panels">Scroll to navigation</a></p>
 {{ .Content }}
-
+</div>
 {{ template "footer" . }}

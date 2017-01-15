@@ -142,7 +142,43 @@ a:visited {
 }
 
 #content {
-	margin: 0 10px 0 52px;
+    margin: 0 10px 0 52px;
+    display: flex;
+    flex-direction: row;
+}
+
+.paneljump {
+    background-color: #d70751;
+    padding: 0.5em;
+    border-radius: 3px;
+    margin-right: .5em;
+    display: none;
+}
+
+.paneljump a,
+.paneljump a:visited,
+.paneljump a:hover,
+.paneljump a:focus {
+    color: white;
+}
+
+@media all and (max-width: 800px) {
+    #content {
+	flex-direction: column;
+	margin: 0.5em;
+    }
+    .paneljump {
+	display: block;
+    }
+}
+
+.panels {
+    display: block;
+    order: 2;
+}
+
+.maincontent {
+    order: 1;
 }
 
 .mandoc {
@@ -428,7 +464,7 @@ h2 {
 }
 
 @media print {
-    #header, #footer, .panel, .anchor {
+    #header, #footer, .panel, .anchor, .paneljump {
 	display: none;
     }
     #content {

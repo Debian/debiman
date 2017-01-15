@@ -36,7 +36,7 @@ func reuse(src string) (doc string, toc []string, err error) {
 		}
 		if bytes.Equal(b, footerB) {
 			all := buf.Bytes()
-			all = bytes.TrimSuffix(all, []byte("</div>\n"))
+			all = bytes.TrimSuffix(all, []byte("</div>\n</div>\n"))
 			return string(bytes.TrimSpace(all)), toc, nil
 		}
 
