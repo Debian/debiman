@@ -3,6 +3,18 @@
 [![Build Status](https://travis-ci.org/Debian/debiman.svg?branch=master)](https://travis-ci.org/Debian/debiman)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Debian/debiman)](https://goreportcard.com/report/github.com/Debian/debiman)
 
+## Goals
+
+debiman makes (Debian) manpages accessible in a web browser. Its goals are, in order:
+
+1. **completeness**: all manpages in Debian should be available.
+2. **visually appealing** and **convenient**: reading manpages should be fun, convenience features (e.g. permalinks, URL redirects, easy navigation) should be available
+3. **speed**: manpages should be quick to load, new manpages should be quickly ingested, the program should run quickly for pleasant development
+
+Currently, there is one known bug with regards to completeness ([#12](https://github.com/Debian/debiman/issues/12)).
+
+With regards to speed, debiman can process all manpages of Debian unstable in **less than 10 minutes** on a modern machine. Incremental updates complete in **less than 15 seconds**. For more details, see [PERFORMANCE.md](https://github.com/Debian/debiman/blob/master/PERFORMANCE.md).
+
 ## Prerequisites
 
 * mandoc
