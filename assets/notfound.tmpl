@@ -1,5 +1,7 @@
 {{ template "header" . }}
 
+<div class="maincontents">
+
 {{ if ne .BestChoice.Suite "" }}
 <p>
 Sorry, I could not find the specific manpage version you requested! Possibly it is no longer in Debian?
@@ -15,5 +17,7 @@ Sorry, the manpage “{{ .Manpage }}” was not found! Did you spell it correctl
 Could I maybe offer you the manpage <a href="{{ .BestChoice.ServingPath .Manpage }}">{{ .BestChoice.ServingPath .Manpage }}</a> instead?
 </p>
 {{ end }}
+
+</div>
 
 {{ template "footer" . }}

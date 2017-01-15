@@ -1,5 +1,7 @@
 {{ template "header" . }}
 
+<div class="maincontents">
+
 <h1>Binary packages containing manpages in Debian {{ .Suite }}</h1>
 
 <ul>
@@ -7,5 +9,7 @@
   <li><a href="/{{ $.Suite }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
 {{ end }}
 </ul>
+
+</div>
 
 {{ template "footer" . }}

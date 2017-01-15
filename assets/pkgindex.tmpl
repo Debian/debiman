@@ -1,5 +1,7 @@
 {{ template "header" . }}
 
+<div class="maincontents">
+
 <h1>Manpages of {{ .First.Package.Binarypkg }} in Debian {{ .First.Package.Suite }}</h1>
   
 <ul>
@@ -15,5 +17,7 @@
   {{ end }}
 {{ end }}
 </ul>
+
+</div>
 
 {{ template "footer" . }}
