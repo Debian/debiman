@@ -64,6 +64,7 @@ func TestToHTML(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			defer converter.Kill()
 			f, err := os.Open("../../testdata/" + d + ".1")
 			if err != nil {
 				t.Fatal(err)

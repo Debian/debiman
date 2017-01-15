@@ -47,6 +47,7 @@ baz
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer converter.Kill()
 
 	if err := rendermanpage(converter, renderJob{
 		dest:     f.Name(),

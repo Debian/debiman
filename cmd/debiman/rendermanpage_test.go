@@ -80,6 +80,7 @@ baz
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer converter.Kill()
 
 	_, data, err := rendermanpageprep(converter, renderJob{
 		dest: f.Name(),
