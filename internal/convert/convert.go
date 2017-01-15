@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -36,14 +35,6 @@ func recurse(n *html.Node, f func(c *html.Node) error) error {
 	return nil
 }
 
-var (
-	xrefRe = regexp.MustCompile(`\b[A-Za-z0-9_.-]+\([^)]+\)`)
-	// urlRe is a regular expression which matches anything that looks
-	// roughly like a URL. Matches are filtered by checking whether
-	// (net/url).Parse returns an error.
-	urlRe = regexp.MustCompile(`[A-Za-z0-9]+://[^ ]+`)
-)
-
 type ref struct {
 	pos  []int
 	dest string
@@ -61,8 +52,37 @@ func (p byStart) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }
 
+func findXrefs(txt string) [][]int {
+	var results [][]int
+
+	lastWordBoundary := -1
+	lastOpeningParen := -1
+
+	for i, r := range txt {
+		switch {
+		case 'a' <= r && r <= 'z':
+		case 'A' <= r && r <= 'Z':
+		case '0' <= r && r <= '9':
+		case r == '-':
+		case r == '.':
+		case r == '_':
+		case r == '(':
+			lastOpeningParen = i
+		case r == ')':
+			if lastOpeningParen > -1 &&
+				lastWordBoundary < (lastOpeningParen-1) {
+				results = append(results, []int{lastWordBoundary + 1, i + 1})
+			}
+		default:
+			lastWordBoundary = i
+			lastOpeningParen = -1
+		}
+	}
+	return results
+}
+
 func xrefMatches(txt string, resolve func(ref string) string) []ref {
-	xrefm := xrefRe.FindAllStringIndex(txt, -1)
+	xrefm := findXrefs(txt)
 	matches := make([]ref, 0, len(xrefm))
 	for _, r := range xrefm {
 		url := resolve(txt[r[0]:r[1]])
@@ -76,8 +96,50 @@ func xrefMatches(txt string, resolve func(ref string) string) []ref {
 	return matches
 }
 
+// findUrls finds anything that roughly like a URL. Matches are
+// filtered by checking whether (net/url).Parse returns an error.
+func findUrls(txt string) [][]int {
+	var results [][]int
+
+	lastWordBoundary := -1
+	lastColon := -1
+	lastSlash := -1
+	inUrl := false
+
+	for i, r := range txt {
+		switch {
+		case 'a' <= r && r <= 'z':
+		case 'A' <= r && r <= 'Z':
+		case '0' <= r && r <= '9':
+		case r == ':':
+			lastColon = i
+		case r == '/':
+			if lastColon > -1 && lastColon == i-2 && lastSlash == i-1 && lastWordBoundary < (lastColon-1) {
+				inUrl = true
+			}
+			lastSlash = i
+		default:
+			if inUrl && r != ' ' {
+				continue
+			}
+			if inUrl && r == ' ' {
+				results = append(results, []int{lastWordBoundary + 1, i})
+				inUrl = false
+			}
+
+			lastWordBoundary = i
+			lastSlash = -1
+			lastColon = -1
+		}
+	}
+	if inUrl {
+		results = append(results, []int{lastWordBoundary + 1, len(txt)})
+	}
+	return results
+}
+
 func urlMatches(txt string) []ref {
-	urlm := urlRe.FindAllStringIndex(txt, -1)
+	urlm := findUrls(txt)
 	matches := make([]ref, 0, len(urlm))
 	for _, r := range urlm {
 		match := txt[r[0]:r[1]]

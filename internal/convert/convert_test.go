@@ -407,3 +407,10 @@ func TestFormattedXref(t *testing.T) {
 		t.Fatalf("Unexpected xref() HTML result: %v", err)
 	}
 }
+
+func BenchmarkXref(b *testing.B) {
+	data := "more details can be found in systemd.service(5), i3lock(1), http://debian.org/# and others"
+	for n := 0; n < b.N; n++ {
+		xref(data, func(ref string) string { return ref })
+	}
+}
