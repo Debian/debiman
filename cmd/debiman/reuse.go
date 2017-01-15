@@ -1,42 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"os"
-
-	"golang.org/x/net/html"
 )
 
-func recurse(n *html.Node, f func(c *html.Node) error) error {
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		if err := recurse(c, f); err != nil {
-			return err
-		}
-		if err := f(c); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func mandocDiv(n *html.Node) bool {
-	for _, a := range n.Attr {
-		if a.Key == "class" && a.Val == "mandoc" {
-			return true
-		}
-	}
-	return false
-}
-
-func tocLink(n *html.Node) bool {
-	for _, a := range n.Attr {
-		if a.Key == "class" && a.Val == "toclink" {
-			return true
-		}
-	}
-	return false
-}
+var mandocDivB = []byte(`<div class="mandoc">`)
+var tocLinkPrefix = []byte(`  <a class="toclink"`)
+var footerB = []byte(`<div id="footer">`)
 
 func reuse(src string) (doc string, toc []string, err error) {
 	f, err := os.Open(src)
@@ -50,33 +23,37 @@ func reuse(src string) (doc string, toc []string, err error) {
 		return "", nil, err
 	}
 	defer r.Close()
-	parsed, err := html.Parse(r)
-	if err != nil {
-		return "", nil, err
-	}
 
-	if err := r.Close(); err != nil {
-		return "", nil, err
-	}
+	var (
+		buf       bytes.Buffer
+		inManpage bool
+	)
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		b := scanner.Bytes()
+		if bytes.Equal(b, mandocDivB) {
+			inManpage = true
+		}
+		if bytes.Equal(b, footerB) {
+			all := buf.Bytes()
+			all = bytes.TrimSuffix(all, []byte("</div>\n"))
+			return string(bytes.TrimSpace(all)), toc, nil
+		}
 
-	if err := recurse(parsed, func(n *html.Node) error {
-		if n.Type == html.ElementNode && n.Data == "div" && mandocDiv(n) {
-			var buf bytes.Buffer
-			if err := html.Render(&buf, n); err != nil {
-				return err
+		if inManpage {
+			if _, err := buf.Write(b); err != nil {
+				return "", nil, err
 			}
-			doc = buf.String()
-			return nil
+			if _, err := buf.Write([]byte{'\n'}); err != nil {
+				return "", nil, err
+			}
+		} else if bytes.HasPrefix(b, tocLinkPrefix) {
+			entry := bytes.TrimSuffix(b, []byte("</a>"))
+			off := bytes.Index(entry, []byte{'>'})
+			if off > -1 {
+				toc = append(toc, string(entry[off+1:]))
+			}
 		}
-
-		if n.Type == html.ElementNode && n.Data == "a" && tocLink(n) {
-			toc = append(toc, n.FirstChild.Data)
-		}
-
-		return nil
-	}); err != nil {
-		return "", nil, err
 	}
-
-	return doc, toc, nil
+	return buf.String(), nil, scanner.Err()
 }

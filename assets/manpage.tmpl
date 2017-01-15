@@ -28,7 +28,7 @@ table of contents
 <ul class="list-group list-group-flush">
 {{ range $idx, $heading := .TOC }}
 <li class="list-group-item">
-  <a href="{{ FragmentLink $heading }}" class="toclink" title="{{ $heading }}">{{ $heading }}</a>
+  <a class="toclink" href="{{ FragmentLink $heading }}" title="{{ $heading }}">{{ $heading }}</a>
 </li>
 {{ end }}
 </ul>

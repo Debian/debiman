@@ -93,6 +93,21 @@ It is safe to run debiman while you are serving from -serving_dir. debiman will 
 
 TODO: add numbers for how long synchronization typically takes from scratch and incrementally, also how much network traffic it will cause
 
+## Customization
+
+You can copy the assets/ directory, modify its contents and start
+debiman with -inject_assets pointed to your directory. Any files whose
+name does not end in .tmpl are treated as static files and will be
+placed in -serving_dir (compressed and uncompressed).
+
+There are a few requirements for the templates, so that debiman can
+re-use rendered manpages (for symlinked manpages):
+
+1. In assets/manpage.tmpl and assets/manpageerror.tmpl, the string “<a
+   class="toclink"” is used to find table of content links.
+2. “</div>\n<div id="footer">” is used to delimit the mandoc output
+   from the rest of the page.
+
 ## interesting test cases
 
 crontab(5) is present in multiple Debian versions, multiple languages, multiple sections and multiple conflicting packages. Hence, it showcases all debiman features.
