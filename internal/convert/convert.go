@@ -60,12 +60,12 @@ func findXrefs(txt string) [][]int {
 
 	for i, r := range txt {
 		switch {
-		case 'a' <= r && r <= 'z':
-		case 'A' <= r && r <= 'Z':
-		case '0' <= r && r <= '9':
-		case r == '-':
-		case r == '.':
-		case r == '_':
+		case 'a' <= r && r <= 'z' ||
+			'A' <= r && r <= 'Z' ||
+			'0' <= r && r <= '9' ||
+			r == '-' ||
+			r == '.' ||
+			r == '_':
 		case r == '(':
 			lastOpeningParen = i
 		case r == ')':
@@ -108,9 +108,9 @@ func findUrls(txt string) [][]int {
 
 	for i, r := range txt {
 		switch {
-		case 'a' <= r && r <= 'z':
-		case 'A' <= r && r <= 'Z':
-		case '0' <= r && r <= '9':
+		case 'a' <= r && r <= 'z' ||
+			'A' <= r && r <= 'Z' ||
+			'0' <= r && r <= '9':
 		case r == ':':
 			lastColon = i
 		case r == '/':
