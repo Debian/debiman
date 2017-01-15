@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/Debian/debiman.svg?branch=master)](https://travis-ci.org/Debian/debiman)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Debian/debiman)](https://goreportcard.com/report/github.com/Debian/debiman)
 
+<img src="https://github.com/Debian/debiman/raw/master/debiman-logo.svg" width="300" height="280" align="right" alt="debiman logo">
+
 ## Goals
 
 debiman makes (Debian) manpages accessible in a web browser. Its goals are, in order:
