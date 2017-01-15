@@ -2,6 +2,7 @@ package bundled
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,9 +22,15 @@ func Inject(dir string) error {
 		return err
 	}
 	for _, fn := range names {
-		b, err := ioutil.ReadFile(filepath.Join(dir, fn))
+		path := filepath.Join(dir, fn)
+		b, err := ioutil.ReadFile(path)
 		if err != nil {
 			return err
+		}
+		if a, ok := assets["assets/"+fn]; !ok {
+			log.Printf("Warning: injected asset %q does not overwrite any bundled asset (left-over file?)", fn)
+		} else {
+			log.Printf("Overwriting bundled asset %q (len %d) with %q (len %d)", fn, len(a), path, len(b))
 		}
 		assets["assets/"+fn] = string(b)
 	}
