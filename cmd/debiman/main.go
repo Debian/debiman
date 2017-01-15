@@ -89,12 +89,16 @@ func logic() error {
 		return err
 	}
 
+	log.Printf("Extracted all manpages, now rendering")
+
 	// Stage 3: all man pages are rendered into an HTML representation
 	// using mandoc(1), directory index files are rendered, contents
 	// files are rendered.
 	if err := renderAll(globalView); err != nil {
 		return err
 	}
+
+	log.Printf("Rendered all manpages, writing index")
 
 	// Stage 4: write the index only after all rendering is complete,
 	// otherwise debiman-auxserver might serve redirects to pages
