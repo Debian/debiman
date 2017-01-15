@@ -356,7 +356,16 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 		}
 	}
 
-	return ioutil.WriteFile(vPath, []byte(p.version.String()), 0644)
+	if err := ioutil.WriteFile(vPath, []byte(p.version.String()), 0644); err != nil {
+		if os.IsNotExist(err) {
+			// If the directory does not exist, we did not extract any
+			// manpages. Since Contents files are not precise (they
+			// might lag behind), this can happen occasionally.
+			return nil
+		}
+		return fmt.Errorf("Writing version file %q: %v", err)
+	}
+	return nil
 }
 
 func parallelDownload(ar *archive.Getter, gv globalView) error {
