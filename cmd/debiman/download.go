@@ -208,10 +208,6 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 
 	allRefs := make(map[string]bool)
 
-	if _, err := tmp.Seek(0, os.SEEK_SET); err != nil {
-		return err
-	}
-
 	d, err := deb.Load(tmp, p.filename)
 	if err != nil {
 		return err
