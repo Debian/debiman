@@ -28,6 +28,10 @@ var (
 	renderConcurrency = flag.Int("concurrency_render",
 		5,
 		"Concurrency level for rendering manpages using mandoc")
+
+	gzipLevel = flag.Int("gzip",
+		9,
+		"gzip compression level to use for compressing HTML versions of manpages. defaults to 9 to keep network traffic minimal, but useful to reduce for development/disaster recovery (level 1 results in a 2x speedup!)")
 )
 
 type breadcrumb struct {
@@ -271,7 +275,7 @@ func renderAll(gv globalView) error {
 			// NOTE(stapelberg): gzip’s decompression phase takes the same
 			// time, regardless of compression level. Hence, we invest the
 			// maximum CPU time once to achieve the best compression.
-			gzipw, err := gzip.NewWriterLevel(nil, gzip.BestCompression)
+			gzipw, err := gzip.NewWriterLevel(nil, *gzipLevel)
 			if err != nil {
 				return err
 			}
