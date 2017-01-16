@@ -23,6 +23,12 @@ func mustParseFaqTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("faq").Parse(bundled.Asset("faq.tmpl")))
 }
 
+var aboutTmpl = mustParseAboutTmpl()
+
+func mustParseAboutTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("about").Parse(bundled.Asset("about.tmpl")))
+}
+
 type bySuiteStr []string
 
 func (p bySuiteStr) Len() int      { return len(p) }
@@ -61,6 +67,20 @@ func renderAux(destDir string, gv globalView) error {
 
 	if err := writeAtomically(filepath.Join(destDir, "faq.html.gz"), true, func(w io.Writer) error {
 		return faqTmpl.Execute(w, struct {
+			Title          string
+			DebimanVersion string
+			Breadcrumbs    []breadcrumb
+			FooterExtra    string
+		}{
+			Title:          "FAQ",
+			DebimanVersion: debimanVersion,
+		})
+	}); err != nil {
+		return err
+	}
+
+	if err := writeAtomically(filepath.Join(destDir, "about.html.gz"), true, func(w io.Writer) error {
+		return aboutTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string
 			Breadcrumbs    []breadcrumb

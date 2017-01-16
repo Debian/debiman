@@ -136,6 +136,7 @@ func main() {
 		pkgindexTmpl = mustParsePkgindexTmpl()
 		indexTmpl = mustParseIndexTmpl()
 		faqTmpl = mustParseFaqTmpl()
+		aboutTmpl = mustParseAboutTmpl()
 		manpageTmpl = mustParseManpageTmpl()
 		manpageerrorTmpl = mustParseManpageerrorTmpl()
 	}
