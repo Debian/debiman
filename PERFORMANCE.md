@@ -29,5 +29,5 @@ xref preparation       | (not measured)  | <80s
 stat                   | (not measured)  | <60s
 **total incremental**  | **<140s**       | **<10m** (TODO)
 full man extraction    | TODO            | TODO
-full man rendering     | TODO            | TODO
+full man rendering     | TODO            | 2h
 **total from scratch** | TODO            | TODO
