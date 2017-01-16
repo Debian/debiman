@@ -2,7 +2,7 @@
 
 <div class="maincontents">
 
-{{ if ne .BestChoice.Suite "" }}
+{{ if or (ne .BestChoice.Suite "") (eq .Manpage "index") }}
 <p>
 Sorry, I could not find the specific manpage version you requested! Possibly it is no longer in Debian?
 </p>

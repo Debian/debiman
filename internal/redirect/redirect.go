@@ -314,10 +314,14 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	}, entries)
 
 	if len(filtered) == 0 {
+		// Present the user with another choice for this manpage.
+		var best IndexEntry
+		if name != "index" && name != "favicon" {
+			best = i.narrow(name, acceptLang, IndexEntry{}, entries)[0]
+		}
 		return "", &NotFoundError{
-			Manpage: name,
-			// Present the user with another choice for this manpage.
-			BestChoice: i.narrow(name, acceptLang, IndexEntry{}, entries)[0]}
+			Manpage:    name,
+			BestChoice: best}
 	}
 
 	return filtered[0].ServingPath(name), nil
