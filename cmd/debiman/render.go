@@ -130,7 +130,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 
 			n := strings.TrimSuffix(fn, ".gz") + ".html.gz"
 			htmlst, err := os.Stat(filepath.Join(dir, n))
-			if err != nil || htmlst.ModTime().Before(st.ModTime()) {
+			if err != nil || *forceRerender || htmlst.ModTime().Before(st.ModTime()) {
 				m, err := manpage.FromServingPath(*servingDir, full)
 				if err != nil {
 					// If we run into this case, our code cannot correctly
@@ -171,7 +171,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 	}
 
 	st, err := os.Stat(filepath.Join(dir, "index.html.gz"))
-	if err == nil && st.ModTime().After(newestModTime) {
+	if !*forceRerender && err == nil && st.ModTime().After(newestModTime) {
 		return newestModTime, nil
 	}
 
