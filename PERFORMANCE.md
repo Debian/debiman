@@ -14,8 +14,8 @@ xref preparation       | <3s             | <15s
 stat                   | <2s             | <4s
 **total incremental**  | **<13s**        | **<65s**
 full man extraction    | 5m              | 20m
-full man rendering     | <4m             | 22m
-**total from scratch** | **<10m**        | **43m**
+full man rendering     | <4m             | 12m
+**total from scratch** | **<10m**        | **34m**
 
 ## Dated machine
 
