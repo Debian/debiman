@@ -280,6 +280,9 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 				}
 				return err
 			}
+			if err := maybeSetLinkMtime(destPath, header.ModTime); err != nil {
+				return err
+			}
 
 			continue
 		}
