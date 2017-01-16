@@ -296,6 +296,8 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		suite, binarypkg, name, section, lang = i.split(path)
 	}
 
+	name = strings.ToLower(name)
+
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
 
 	entries, ok := i.Entries[name]
@@ -337,7 +339,8 @@ func IndexFromProto(path string) (Index, error) {
 	}
 	index.Entries = make(map[string][]IndexEntry, len(idx.Entry))
 	for _, e := range idx.Entry {
-		index.Entries[e.Name] = append(index.Entries[e.Name], IndexEntry{
+		name := strings.ToLower(e.Name)
+		index.Entries[name] = append(index.Entries[name], IndexEntry{
 			Suite:     e.Suite,
 			Binarypkg: e.Binarypkg,
 			Section:   e.Section,
