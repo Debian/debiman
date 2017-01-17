@@ -94,7 +94,7 @@ func renderAux(destDir string, gv globalView) error {
 	}
 
 	for name, content := range bundled.AssetsFiltered(func(fn string) bool {
-		return !strings.HasSuffix(fn, ".tmpl") && !strings.HasSuffix(fn, ".css")
+		return !strings.HasSuffix(fn, ".tmpl") && !strings.HasSuffix(fn, "style.css")
 	}) {
 		if err := writeAtomically(filepath.Join(destDir, filepath.Base(name)+".gz"), true, func(w io.Writer) error {
 			_, err := io.WriteString(w, content)
