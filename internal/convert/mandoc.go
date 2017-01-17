@@ -131,13 +131,15 @@ func (p *Process) mandocUnix(r io.Reader) (stdout string, stderr string, err err
 	outw.Close()
 	errw.Close()
 
-	if _, err := io.Copy(manw, r); err != nil {
-		return "", "", err
-	}
-	if err := manw.Close(); err != nil {
-		return "", "", err
-	}
 	var eg errgroup.Group
+
+	eg.Go(func() error {
+		if _, err := io.Copy(manw, r); err != nil {
+			return err
+		}
+		return manw.Close()
+	})
+
 	var stdoutb, stderrb []byte
 
 	eg.Go(func() error {
