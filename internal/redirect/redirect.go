@@ -23,8 +23,8 @@ type IndexEntry struct {
 	Language  string // TODO: type: would it make sense to use language.Tag?
 }
 
-func (e IndexEntry) ServingPath(name string) string {
-	return "/" + e.Suite + "/" + e.Binarypkg + "/" + name + "." + e.Section + "." + e.Language + ".html"
+func (e IndexEntry) ServingPath() string {
+	return "/" + e.Suite + "/" + e.Binarypkg + "/" + e.Name + "." + e.Section + "." + e.Language + ".html"
 }
 
 type Index struct {
@@ -306,7 +306,6 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	if !ok {
 		return "", &NotFoundError{Manpage: name}
 	}
-	name = entries[0].Name
 
 	acceptLang := r.Header.Get("Accept-Language")
 	filtered := i.narrow(name, acceptLang, IndexEntry{
@@ -327,7 +326,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 			BestChoice: best}
 	}
 
-	return filtered[0].ServingPath(name), nil
+	return filtered[0].ServingPath(), nil
 }
 
 func IndexFromProto(path string) (Index, error) {

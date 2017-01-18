@@ -199,7 +199,7 @@ func TestNotFoundWrongSuite(t *testing.T) {
 	if got, want := e.Manpage, "i3"; got != want {
 		t.Fatalf("Unexpected e.Manpage: got %q, want %q", got, want)
 	}
-	if got, want := e.BestChoice.ServingPath(e.Manpage), "/jessie/i3-wm/i3.1.en.html"; got != want {
+	if got, want := e.BestChoice.ServingPath(), "/jessie/i3-wm/i3.1.en.html"; got != want {
 		t.Fatalf("Unexpected e.BestChoice.ServingPath(): got %q, want %q", got, want)
 	}
 }
