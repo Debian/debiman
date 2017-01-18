@@ -16,6 +16,7 @@ import (
 )
 
 type IndexEntry struct {
+	Name      string // TODO: string pool
 	Suite     string // TODO: enum to save space
 	Binarypkg string // TODO: sort by popcon, TODO: use a string pool
 	Section   string // TODO: use a string pool
@@ -296,14 +297,13 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		suite, binarypkg, name, section, lang = i.split(path)
 	}
 
-	name = strings.ToLower(name)
-
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
 
-	entries, ok := i.Entries[name]
+	entries, ok := i.Entries[strings.ToLower(name)]
 	if !ok {
 		return "", &NotFoundError{Manpage: name}
 	}
+	name = entries[0].Name
 
 	acceptLang := r.Header.Get("Accept-Language")
 	filtered := i.narrow(name, acceptLang, IndexEntry{
@@ -345,6 +345,7 @@ func IndexFromProto(path string) (Index, error) {
 	for _, e := range idx.Entry {
 		name := strings.ToLower(e.Name)
 		index.Entries[name] = append(index.Entries[name], IndexEntry{
+			Name:      e.Name,
 			Suite:     e.Suite,
 			Binarypkg: e.Binarypkg,
 			Section:   e.Section,

@@ -42,6 +42,7 @@ var testIdx = Index{
 	Entries: map[string][]IndexEntry{
 		"i3": []IndexEntry{
 			{
+				Name:      "i3",
 				Suite:     "jessie",
 				Binarypkg: "i3-wm",
 				Section:   "1",
@@ -49,6 +50,7 @@ var testIdx = Index{
 			},
 
 			{
+				Name:      "i3",
 				Suite:     "jessie",
 				Binarypkg: "i3-wm",
 				Section:   "5",
@@ -56,6 +58,7 @@ var testIdx = Index{
 			},
 
 			{
+				Name:      "i3",
 				Suite:     "jessie",
 				Binarypkg: "i3-wm",
 				Section:   "5",
@@ -63,6 +66,7 @@ var testIdx = Index{
 			},
 
 			{
+				Name:      "i3",
 				Suite:     "jessie",
 				Binarypkg: "i3-wm",
 				Section:   "1",
@@ -70,6 +74,7 @@ var testIdx = Index{
 			},
 
 			{
+				Name:      "i3",
 				Suite:     "testing",
 				Binarypkg: "i3-wm",
 				Section:   "1",
@@ -77,6 +82,7 @@ var testIdx = Index{
 			},
 
 			{
+				Name:      "i3",
 				Suite:     "testing",
 				Binarypkg: "i3-wm",
 				Section:   "1",
@@ -84,6 +90,7 @@ var testIdx = Index{
 			},
 
 			{
+				Name:      "i3",
 				Suite:     "testing",
 				Binarypkg: "i3-wm",
 				Section:   "5",
@@ -91,58 +98,71 @@ var testIdx = Index{
 			},
 
 			{
+				Name:      "i3",
 				Suite:     "testing",
 				Binarypkg: "i3-wm",
 				Section:   "5",
 				Language:  "en",
 			},
 		},
+
 		"systemd.service": []IndexEntry{
 			{
+				Name:      "systemd.service",
 				Suite:     "jessie",
 				Binarypkg: "systemd",
 				Section:   "5",
 				Language:  "en",
 			},
 		},
+
 		"editline": []IndexEntry{
 			{
+				Name:      "editline",
 				Suite:     "jessie",
 				Binarypkg: "libedit-dev",
 				Section:   "3edit",
 				Language:  "en",
 			},
 			{
+				Name:      "editline",
 				Suite:     "jessie",
 				Binarypkg: "libeditline-dev",
 				Section:   "3",
 				Language:  "en",
 			},
 		},
+
 		"javafxpackager": []IndexEntry{
 			{
+				Name:      "javafxpackager",
 				Suite:     "testing",
 				Binarypkg: "openjfx",
 				Section:   "1",
 				Language:  "en",
 			},
 		},
+
 		"dup": []IndexEntry{
 			{
+				Name:      "dup",
 				Suite:     "jessie",
 				Binarypkg: "manpages-pl-dev",
 				Section:   "2",
 				Language:  "pl",
 			},
 			{
+				Name:      "dup",
 				Suite:     "jessie",
 				Binarypkg: "manpages-dev",
 				Section:   "2",
 				Language:  "en",
 			},
 		},
+
 		"man": []IndexEntry{
 			{
+				Name:      "man",
 				Suite:     "jessie",
 				Binarypkg: "man-db",
 				Section:   "1",

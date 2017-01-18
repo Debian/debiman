@@ -12,6 +12,7 @@ var i3OnlyIdx = redirect.Index{
 	Entries: map[string][]redirect.IndexEntry{
 		"i3": []redirect.IndexEntry{
 			{
+				Name:      "i3",
 				Suite:     "jessie",
 				Binarypkg: "i3-wm",
 				Section:   "1",
@@ -64,14 +65,17 @@ func TestIndexSwapSucceed(t *testing.T) {
 		Entries: map[string][]redirect.IndexEntry{
 			"i3": []redirect.IndexEntry{
 				{
+					Name:      "i3",
 					Suite:     "jessie",
 					Binarypkg: "i3-wm",
 					Section:   "1",
 					Language:  "en",
 				},
 			},
+
 			"w3m": []redirect.IndexEntry{
 				{
+					Name:      "w3m",
 					Suite:     "jessie",
 					Binarypkg: "w3m",
 					Section:   "1",
