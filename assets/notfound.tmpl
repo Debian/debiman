@@ -14,7 +14,7 @@ Sorry, the manpage “{{ .Manpage }}” was not found! Did you spell it correctl
 
 {{ if ne .BestChoice.Suite "" }}
 <p>
-Could I maybe offer you the manpage <a href="{{ .BestChoice.ServingPath .Manpage }}">{{ .BestChoice.ServingPath .Manpage }}</a> instead?
+Could I maybe offer you the manpage <a href="{{ .BestChoice.ServingPath }}">{{ .BestChoice.ServingPath }}</a> instead?
 </p>
 {{ end }}
 
