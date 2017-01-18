@@ -71,6 +71,8 @@ func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
 
 func (i Index) split(path string) (suite string, binarypkg string, name string, section string, lang string) {
 	dir := strings.TrimPrefix(filepath.Dir(path), "/")
+	base := strings.TrimSpace(filepath.Base(path))
+	base = strings.Replace(base, " ", ".", -1)
 	parts := strings.Split(dir, "/")
 	if len(parts) > 0 {
 		if len(parts) == 1 {
@@ -80,7 +82,13 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 				// legacy manpages.debian.org
 				section = parts[0]
 			} else {
-				binarypkg = parts[0]
+				if i.Sections[base] {
+					// man.freebsd.org
+					section = base
+					base = parts[0]
+				} else {
+					binarypkg = parts[0]
+				}
 			}
 		} else if len(parts) == 2 && strings.HasPrefix(parts[1], "man") && i.Sections[strings.TrimPrefix(parts[1], "man")] {
 			// legacy manpages.debian.org
@@ -92,8 +100,6 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 		}
 	}
 
-	base := strings.TrimSpace(filepath.Base(path))
-	base = strings.Replace(base, " ", ".", -1)
 	// the first part can contain dots, so we need to “split from the right”
 	parts = strings.Split(base, ".")
 	if len(parts) == 1 {
