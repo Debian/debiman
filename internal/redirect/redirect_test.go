@@ -260,7 +260,8 @@ func TestUnderspecified(t *testing.T) {
 		want string
 	}{
 		{Case: 1, URL: "i3", want: "jessie/i3-wm/i3.1.en.html"},
-		{Case: 1, URL: "I3", want: "jessie/i3-wm/i3.1.en.html"}, // case
+		{Case: 1, URL: "I3", want: "jessie/i3-wm/i3.1.en.html"},  // case
+		{Case: 1, URL: " I3", want: "jessie/i3-wm/i3.1.en.html"}, // leading space
 		{Case: 1, URL: "systemd.service", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 1, URL: "javafxpackager", want: "testing/openjfx/javafxpackager.1.en.html"}, // not available in jessie
 

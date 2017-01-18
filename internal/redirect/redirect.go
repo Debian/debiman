@@ -299,7 +299,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
 
-	entries, ok := i.Entries[strings.ToLower(name)]
+	entries, ok := i.Entries[strings.ToLower(strings.TrimSpace(name))]
 	if !ok {
 		return "", &NotFoundError{Manpage: name}
 	}
