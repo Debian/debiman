@@ -503,6 +503,48 @@ func TestAcceptLanguage(t *testing.T) {
 	}
 }
 
+func TestReferrer(t *testing.T) {
+	table := []struct {
+		URL      string
+		want     string
+		lang     string
+		referrer string
+	}{
+		{
+			URL:      "i3",
+			want:     "testing/i3-wm/i3.1.fr.html",
+			lang:     "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+			referrer: "testing/i3-wm/i3.5.fr.html",
+		},
+	}
+	for _, entry := range table {
+		entry := entry // capture
+		t.Run(entry.URL, func(t *testing.T) {
+			t.Parallel()
+
+			u, err := url.Parse("http://man.debian.org/" + entry.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req := &http.Request{
+				URL: u,
+				Header: http.Header{
+					"Accept-Language": []string{entry.lang},
+					"Referer":         []string{"http://man.debian.org/" + entry.referrer},
+				},
+			}
+			got, err := testIdx.Redirect(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "/" + entry.want
+			if got != want {
+				t.Fatalf("Unexpected redirect: got %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 // // TODO: no longer supported releases result in an error page with a link to the oldest stable version
 // {
 // 	URL:  "http://man.debian.org/lenny/i3",

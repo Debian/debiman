@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -154,7 +155,7 @@ func (p bySection) Len() int           { return len(p) }
 func (p bySection) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p bySection) Less(i, j int) bool { return p[i].Section < p[j].Section }
 
-func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []IndexEntry) []IndexEntry {
+func (i Index) narrow(name, acceptLang string, template, ref IndexEntry, entries []IndexEntry) []IndexEntry {
 	t := template // for convenience
 	valid := make(map[string]bool, len(entries))
 	for _, e := range entries {
@@ -194,11 +195,20 @@ func (i Index) narrow(name, acceptLang string, template IndexEntry, entries []In
 	// suite
 
 	if t.Suite == "" {
-		// Prefer redirecting to defaultSuite
+		// Prefer redirecting to the suite from the referrer
 		for _, e := range filtered {
-			if e.Suite == defaultSuite {
-				t.Suite = defaultSuite
+			if e.Suite == ref.Suite {
+				t.Suite = ref.Suite
 				break
+			}
+		}
+		// Default to defaultSuite
+		if t.Suite == "" {
+			for _, e := range filtered {
+				if e.Suite == defaultSuite {
+					t.Suite = defaultSuite
+					break
+				}
 			}
 		}
 		// If the manpage is not contained in defaultSuite, use the
@@ -315,18 +325,28 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	}
 
 	acceptLang := r.Header.Get("Accept-Language")
+	ref := IndexEntry{}
+	if referer := r.Referer(); referer != "" {
+		if u, err := url.Parse(referer); err == nil {
+			rsuite, rbinarypkg, _, rsection, rlang := i.split(u.Path)
+			ref.Suite = rsuite
+			ref.Binarypkg = rbinarypkg
+			ref.Section = rsection
+			ref.Language = rlang
+		}
+	}
 	filtered := i.narrow(name, acceptLang, IndexEntry{
 		Suite:     suite,
 		Binarypkg: binarypkg,
 		Section:   section,
 		Language:  lang,
-	}, entries)
+	}, ref, entries)
 
 	if len(filtered) == 0 {
 		// Present the user with another choice for this manpage.
 		var best IndexEntry
 		if name != "index" && name != "favicon" {
-			best = i.narrow(name, acceptLang, IndexEntry{}, entries)[0]
+			best = i.narrow(name, acceptLang, IndexEntry{}, ref, entries)[0]
 		}
 		return "", &NotFoundError{
 			Manpage:    name,
