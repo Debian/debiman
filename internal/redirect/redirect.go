@@ -92,7 +92,8 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 		}
 	}
 
-	base := filepath.Base(path)
+	base := strings.TrimSpace(filepath.Base(path))
+	base = strings.Replace(base, " ", ".", -1)
 	// the first part can contain dots, so we need to “split from the right”
 	parts = strings.Split(base, ".")
 	if len(parts) == 1 {
@@ -302,7 +303,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
 
-	entries, ok := i.Entries[strings.ToLower(strings.TrimSpace(name))]
+	entries, ok := i.Entries[strings.ToLower(name)]
 	if !ok {
 		return "", &NotFoundError{Manpage: name}
 	}

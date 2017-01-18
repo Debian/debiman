@@ -272,6 +272,7 @@ func TestUnderspecified(t *testing.T) {
 
 		{Case: 3, URL: "i3.1", want: "jessie/i3-wm/i3.1.en.html"},  // default section
 		{Case: 3, URL: "i3(1)", want: "jessie/i3-wm/i3.1.en.html"}, // default section
+		{Case: 3, URL: "i3 1", want: "jessie/i3-wm/i3.1.en.html"},  // default section
 		{Case: 3, URL: "systemd.service.5", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 3, URL: "systemd.service(5)", want: "jessie/systemd/systemd.service.5.en.html"},
 		{Case: 3, URL: "i3.5", want: "jessie/i3-wm/i3.5.en.html"},                           // non-default section
