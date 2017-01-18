@@ -87,7 +87,7 @@ other sections
 <li class="list-group-item
 {{- if eq $man.MainSection $.Meta.MainSection }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ $man.MainSection }} (<span title="{{ LongSection $man.MainSection }}">{{ ShortSection $man.MainSection }}</span>)</a>
+<a href="/{{ $man.ServingPath }}.html">{{ $man.Section }} (<span title="{{ LongSection $man.MainSection }}">{{ ShortSection $man.MainSection }}</span>)</a>
 </li>
 {{ end }}
 </ul>

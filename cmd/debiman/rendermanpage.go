@@ -326,7 +326,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		if v.Package.Binarypkg != meta.Package.Binarypkg {
 			continue
 		}
-		if v.MainSection() != meta.MainSection() {
+		if v.Section != meta.Section {
 			continue
 		}
 		// TODO(later): allow switching to a different suite even if
@@ -345,7 +345,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		if v.Package.Suite != meta.Package.Suite {
 			continue
 		}
-		bySection[v.MainSection()] = append(bySection[v.MainSection()], v)
+		bySection[v.Section] = append(bySection[v.Section], v)
 	}
 	sections := make([]*manpage.Meta, 0, len(bySection))
 	for _, all := range bySection {
@@ -356,7 +356,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 	conflicting := make(map[string]bool)
 	bins := make([]*manpage.Meta, 0, len(job.versions))
 	for _, v := range job.versions {
-		if v.MainSection() != meta.MainSection() {
+		if v.Section != meta.Section {
 			continue
 		}
 
@@ -383,7 +383,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 	ambiguous := make(map[*manpage.Meta]bool)
 	byLang := make(map[string][]*manpage.Meta)
 	for _, v := range job.versions {
-		if v.MainSection() != meta.MainSection() {
+		if v.Section != meta.Section {
 			continue
 		}
 		if v.Package.Suite != meta.Package.Suite {
