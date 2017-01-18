@@ -82,7 +82,7 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 			} else {
 				binarypkg = parts[0]
 			}
-		} else if len(parts) == 2 && strings.HasPrefix(parts[1], "man") {
+		} else if len(parts) == 2 && strings.HasPrefix(parts[1], "man") && i.Sections[strings.TrimPrefix(parts[1], "man")] {
 			// legacy manpages.debian.org
 			lang = parts[0]
 			section = strings.TrimPrefix(parts[1], "man")
@@ -103,6 +103,9 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 	consumed := 0
 	if l := parts[len(parts)-1]; i.Langs[l] {
 		lang = l
+		consumed++
+	} else if l := parts[len(parts)-1]; i.Sections[l] {
+		section = l
 		consumed++
 	}
 	// The second to last part (if enough parts are present) can

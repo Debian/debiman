@@ -14,6 +14,7 @@ var testIdx = Index{
 
 	Sections: map[string]bool{
 		"1":     true,
+		"2":     true,
 		"3":     true,
 		"3edit": true,
 		"5":     true,
@@ -430,8 +431,15 @@ func TestAcceptLanguage(t *testing.T) {
 			want: "jessie/i3-wm/i3.1.fr.html",
 			lang: "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
 		},
+
 		{
 			URL:  "dup",
+			want: "jessie/manpages-dev/dup.2.en.html",
+			lang: "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
+		},
+
+		{
+			URL:  "jessie/manpages-dev/dup.2",
 			want: "jessie/manpages-dev/dup.2.en.html",
 			lang: "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
 		},
