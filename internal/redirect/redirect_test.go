@@ -141,6 +141,14 @@ var testIdx = Index{
 				Language:  "en",
 			},
 		},
+		"man": []IndexEntry{
+			{
+				Suite:     "jessie",
+				Binarypkg: "man-db",
+				Section:   "1",
+				Language:  "en",
+			},
+		},
 	},
 }
 
@@ -341,6 +349,9 @@ func TestLegacyManpagesDebianOrgRedirects(t *testing.T) {
 		want string
 	}{
 		{Case: 1, URL: "man/i3", want: "jessie/i3-wm/i3.1.en.html"},
+		{Case: 1, URL: "man", want: "jessie/man-db/man.1.en.html"},      // corner case: same name as a path prefix
+		{Case: 1, URL: "man(1)", want: "jessie/man-db/man.1.en.html"},   // corner case: same name as a path prefix
+		{Case: 1, URL: "man.1.en", want: "jessie/man-db/man.1.en.html"}, // corner case: same name as a path prefix
 
 		{Case: 2, URL: "man/fr/i3", want: "jessie/i3-wm/i3.1.fr.html"},
 

@@ -290,7 +290,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	path = strings.TrimSuffix(path, ".")
 
 	var suite, binarypkg, name, section, lang string
-	if strings.HasPrefix(path, "/man") {
+	if strings.HasPrefix(path, "/man") && strings.Index(path[1:], "/") > -1 {
 		suite, binarypkg, name, section, lang = i.splitLegacy(path)
 	} else {
 		suite, binarypkg, name, section, lang = i.split(path)

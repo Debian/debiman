@@ -5,6 +5,7 @@ import "strings"
 func (i *Index) splitLegacy(path string) (suite string, binarypkg string, name string, section string, lang string) {
 	parts := strings.Split(path[1:], "/")
 	// /man/<name>
+	// /man<section>/<name>
 	if len(parts) == 2 {
 		return "", "", parts[1], parts[0][len("man"):], ""
 	}
