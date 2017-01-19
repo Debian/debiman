@@ -13,6 +13,7 @@ var testIdx = Index{
 	},
 
 	Sections: map[string]bool{
+		"0":     true,
 		"1":     true,
 		"2":     true,
 		"3":     true,
@@ -380,6 +381,7 @@ func TestLegacyManpagesDebianOrgRedirects(t *testing.T) {
 
 		{Case: 3, URL: "man/1/i3", want: "jessie/i3-wm/i3.1.en.html"},
 		{Case: 3, URL: "man1/i3", want: "jessie/i3-wm/i3.1.en.html"},
+		{Case: 3, URL: "man0/i3", want: "jessie/i3-wm/i3.1.en.html"},
 		{Case: 3, URL: "man5/i3", want: "jessie/i3-wm/i3.5.en.html"},
 		{Case: 3, URL: "1/i3", want: "jessie/i3-wm/i3.1.en.html"},
 		{Case: 3, URL: "5/i3", want: "jessie/i3-wm/i3.5.en.html"},

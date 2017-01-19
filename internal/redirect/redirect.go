@@ -316,6 +316,10 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	} else {
 		suite, binarypkg, name, section, lang = i.split(path)
 	}
+	if section == "0" {
+		// legacy manpages.debian.org
+		section = ""
+	}
 
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
 
@@ -388,6 +392,7 @@ func IndexFromProto(path string) (Index, error) {
 	for _, l := range idx.Section {
 		index.Sections[l] = true
 	}
+	index.Sections["0"] = true
 
 	return index, nil
 }
