@@ -179,17 +179,27 @@ func getAllContents(ar *archive.Getter, suite string, release *ptarchive.Release
 	// contents of Architecture: all packages are included in the
 	// architecture-specific Contents-* files.
 
-	// TODO(later): make this code work with all components once it’s
-	// confirmed that we are interested in serving more than just
-	// main.
-	for _, component := range []string{"main"} {
+	var components = [...]string{"main", "contrib"}
+	parts := make([][]*contentEntry, len(components))
+	var sum int
+	for idx, component := range components {
 		archs := make([]string, len(release.Architectures))
 		for idx, arch := range release.Architectures {
 			archs[idx] = arch.String()
 		}
 
-		return getContents(ar, suite, component, archs, hashByFilename)
+		part, err := getContents(ar, suite, component, archs, hashByFilename)
+		if err != nil {
+			return nil, err
+		}
+		parts[idx] = part
+		sum += len(part)
 	}
 
-	return nil, nil
+	results := make([]*contentEntry, 0, sum)
+	for _, part := range parts {
+		results = append(results, part...)
+	}
+
+	return results, nil
 }

@@ -300,15 +300,32 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 }
 
 func getAllPackages(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]*pkgEntry, map[string]*manpage.PkgMeta, error) {
-	// TODO(later): make this code work with all components once it’s
-	// confirmed that we are interested in serving more than just
-	// main.
-	for _, component := range []string{"main"} {
+	var components = [...]string{"main", "contrib"}
+	partsp := make([][]*pkgEntry, len(components))
+	partsl := make([]map[string]*manpage.PkgMeta, len(components))
+	latestVersion := make(map[string]*manpage.PkgMeta)
+	var sum int
+	for idx, component := range components {
 		archs := make([]string, len(release.Architectures))
 		for idx, arch := range release.Architectures {
 			archs[idx] = arch.String()
 		}
-		return getPackages(ar, suite, component, archs, hashByFilename, containsMans)
+		partp, partl, err := getPackages(ar, suite, component, archs, hashByFilename, containsMans)
+		if err != nil {
+			return nil, nil, err
+		}
+		partsp[idx] = partp
+		partsl[idx] = partl
+		sum += len(partp)
 	}
-	return nil, nil, nil
+
+	results := make([]*pkgEntry, 0, sum)
+	for idx := range partsp {
+		results = append(results, partsp[idx]...)
+		for key, value := range partsl[idx] {
+			latestVersion[key] = value
+		}
+	}
+
+	return results, latestVersion, nil
 }
