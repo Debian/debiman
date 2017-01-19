@@ -95,7 +95,7 @@ func mustParseManpageTmpl() *template.Template {
 				return longSections[section]
 			},
 			"FragmentLink": func(fragment string) string {
-				u := url.URL{Fragment: fragment}
+				u := url.URL{Fragment: strings.Replace(fragment, " ", "_", -1)}
 				return u.String()
 			},
 		}).
@@ -114,7 +114,7 @@ func mustParseManpageerrorTmpl() *template.Template {
 				return longSections[section]
 			},
 			"FragmentLink": func(fragment string) string {
-				u := url.URL{Fragment: fragment}
+				u := url.URL{Fragment: strings.Replace(fragment, " ", "_", -1)}
 				return u.String()
 			},
 		}).
