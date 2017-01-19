@@ -178,6 +178,8 @@ a:visited {
 }
 
 .maincontent {
+    width: 100%;
+    max-width: 80ch;
     order: 1;
 }
 
