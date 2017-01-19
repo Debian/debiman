@@ -160,7 +160,7 @@ func (g *Getter) Get(path string, sha256sum []byte) (*os.File, error) {
 	// TODO: how does this fail on linux < 3.11 or other OSes?
 	f, err := os.OpenFile("/tmp", 0x410000|os.O_RDWR, 0600)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("archive.get: %v", err)
 	}
 	// TODO: fallback
 	// f, err := ioutil.TempFile("", "archive-")
@@ -180,12 +180,12 @@ func (g *Getter) Get(path string, sha256sum []byte) (*os.File, error) {
 			continue
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("archive.get: %v", err)
 		}
 	}
 
 	if _, err := f.Seek(0, os.SEEK_SET); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("archive.get: %v", err)
 	}
 
 	return f, nil
@@ -227,7 +227,7 @@ func (g *Getter) GetRelease(suite string) (*archive.Release, error) {
 	if g.LocalMirror != "" {
 		f, err := os.Open(filepath.Join(g.LocalMirror, "dists", suite, "Release"))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("archive.GetRelease: %v", err)
 		}
 		defer f.Close()
 		r = f
@@ -236,7 +236,7 @@ func (g *Getter) GetRelease(suite string) (*archive.Release, error) {
 		path := "http://ftp.ch.debian.org/debian/dists/" + suite + "/Release"
 		resp, err := http.Get(path)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("archive.GetRelease: %v", err)
 		}
 
 		defer func() {
@@ -253,7 +253,7 @@ func (g *Getter) GetRelease(suite string) (*archive.Release, error) {
 
 	release, err := archive.LoadInRelease(r, &g.keyring)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("archive.GetRelease: %v", err)
 	}
 
 	g.byHashMu.Lock()
@@ -261,5 +261,5 @@ func (g *Getter) GetRelease(suite string) (*archive.Release, error) {
 	g.byHash[release.Codename] = release.Values["Acquire-By-Hash"] == "yes"
 	g.byHash[release.Suite] = release.Values["Acquire-By-Hash"] == "yes"
 
-	return release, err
+	return release, nil
 }
