@@ -39,7 +39,7 @@ func parseContentsEntry(scanner *bufio.Scanner) ([]*contentEntry, error) {
 		parts := bytes.Split(text[idx:], []byte{','})
 		entries := make([]*contentEntry, 0, len(parts))
 		for _, part := range parts {
-			idx2 := bytes.IndexByte(part, '/')
+			idx2 := bytes.LastIndex(part, []byte{'/'})
 			if idx2 == -1 {
 				continue
 			}
