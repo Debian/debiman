@@ -92,6 +92,10 @@ func getContents(ar *archive.Getter, suite string, component string, archs []str
 			scanners[idx] = bufio.NewScanner(r)
 			contents[idx], err = parseContentsEntry(scanners[idx])
 			if err != nil {
+				if err == io.EOF {
+					exhausted[idx] = true
+					return nil
+				}
 				return err
 			}
 			advance[idx] = false
