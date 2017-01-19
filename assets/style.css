@@ -183,11 +183,6 @@ a:visited {
     order: 1;
 }
 
-.mandoc {
-    font-family: 'Inconsolata', monospace;
-    font-size: 1.04rem;
-}
-
 #footer {
 	border: 1px solid #dfdfe0;
 	border-left: 0;
@@ -422,6 +417,10 @@ min-width: 200px;
 /* mandoc styles */
 
 .mandoc {
+    font-family: 'Inconsolata', monospace;
+    font-size: 1.04rem;
+    margin-right: 45px;
+
     /* Required so that table.head and table.foot can take up 100% of what remains after floating the panels. */
     overflow: hidden;
     margin-top: .5em;
