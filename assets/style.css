@@ -249,6 +249,10 @@ a, a:hover, a:focus, a:visited {
     padding-left: 7px;
 }
 
+summary, details {
+    display: block;
+}
+
 .panel details ul {
   margin: 0;
 }
