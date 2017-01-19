@@ -223,7 +223,8 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 
 		if header.Typeflag != tar.TypeReg &&
 			header.Typeflag != tar.TypeRegA &&
-			header.Typeflag != tar.TypeSymlink {
+			header.Typeflag != tar.TypeSymlink &&
+			header.Typeflag != tar.TypeLink {
 			continue
 		}
 		if header.FileInfo().IsDir() {
@@ -250,6 +251,23 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 		}
 
 		destPath := filepath.Join(*servingDir, m.ServingPath()+".gz")
+		if header.Typeflag == tar.TypeLink {
+			d, err := manpage.FromManPath(strings.TrimPrefix(header.Linkname, "./usr/share/man/"), &manpage.PkgMeta{
+				Binarypkg: p.binarypkg,
+				Suite:     p.suite,
+			})
+			if err != nil {
+				logger.Printf("WARNING: hard link name %q (underneath /usr/share/man) cannot be parsed: %v", header.Linkname, err)
+				continue
+			}
+			if err := os.Link(filepath.Join(*servingDir, d.ServingPath()+".gz"), m.ServingPath()+".gz"); err != nil {
+				if os.IsExist(err) {
+					continue
+				}
+				return err
+			}
+			continue
+		}
 		if header.Typeflag == tar.TypeSymlink {
 			// filepath.Join calls filepath.Abs
 			resolved := filepath.Join(filepath.Dir(strings.TrimPrefix(header.Name, ".")), header.Linkname)
