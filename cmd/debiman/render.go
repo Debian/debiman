@@ -35,7 +35,7 @@ var (
 		9,
 		"gzip compression level to use for compressing HTML versions of manpages. defaults to 9 to keep network traffic minimal, but useful to reduce for development/disaster recovery (level 1 results in a 2x speedup!)")
 
-	baseUrl = flag.String("base_url",
+	baseURL = flag.String("base_url",
 		"https://manpages.debian.org",
 		"Base URL (without trailing slash) to the site. Used where absolute URLs are required, e.g. sitemaps.")
 )
