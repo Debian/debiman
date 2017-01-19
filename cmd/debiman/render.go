@@ -10,12 +10,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
+	"github.com/Debian/debiman/internal/sitemap"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 )
@@ -32,6 +34,10 @@ var (
 	gzipLevel = flag.Int("gzip",
 		9,
 		"gzip compression level to use for compressing HTML versions of manpages. defaults to 9 to keep network traffic minimal, but useful to reduce for development/disaster recovery (level 1 results in a 2x speedup!)")
+
+	baseUrl = flag.String("base_url",
+		"https://manpages.debian.org",
+		"Base URL (without trailing slash) to the site. Used where absolute URLs are required, e.g. sitemaps.")
 )
 
 type breadcrumb struct {
@@ -188,6 +194,8 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 }
 
 func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist map[string]bool, gv globalView) error {
+	sitemaps := make(map[string]time.Time)
+
 	suitedirs, err := ioutil.ReadDir(*servingDir)
 	if err != nil {
 		return err
@@ -205,6 +213,12 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 		}
 		defer bins.Close()
 
+		// 20000 is the order of magnitude of binary packages
+		// (containing manpages) in any given Debian suite, so that is
+		// a good value to start with.
+		sitemapEntries := make(map[string]time.Time, 20000)
+		var sitemapEntriesMu sync.RWMutex
+
 		for {
 			names, err := bins.Readdirnames(*manwalkConcurrency)
 			if err != nil {
@@ -221,6 +235,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 					continue
 				}
 
+				bfn := bfn // copy
 				dir := filepath.Join(*servingDir, sfi.Name(), bfn)
 				wg.Go(func() error {
 					// Iterating through the same directory in all
@@ -249,6 +264,13 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 					if _, err := walkManContents(ctx, renderChan, dir, packageIndex, gv, newestModTime); err != nil {
 						return err
 					}
+
+					if !newestModTime.IsZero() {
+						sitemapEntriesMu.Lock()
+						defer sitemapEntriesMu.Unlock()
+						sitemapEntries[bfn] = newestModTime
+					}
+
 					return nil
 				})
 			}
@@ -257,8 +279,21 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 			}
 		}
 		bins.Close()
+
+		sitemapPath := filepath.Join(*servingDir, sfi.Name(), "sitemap.xml.gz")
+		if err := writeAtomically(sitemapPath, true, func(w io.Writer) error {
+			return sitemap.WriteTo(w, *baseURL+"/"+sfi.Name(), sitemapEntries)
+		}); err != nil {
+			return err
+		}
+		st, err := os.Stat(sitemapPath)
+		if err == nil {
+			sitemaps[sfi.Name()] = st.ModTime()
+		}
 	}
-	return nil
+	return writeAtomically(filepath.Join(*servingDir, "sitemapindex.xml.gz"), true, func(w io.Writer) error {
+		return sitemap.WriteIndexTo(w, *baseURL, sitemaps)
+	})
 }
 
 func renderAll(gv globalView) error {
