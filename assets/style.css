@@ -416,9 +416,11 @@ min-width: 200px;
 
 /* mandoc styles */
 
-.mandoc {
+.mandoc, .mandoc pre, .mandoc code {
     font-family: 'Inconsolata', monospace;
     font-size: 1.04rem;
+}
+.mandoc {
     margin-right: 45px;
 
     /* Required so that table.head and table.foot can take up 100% of what remains after floating the panels. */
