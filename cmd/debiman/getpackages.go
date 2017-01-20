@@ -157,10 +157,15 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 		idx := idx   // copy
 		arch := arch // copy
 		eg.Go(func() error {
+			// Prefer gzip over xz because gzip uncompresses faster.
 			path := component + "/binary-" + arch + "/Packages.gz"
 			fh, ok := hashByFilename[path]
 			if !ok {
-				return fmt.Errorf("ERROR: expected path %q not found in Release file", path)
+				path = component + "/binary-" + arch + "/Packages.xz"
+				fh, ok = hashByFilename[path]
+				if !ok {
+					return fmt.Errorf("ERROR: expected path %q not found in Release file", path)
+				}
 			}
 
 			h, err := hex.DecodeString(fh.Hash)

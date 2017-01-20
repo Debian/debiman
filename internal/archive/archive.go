@@ -16,6 +16,8 @@ import (
 	"strings"
 	"sync"
 
+	"xi2.org/x/xz"
+
 	"golang.org/x/crypto/openpgp"
 	"pault.ag/go/archive"
 )
@@ -123,6 +125,11 @@ func (g *Getter) download(path string, f *os.File, sha256sum []byte) error {
 	var err error
 	if strings.HasSuffix(path, ".gz") {
 		rd, err = gzip.NewReader(rd)
+		if err != nil {
+			return err
+		}
+	} else if strings.HasSuffix(path, ".xz") {
+		rd, err = xz.NewReader(rd, 0)
 		if err != nil {
 			return err
 		}
