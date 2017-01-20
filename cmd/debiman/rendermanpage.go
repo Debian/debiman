@@ -55,6 +55,7 @@ func init() {
 	}
 	sortOrder["testing"] = sortOrder["stretch"]
 	sortOrder["unstable"] = len(releaseList)
+	sortOrder["experimental"] = sortOrder["unstable"] + 1
 }
 
 // stapelberg came up with the following abbreviations:
