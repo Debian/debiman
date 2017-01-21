@@ -139,6 +139,7 @@ func main() {
 		aboutTmpl = mustParseAboutTmpl()
 		manpageTmpl = mustParseManpageTmpl()
 		manpageerrorTmpl = mustParseManpageerrorTmpl()
+		manpagefooterextraTmpl = mustParseManpagefooterextraTmpl()
 	}
 
 	// All of our .so references are relative to *servingDir. For

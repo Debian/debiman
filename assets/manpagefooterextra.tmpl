@@ -1,0 +1,28 @@
+<table>
+<tr>
+<td>
+Source file:
+</td>
+<td>
+{{ .SourceFile }} (from <a href="http://snapshot.debian.org/package/{{ .Meta.Package.Binarypkg }}/{{ .Meta.Package.Version }}/">{{ .Meta.Package.Binarypkg }} {{ .Meta.Package.Version }}</a>)
+</td>
+</tr>
+
+<tr>
+<td>
+Source last updated:
+</td>
+<td>
+{{ Iso8601 .LastUpdated }}
+</td>
+</tr>
+
+<tr>
+<td>
+Converted to HTML:
+</td>
+<td>
+{{ Iso8601 .Converted }}
+</td>
+</tr>
+</table>

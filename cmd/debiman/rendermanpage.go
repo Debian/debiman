@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -122,6 +123,18 @@ func mustParseManpageerrorTmpl() *template.Template {
 		Parse(bundled.Asset("manpageerror.tmpl")))
 }
 
+var manpagefooterextraTmpl = mustParseManpagefooterextraTmpl()
+
+func mustParseManpagefooterextraTmpl() *template.Template {
+	return template.Must(template.Must(commonTmpls.Clone()).New("manpage-footerextra").
+		Funcs(map[string]interface{}{
+			"Iso8601": func(t time.Time) string {
+				return t.UTC().Format(iso8601Format)
+			},
+		}).
+		Parse(bundled.Asset("manpagefooterextra.tmpl")))
+}
+
 func convertFile(converter *convert.Process, src string, resolve func(ref string) string) (doc string, toc []string, err error) {
 	f, err := os.Open(src)
 	if err != nil {
@@ -230,7 +243,7 @@ type manpagePrepData struct {
 	Title          string
 	DebimanVersion string
 	Breadcrumbs    []breadcrumb
-	FooterExtra    string
+	FooterExtra    template.HTML
 	Suites         []*manpage.Meta
 	Versions       []*manpage.Meta
 	Sections       []*manpage.Meta
@@ -422,10 +435,20 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		title = "Error: " + title
 	}
 
-	footerExtra := fmt.Sprintf("Source file %s was last updated at %v and converted to HTML at %v",
-		filepath.Base(job.src),
-		job.modTime.UTC().Format(iso8601Format),
-		time.Now().UTC().Format(iso8601Format))
+	var footerExtra bytes.Buffer
+	if err := manpagefooterextraTmpl.Execute(&footerExtra, struct {
+		SourceFile  string
+		LastUpdated time.Time
+		Converted   time.Time
+		Meta        *manpage.Meta
+	}{
+		SourceFile:  filepath.Base(job.src),
+		LastUpdated: job.modTime,
+		Converted:   time.Now(),
+		Meta:        meta,
+	}); err != nil {
+		return nil, manpagePrepData{}, err
+	}
 
 	return t, manpagePrepData{
 		Title:          title,
@@ -435,7 +458,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 			{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
 			{"", shorttitle},
 		},
-		FooterExtra: footerExtra,
+		FooterExtra: template.HTML(footerExtra.String()),
 		Suites:      suites,
 		Versions:    job.versions,
 		Sections:    sections,
