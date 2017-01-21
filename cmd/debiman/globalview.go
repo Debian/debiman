@@ -86,6 +86,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 		res.suites[suite] = true
 		res.idxSuites[release.Suite] = suite
 		res.idxSuites[release.Codename] = suite
+		res.idxSuites[dist.name] = suite
 
 		hashByFilename := make(map[string]*control.SHA256FileHash, len(release.SHA256))
 		for idx, fh := range release.SHA256 {
