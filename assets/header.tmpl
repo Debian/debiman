@@ -15,6 +15,12 @@
   <h1><a href="/">some debiman installation</a></h1>
   <div id="searchbox">
     <form action="/jump" method="get">
+      {{ if .Meta -}}
+      <input type="hidden" name="suite" value="{{ .Meta.Package.Suite }}">
+      <input type="hidden" name="binarypkg" value="{{ .Meta.Package.Binarypkg }}">
+      <input type="hidden" name="section" value="{{ .Meta.Section }}">
+      <input type="hidden" name="language" value="{{ .Meta.Language }}">
+      {{ end -}}
       <input type="text" name="q" placeholder="manpage name" required>
       <input type="submit" value="Jump">
     </form>

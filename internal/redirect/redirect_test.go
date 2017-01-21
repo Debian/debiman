@@ -505,18 +505,16 @@ func TestAcceptLanguage(t *testing.T) {
 	}
 }
 
-func TestReferrer(t *testing.T) {
+func TestFormExtra(t *testing.T) {
 	table := []struct {
-		URL      string
-		want     string
-		lang     string
-		referrer string
+		URL  string
+		want string
+		lang string
 	}{
 		{
-			URL:      "i3",
-			want:     "testing/i3-wm/i3.1.fr.html",
-			lang:     "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
-			referrer: "testing/i3-wm/i3.5.fr.html",
+			URL:  "i3?suite=testing&binarypkg=i3-wm&section=1&language=fr",
+			want: "testing/i3-wm/i3.1.fr.html",
+			lang: "fr-CH, fr;q=0.9, en;q=0.8, de;q=0.7, *;q=0.5",
 		},
 	}
 	for _, entry := range table {
@@ -532,7 +530,6 @@ func TestReferrer(t *testing.T) {
 				URL: u,
 				Header: http.Header{
 					"Accept-Language": []string{entry.lang},
-					"Referer":         []string{"http://man.debian.org/" + entry.referrer},
 				},
 			}
 			got, err := testIdx.Redirect(req)

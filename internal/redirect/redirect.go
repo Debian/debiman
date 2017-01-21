@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -329,15 +328,11 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 	}
 
 	acceptLang := r.Header.Get("Accept-Language")
-	ref := IndexEntry{}
-	if referer := r.Referer(); referer != "" {
-		if u, err := url.Parse(referer); err == nil {
-			rsuite, rbinarypkg, _, rsection, rlang := i.split(u.Path)
-			ref.Suite = rsuite
-			ref.Binarypkg = rbinarypkg
-			ref.Section = rsection
-			ref.Language = rlang
-		}
+	ref := IndexEntry{
+		Suite:     r.FormValue("suite"),
+		Binarypkg: r.FormValue("binarypkg"),
+		Section:   r.FormValue("section"),
+		Language:  r.FormValue("language"),
 	}
 	filtered := i.narrow(name, acceptLang, IndexEntry{
 		Suite:     suite,
