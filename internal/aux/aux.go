@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Debian/debiman/internal/manpage"
 	"github.com/Debian/debiman/internal/redirect"
 )
 
@@ -66,6 +67,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				FooterExtra    string
 				Manpage        string
 				BestChoice     redirect.IndexEntry
+				Meta           *manpage.Meta
 			}{
 				Title:          "Not Found",
 				DebimanVersion: s.debimanVersion,

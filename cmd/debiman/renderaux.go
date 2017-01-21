@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/Debian/debiman/internal/bundled"
+	"github.com/Debian/debiman/internal/manpage"
 )
 
 var indexTmpl = mustParseIndexTmpl()
@@ -56,6 +57,7 @@ func renderAux(destDir string, gv globalView) error {
 			Breadcrumbs    []breadcrumb
 			FooterExtra    string
 			Suites         []string
+			Meta           *manpage.Meta
 		}{
 			Title:          "index",
 			Suites:         suites,
@@ -71,6 +73,7 @@ func renderAux(destDir string, gv globalView) error {
 			DebimanVersion string
 			Breadcrumbs    []breadcrumb
 			FooterExtra    string
+			Meta           *manpage.Meta
 		}{
 			Title:          "FAQ",
 			DebimanVersion: debimanVersion,
@@ -85,6 +88,7 @@ func renderAux(destDir string, gv globalView) error {
 			DebimanVersion string
 			Breadcrumbs    []breadcrumb
 			FooterExtra    string
+			Meta           *manpage.Meta
 		}{
 			Title:          "FAQ",
 			DebimanVersion: debimanVersion,

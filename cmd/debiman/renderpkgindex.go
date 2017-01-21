@@ -36,6 +36,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 			Breadcrumbs    []breadcrumb
 			FooterExtra    string
 			First          *manpage.Meta
+			Meta           *manpage.Meta
 			ManpageByName  map[string]*manpage.Meta
 			Mans           []string
 		}{
@@ -47,6 +48,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 				{"", "Contents"},
 			},
 			First:         first,
+			Meta:          first,
 			ManpageByName: manpageByName,
 			Mans:          mans,
 		})

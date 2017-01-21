@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/Debian/debiman/internal/bundled"
+	"github.com/Debian/debiman/internal/manpage"
 )
 
 var contentsTmpl = mustParseContentsTmpl()
@@ -28,6 +29,7 @@ func renderContents(dest, suite string, bins []string) error {
 			FooterExtra    string
 			Bins           []string
 			Suite          string
+			Meta           *manpage.Meta
 		}{
 			Title:          fmt.Sprintf("Contents of Debian %s", suite),
 			DebimanVersion: debimanVersion,
