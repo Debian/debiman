@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/Debian/debiman/internal/bundled"
@@ -18,7 +20,7 @@ func mustParseContentsTmpl() *template.Template {
 func renderContents(dest, suite string, bins []string) error {
 	sort.Strings(bins)
 
-	return writeAtomically(dest, true, func(w io.Writer) error {
+	if err := writeAtomically(dest, true, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string
@@ -36,5 +38,14 @@ func renderContents(dest, suite string, bins []string) error {
 			Bins:  bins,
 			Suite: suite,
 		})
-	})
+	}); err != nil {
+		return err
+	}
+
+	destPath := filepath.Join(*servingDir, suite, "index.html.gz")
+	link := fmt.Sprintf("../contents-%s.html.gz", suite)
+	if err := os.Symlink(link, destPath); err != nil && !os.IsExist(err) {
+		return err
+	}
+	return nil
 }
