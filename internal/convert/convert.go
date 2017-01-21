@@ -119,10 +119,10 @@ func findUrls(txt string) [][]int {
 			}
 			lastSlash = i
 		default:
-			if inUrl && r != ' ' {
+			if inUrl && r != ' ' && r != '>' {
 				continue
 			}
-			if inUrl && r == ' ' {
+			if inUrl && (r == ' ' || r == '>') {
 				results = append(results, []int{lastWordBoundary + 1, i})
 				inUrl = false
 			}
