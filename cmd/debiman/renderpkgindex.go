@@ -33,7 +33,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string
-			Breadcrumbs    []breadcrumb
+			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			First          *manpage.Meta
 			Meta           *manpage.Meta
@@ -42,7 +42,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 		}{
 			Title:          fmt.Sprintf("Manpages of %s in Debian %s", first.Package.Binarypkg, first.Package.Suite),
 			DebimanVersion: debimanVersion,
-			Breadcrumbs: []breadcrumb{
+			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
 				{fmt.Sprintf("/%s/%s/index.html", first.Package.Suite, first.Package.Binarypkg), first.Package.Binarypkg},
 				{"", "Contents"},

@@ -25,7 +25,7 @@ func renderContents(dest, suite string, bins []string) error {
 		return contentsTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string
-			Breadcrumbs    []breadcrumb
+			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Bins           []string
 			Suite          string
@@ -33,7 +33,7 @@ func renderContents(dest, suite string, bins []string) error {
 		}{
 			Title:          fmt.Sprintf("Contents of Debian %s", suite),
 			DebimanVersion: debimanVersion,
-			Breadcrumbs: []breadcrumb{
+			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/contents-%s.html", suite), suite},
 				{"", "Contents"},
 			},

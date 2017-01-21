@@ -54,7 +54,7 @@ func renderAux(destDir string, gv globalView) error {
 		return indexTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string
-			Breadcrumbs    []breadcrumb
+			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Suites         []string
 			Meta           *manpage.Meta
@@ -71,7 +71,7 @@ func renderAux(destDir string, gv globalView) error {
 		return faqTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string
-			Breadcrumbs    []breadcrumb
+			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Meta           *manpage.Meta
 		}{
@@ -86,7 +86,7 @@ func renderAux(destDir string, gv globalView) error {
 		return aboutTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string
-			Breadcrumbs    []breadcrumb
+			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Meta           *manpage.Meta
 		}{

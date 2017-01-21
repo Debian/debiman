@@ -242,7 +242,7 @@ var notYetRenderedSentinel = errors.New("Not yet rendered")
 type manpagePrepData struct {
 	Title          string
 	DebimanVersion string
-	Breadcrumbs    []breadcrumb
+	Breadcrumbs    breadcrumbs
 	FooterExtra    template.HTML
 	Suites         []*manpage.Meta
 	Versions       []*manpage.Meta
@@ -453,7 +453,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 	return t, manpagePrepData{
 		Title:          title,
 		DebimanVersion: debimanVersion,
-		Breadcrumbs: []breadcrumb{
+		Breadcrumbs: breadcrumbs{
 			{fmt.Sprintf("/contents-%s.html", meta.Package.Suite), meta.Package.Suite},
 			{fmt.Sprintf("/%s/%s/index.html", meta.Package.Suite, meta.Package.Binarypkg), meta.Package.Binarypkg},
 			{"", shorttitle},

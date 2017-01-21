@@ -2,8 +2,10 @@ package main
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
@@ -43,6 +45,47 @@ var (
 type breadcrumb struct {
 	Link string
 	Text string
+}
+
+type breadcrumbs []breadcrumb
+
+func (b breadcrumbs) ToJSON() template.HTML {
+	type item struct {
+		Type string `json:"@type"`
+		Id   string `json:"@id"`
+		Name string `json:"name"`
+	}
+	type listItem struct {
+		Type     string `json:"@type"`
+		Position int    `json:"position"`
+		Item     item   `json:"item"`
+	}
+	type breadcrumbList struct {
+		Context  string     `json:"@context"`
+		Type     string     `json:"@type"`
+		Elements []listItem `json:"itemListElement"`
+	}
+	l := breadcrumbList{
+		Context:  "http://schema.org",
+		Type:     "BreadcrumbList",
+		Elements: make([]listItem, len(b)),
+	}
+	for idx, br := range b {
+		l.Elements[idx] = listItem{
+			Type:     "ListItem",
+			Position: idx + 1,
+			Item: item{
+				Type: "Thing",
+				Id:   br.Link,
+				Name: br.Text,
+			},
+		}
+	}
+	jsonb, err := json.Marshal(l)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return template.HTML(jsonb)
 }
 
 var commonTmpls = commontmpl.MustParseCommonTmpls()
