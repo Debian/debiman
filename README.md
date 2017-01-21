@@ -146,24 +146,28 @@ https://wiki.debian.org/RepositoryFormat
 The URL schema which debiman uses is `(<suite>/)(<binarypkg/>)<name>(.<section>(.<lang>))`. Any part aside from `name` can be omitted; here are a few examples:
 
 Without suite and binary package:
+
 1. https://manpages.debian.org/i3
 2. https://manpages.debian.org/i3.fr
 3. https://manpages.debian.org/i3.1
 4. https://manpages.debian.org/i3.1.fr
 
 With binary package:
+
 1. https://manpages.debian.org/i3-wm/i3
 2. https://manpages.debian.org/i3-wm/i3.fr
 3. https://manpages.debian.org/i3-wm/i3.1
 4. https://manpages.debian.org/i3-wm/i3.1.fr
 
 With suite:
+
 1. https://manpages.debian.org/testing/i3
 2. https://manpages.debian.org/testing/i3.fr
 3. https://manpages.debian.org/testing/i3.1
 4. https://manpages.debian.org/testing/i3.1.fr
 
 With suite and binary package:
+
 1. https://manpages.debian.org/testing/i3-wm/i3
 2. https://manpages.debian.org/testing/i3-wm/i3.fr
 3. https://manpages.debian.org/testing/i3-wm/i3.1
