@@ -13,6 +13,12 @@ import (
 
 const iso8601Format = "2006-01-02T15:04:05Z"
 
+var ambiguousLangs = map[string]bool{
+	"cat": true, // català (ca, ca@valencia)
+	"por": true, // português (pt, pt_BR)
+	"zho": true, // 繁體中文 (zh_HK, zh_TW)
+}
+
 func MustParseCommonTmpls() *template.Template {
 	t := template.New("root")
 	t = template.Must(t.New("header").Parse(bundled.Asset("header.tmpl")))
@@ -25,6 +31,10 @@ func MustParseCommonTmpls() *template.Template {
 				// language. Fall back to English.
 				if lang == "" {
 					return display.English.Languages().Name(tag)
+				}
+				base, _ := tag.Base()
+				if ambiguousLangs[base.ISO3()] {
+					return lang + " (" + tag.String() + ")"
 				}
 				return lang
 
