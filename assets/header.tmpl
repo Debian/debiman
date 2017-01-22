@@ -1,5 +1,9 @@
 <!DOCTYPE html>
+{{ if .Meta -}}
+<html lang="{{ .Meta.LanguageTag }}">
+{{ else -}}
 <html lang="en">
+{{ end -}}
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
