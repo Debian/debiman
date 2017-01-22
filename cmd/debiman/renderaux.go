@@ -58,6 +58,7 @@ func renderAux(destDir string, gv globalView) error {
 			FooterExtra    string
 			Suites         []string
 			Meta           *manpage.Meta
+			HrefLangs      []*manpage.Meta
 		}{
 			Title:          "index",
 			Suites:         suites,
@@ -74,6 +75,7 @@ func renderAux(destDir string, gv globalView) error {
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Meta           *manpage.Meta
+			HrefLangs      []*manpage.Meta
 		}{
 			Title:          "FAQ",
 			DebimanVersion: debimanVersion,
@@ -89,6 +91,7 @@ func renderAux(destDir string, gv globalView) error {
 			Breadcrumbs    breadcrumbs
 			FooterExtra    string
 			Meta           *manpage.Meta
+			HrefLangs      []*manpage.Meta
 		}{
 			Title:          "FAQ",
 			DebimanVersion: debimanVersion,

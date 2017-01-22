@@ -68,6 +68,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 				Manpage        string
 				BestChoice     redirect.IndexEntry
 				Meta           *manpage.Meta
+				HrefLangs      []*manpage.Meta
 			}{
 				Title:          "Not Found",
 				DebimanVersion: s.debimanVersion,

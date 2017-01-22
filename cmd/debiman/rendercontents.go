@@ -30,6 +30,7 @@ func renderContents(dest, suite string, bins []string) error {
 			Bins           []string
 			Suite          string
 			Meta           *manpage.Meta
+			HrefLangs      []*manpage.Meta
 		}{
 			Title:          fmt.Sprintf("Contents of Debian %s", suite),
 			DebimanVersion: debimanVersion,

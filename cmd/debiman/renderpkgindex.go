@@ -39,6 +39,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 			Meta           *manpage.Meta
 			ManpageByName  map[string]*manpage.Meta
 			Mans           []string
+			HrefLangs      []*manpage.Meta
 		}{
 			Title:          fmt.Sprintf("Manpages of %s in Debian %s", first.Package.Binarypkg, first.Package.Suite),
 			DebimanVersion: debimanVersion,

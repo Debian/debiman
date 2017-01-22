@@ -249,6 +249,7 @@ type manpagePrepData struct {
 	Sections       []*manpage.Meta
 	Bins           []*manpage.Meta
 	Langs          []*manpage.Meta
+	HrefLangs      []*manpage.Meta
 	Meta           *manpage.Meta
 	TOC            []string
 	Ambiguous      map[*manpage.Meta]bool
@@ -410,11 +411,17 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		byLang[v.Language] = append(byLang[v.Language], v)
 	}
 	langs := make([]*manpage.Meta, 0, len(byLang))
+	hrefLangs := make([]*manpage.Meta, 0, len(byLang))
 	for _, all := range byLang {
 		for _, e := range all {
 			langs = append(langs, e)
 			if len(all) > 1 {
 				ambiguous[e] = true
+			}
+			// hreflang consists only of language and region,
+			// scripts are not supported.
+			if !strings.Contains(e.Language, "@") {
+				hrefLangs = append(hrefLangs, e)
 			}
 		}
 	}
@@ -426,6 +433,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 	// TODO(stapelberg): is english collation always the same as
 	// strings.Sort (at least on the list of languages)?
 	collate.New(language.English).Sort(byLanguage(langs))
+	collate.New(language.English).Sort(byLanguage(hrefLangs))
 
 	t := manpageTmpl
 	title := fmt.Sprintf("%s(%s) — %s — Debian %s", meta.Name, meta.Section, meta.Package.Binarypkg, meta.Package.Suite)
@@ -464,6 +472,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		Sections:    sections,
 		Bins:        bins,
 		Langs:       langs,
+		HrefLangs:   hrefLangs,
 		Meta:        meta,
 		TOC:         toc,
 		Ambiguous:   ambiguous,
