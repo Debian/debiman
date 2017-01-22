@@ -1,0 +1,15 @@
+Origin: Debian
+Label: Debian
+Suite: testing
+Codename: stretch
+Changelogs: http://metadata.ftp-master.debian.org/changelogs/@CHANGEPATH@_changelog
+Date: Sun, 22 Jan 2017 14:29:53 UTC
+Valid-Until: Sun, 29 Jan 2017 14:29:53 UTC
+Architectures: amd64
+Components: main contrib
+Description: Debian x.y Testing distribution - Not Released
+SHA256:
+ 53124b5c43e4b9e38aec254648ab93e41391be944edc59e6c8ff46c3d17524ae  641 main/Contents-amd64.gz
+ cbaf8f5c71fc8b3e8f0203d6b8f28a6dc2d5915d6f3607b0fef7daab3573929c  35 contrib/Contents-amd64.gz
+ b95d7eb17250c5aa3bd52a365e2eab3f53437e76fc6aef3ff863cf20dba639ac  719 main/binary-amd64/Packages.gz
+ d97a7fd85512719a9c2f31a21ed28fffa3acfc1436615ec7d9072cb60d5de917  29 contrib/binary-amd64/Packages.gz
