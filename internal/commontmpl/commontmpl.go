@@ -2,6 +2,7 @@ package commontmpl
 
 import (
 	"html/template"
+	"strings"
 	"time"
 
 	"golang.org/x/text/language"
@@ -22,6 +23,9 @@ func MustParseCommonTmpls() *template.Template {
 			},
 			"EnglishLang": func(tag language.Tag) string {
 				return display.English.Languages().Name(tag)
+			},
+			"HasSuffix": func(s, suffix string) bool {
+				return strings.HasSuffix(s, suffix)
 			},
 			"Now": func() string {
 				return time.Now().UTC().Format(iso8601Format)

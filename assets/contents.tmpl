@@ -6,7 +6,9 @@
 
 <ul>
 {{ range $idx, $dir := .Bins }}
+{{ if not (HasSuffix $dir ".gz") }}
   <li><a href="/{{ $.Suite }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
+{{ end }}
 {{ end }}
 </ul>
 
