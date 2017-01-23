@@ -76,8 +76,8 @@ func (i Index) split(path string) (suite string, binarypkg string, name string, 
 	parts := strings.Split(dir, "/")
 	if len(parts) > 0 {
 		if len(parts) == 1 {
-			if rewrite, ok := i.Suites[parts[0]]; ok {
-				suite = rewrite
+			if _, ok := i.Suites[parts[0]]; ok {
+				suite = parts[0]
 			} else if i.Sections[parts[0]] {
 				// legacy manpages.debian.org
 				section = parts[0]
@@ -314,6 +314,9 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		suite, binarypkg, name, section, lang = i.splitLegacy(path)
 	} else {
 		suite, binarypkg, name, section, lang = i.split(path)
+	}
+	if rewrite, ok := i.Suites[suite]; ok {
+		suite = rewrite
 	}
 	if section == "0" {
 		// legacy manpages.debian.org

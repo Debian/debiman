@@ -318,6 +318,7 @@ func TestUnderspecified(t *testing.T) {
 
 		{Case: 13, URL: "jessie/i3-wm/i3", want: "jessie/i3-wm/i3.1.en.html"},   // default suite
 		{Case: 13, URL: "testing/i3-wm/i3", want: "testing/i3-wm/i3.1.en.html"}, // non-default suite
+		{Case: 13, URL: "stable/i3-wm/i3", want: "jessie/i3-wm/i3.1.en.html"},   // suite alias
 
 		{Case: 14, URL: "jessie/i3-wm/i3.fr", want: "jessie/i3-wm/i3.1.fr.html"},   // default suite
 		{Case: 14, URL: "testing/i3-wm/i3.fr", want: "testing/i3-wm/i3.1.fr.html"}, // non-default suite
