@@ -158,7 +158,7 @@ func (p bySection) Len() int           { return len(p) }
 func (p bySection) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p bySection) Less(i, j int) bool { return p[i].Section < p[j].Section }
 
-func (i Index) narrow(acceptLang string, template, ref IndexEntry, entries []IndexEntry) []IndexEntry {
+func (i Index) Narrow(acceptLang string, template, ref IndexEntry, entries []IndexEntry) []IndexEntry {
 	t := template // for convenience
 
 	fullyQualified := func() bool {
@@ -347,7 +347,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		Section:   r.FormValue("section"),
 		Language:  r.FormValue("language"),
 	}
-	filtered := i.narrow(acceptLang, IndexEntry{
+	filtered := i.Narrow(acceptLang, IndexEntry{
 		Suite:     suite,
 		Binarypkg: binarypkg,
 		Section:   section,
@@ -358,7 +358,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		// Present the user with another choice for this manpage.
 		var best IndexEntry
 		if name != "index" && name != "favicon" {
-			best = i.narrow(acceptLang, IndexEntry{}, ref, entries)[0]
+			best = i.Narrow(acceptLang, IndexEntry{}, ref, entries)[0]
 		}
 		return "", &NotFoundError{
 			Manpage:    name,
