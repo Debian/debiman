@@ -50,6 +50,10 @@ func bestLanguageMatch(t []language.Tag, options []IndexEntry) IndexEntry {
 		}
 	}
 
+	if t == nil {
+		return options[0]
+	}
+
 	tags := make([]language.Tag, len(options))
 	for idx, m := range options {
 		tag, err := tag.FromLocale(m.Language)
