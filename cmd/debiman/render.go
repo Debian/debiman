@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -172,6 +173,10 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 
 			symlink := st.Mode()&os.ModeSymlink != 0
 
+			if !symlink {
+				atomic.AddUint64(&gv.stats.ManpageBytes, uint64(st.Size()))
+			}
+
 			if mode == regularFiles && symlink ||
 				mode == symlinks && !symlink {
 				continue
@@ -179,6 +184,9 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 
 			n := strings.TrimSuffix(fn, ".gz") + ".html.gz"
 			htmlst, err := os.Stat(filepath.Join(dir, n))
+			if err == nil {
+				atomic.AddUint64(&gv.stats.HtmlBytes, uint64(htmlst.Size()))
+			}
 			if err != nil || *forceRerender || htmlst.ModTime().Before(st.ModTime()) {
 				m, err := manpage.FromServingPath(*servingDir, full)
 				if err != nil {
@@ -359,12 +367,16 @@ func renderAll(gv globalView) error {
 			}
 
 			for r := range renderChan {
-				if err := rendermanpage(gzipw, converter, r); err != nil {
+				n, err := rendermanpage(gzipw, converter, r)
+				if err != nil {
 					// rendermanpage writes an error page if rendering
 					// failed, any returned error is severe (e.g. file
 					// system full) and should lead to termination.
 					return err
 				}
+
+				atomic.AddUint64(&gv.stats.HtmlBytes, n)
+				atomic.AddUint64(&gv.stats.ManpagesRendered, 1)
 			}
 			return nil
 		})

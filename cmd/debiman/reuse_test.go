@@ -54,7 +54,7 @@ baz
 		t.Fatal(err)
 	}
 
-	if err := rendermanpage(gzipw, converter, renderJob{
+	if _, err := rendermanpage(gzipw, converter, renderJob{
 		dest:     f.Name(),
 		src:      f.Name(),
 		meta:     meta,

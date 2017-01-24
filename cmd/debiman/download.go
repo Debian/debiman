@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"unicode/utf8"
 
 	"golang.org/x/net/context"
@@ -188,7 +189,7 @@ func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.
 	return refs, err
 }
 
-func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*contentEntry) error {
+func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 	vPath := filepath.Join(*servingDir, p.suite, p.binarypkg, "VERSION")
 
 	if !*forceReextract && canSkip(p, vPath) {
@@ -275,7 +276,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 				resolved = resolved + ".gz"
 			}
 
-			destsp := findClosestFile(logger, p, header.Name, resolved, contentByPath)
+			destsp := findClosestFile(logger, p, header.Name, resolved, gv.contentByPath)
 			if destsp == "" {
 				// Try to extract the resolved file as non-manpage
 				// file. If the resolved file does not live in this
@@ -309,7 +310,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 		if err != nil {
 			return err
 		}
-		refs, err := writeManpage(logger, header.Name, destPath, r, m, contentByPath)
+		refs, err := writeManpage(logger, header.Name, destPath, r, m, gv.contentByPath)
 		if err != nil {
 			return err
 		}
@@ -382,6 +383,9 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, contentByPath map[string][]*con
 		}
 		return fmt.Errorf("Writing version file %q: %v", err)
 	}
+
+	atomic.AddUint64(&gv.stats.PackagesExtracted, 1)
+
 	return nil
 }
 
@@ -392,7 +396,7 @@ func parallelDownload(ar *archive.Getter, gv globalView) error {
 	for i := 0; i < 10; i++ {
 		eg.Go(func() error {
 			for p := range downloadChan {
-				if err := downloadPkg(ar, p, gv.contentByPath); err != nil {
+				if err := downloadPkg(ar, p, gv); err != nil {
 					return err
 				}
 			}

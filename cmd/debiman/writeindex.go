@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"sync/atomic"
 
 	pb "github.com/Debian/debiman/internal/proto"
 	"github.com/golang/protobuf/proto"
@@ -48,6 +49,10 @@ func writeIndex(dest string, gv globalView) error {
 
 	return writeAtomically(dest, false, func(w io.Writer) error {
 		_, err := w.Write(idxb)
-		return err
+		if err != nil {
+			return err
+		}
+		atomic.AddUint64(&gv.stats.IndexBytes, uint64(len(idxb)))
+		return nil
 	})
 }

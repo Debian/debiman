@@ -481,17 +481,25 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 	}, nil
 }
 
-func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob) error {
+type countingWriter int64
+
+func (c *countingWriter) Write(p []byte) (n int, err error) {
+	*c += countingWriter(len(p))
+	return len(p), nil
+}
+
+func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob) (uint64, error) {
 	t, data, err := rendermanpageprep(converter, job)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
+	var written countingWriter
 	if err := writeAtomicallyWithGz(job.dest, gzipw, func(w io.Writer) error {
-		return t.Execute(w, data)
+		return t.Execute(io.MultiWriter(w, &written), data)
 	}); err != nil {
-		return err
+		return 0, err
 	}
 
-	return os.Chtimes(job.dest, job.modTime, job.modTime)
+	return uint64(written), os.Chtimes(job.dest, job.modTime, job.modTime)
 }

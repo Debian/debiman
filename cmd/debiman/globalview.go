@@ -16,12 +16,22 @@ import (
 // least bad influence on the mirror server’s caches.
 const mostPopularArchitecture = "amd64"
 
+type stats struct {
+	PackagesExtracted uint64
+	PackagesDeleted   uint64
+	ManpagesRendered  uint64
+	ManpageBytes      uint64
+	HtmlBytes         uint64
+	IndexBytes        uint64
+}
+
 type globalView struct {
 	pkgs          []*pkgEntry
 	suites        map[string]bool
 	idxSuites     map[string]string
 	contentByPath map[string][]*contentEntry
 	xref          map[string][]*manpage.Meta
+	stats         *stats
 }
 
 type distributionIdentifier int
@@ -63,11 +73,13 @@ func distributions(codenames []string, suites []string) []distribution {
 }
 
 func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, error) {
+	var stats stats
 	res := globalView{
 		suites:        make(map[string]bool, len(dists)),
 		idxSuites:     make(map[string]string, len(dists)),
 		contentByPath: make(map[string][]*contentEntry),
 		xref:          make(map[string][]*manpage.Meta),
+		stats:         &stats,
 	}
 
 	for _, dist := range dists {

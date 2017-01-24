@@ -3,10 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	_ "net/http/pprof"
 
@@ -66,6 +69,8 @@ var debimanVersion = "HEAD"
 // TODO(later): add memory usage estimates to the big structures, set
 // parallelism level according to available memory on the system
 func logic() error {
+	start := time.Now()
+
 	ar := &archive.Getter{
 		ConnectionsPerMirror: 10,
 		LocalMirror:          *localMirror,
@@ -113,7 +118,18 @@ func logic() error {
 		return err
 	}
 
-	return nil
+	fmt.Printf("total number of packages: %d\n", len(globalView.pkgs))
+	fmt.Printf("packages extracted:       %d\n", globalView.stats.PackagesExtracted)
+	fmt.Printf("packages deleted:         %d\n", globalView.stats.PackagesDeleted)
+	fmt.Printf("manpages rendered:        %d\n", globalView.stats.ManpagesRendered)
+	fmt.Printf("total manpage bytes:      %d\n", globalView.stats.ManpageBytes)
+	fmt.Printf("total HTML bytes:         %d\n", globalView.stats.HtmlBytes)
+	fmt.Printf("auxserver index bytes:    %d\n", globalView.stats.IndexBytes)
+	fmt.Printf("wall-clock runtime (s):   %d\n", int(time.Now().Sub(start).Seconds()))
+
+	return writeAtomically(filepath.Join(*servingDir, "metrics.txt"), false, func(w io.Writer) error {
+		return writeMetrics(w, globalView, start)
+	})
 }
 
 func main() {
