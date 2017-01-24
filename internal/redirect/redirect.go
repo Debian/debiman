@@ -168,11 +168,11 @@ func (i Index) narrow(name, acceptLang string, template, ref IndexEntry, entries
 		return valid[t.Suite+"/"+t.Binarypkg+"/"+name+"/"+t.Section+"/"+t.Language]
 	}
 
-	// TODO: use pointers
-	filtered := entries[:]
+	filtered := make([]IndexEntry, len(entries))
+	copy(filtered, entries)
 
 	filter := func(keep func(e IndexEntry) bool) {
-		tmp := make([]IndexEntry, 0, len(filtered))
+		tmp := filtered[:0]
 		for _, e := range filtered {
 			if !keep(e) {
 				continue
