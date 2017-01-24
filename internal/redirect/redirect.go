@@ -156,16 +156,22 @@ func (p bySection) Less(i, j int) bool { return p[i].Section < p[j].Section }
 
 func (i Index) narrow(name, acceptLang string, template, ref IndexEntry, entries []IndexEntry) []IndexEntry {
 	t := template // for convenience
-	valid := make(map[string]bool, len(entries))
-	for _, e := range entries {
-		valid[e.Suite+"/"+e.Binarypkg+"/"+name+"/"+e.Section+"/"+e.Language] = true
-	}
 
 	fullyQualified := func() bool {
 		if t.Suite == "" || t.Binarypkg == "" || t.Section == "" || t.Language == "" {
 			return false
 		}
-		return valid[t.Suite+"/"+t.Binarypkg+"/"+name+"/"+t.Section+"/"+t.Language]
+
+		// Verify validity
+		for _, e := range entries {
+			if t.Suite == e.Suite &&
+				t.Binarypkg == e.Binarypkg &&
+				t.Section == e.Section &&
+				t.Language == e.Language {
+				return true
+			}
+		}
+		return false
 	}
 
 	filtered := make([]IndexEntry, len(entries))
