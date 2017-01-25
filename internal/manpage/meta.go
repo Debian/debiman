@@ -94,7 +94,7 @@ func FromManPath(path string, p *PkgMeta) (*Meta, error) {
 	return &Meta{
 		Name:        strings.TrimSuffix(parts[1], "."+section+".gz"),
 		Package:     p,
-		Section:     section,
+		Section:     strings.ToLower(section),
 		Language:    lang,
 		LanguageTag: tag,
 	}, nil
