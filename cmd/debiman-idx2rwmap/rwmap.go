@@ -94,16 +94,8 @@ func printAll(bufw *bufio.Writer, idx redirect.Index, name string) {
 		op.mustPrint(fmt.Sprintf("/%s", lcName),
 			redirect.IndexEntry{})
 
-		// legacy, case 01
-		op.mustPrint(fmt.Sprintf("/man/%s.%s", lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language})
-
 		// case 02
 		op.mustPrint(fmt.Sprintf("/%s.%s", lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language})
-
-		// legacy, case 02
-		op.mustPrint(fmt.Sprintf("/man/%s/%s", v.Language, lcName),
 			redirect.IndexEntry{Language: v.Language})
 
 		// case 03
@@ -122,60 +114,12 @@ func printAll(bufw *bufio.Writer, idx redirect.Index, name string) {
 		op.mustPrint(fmt.Sprintf("/%s/%s", lcName, v.Section[:1]),
 			redirect.IndexEntry{Section: v.Section[:1]})
 
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/man/%s/%s.%s", v.Section, lcName, v.Language),
-			redirect.IndexEntry{Section: v.Section, Language: v.Language})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/man/0/%s.%s", lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/man/%s/%s.%s", v.Section[:1], lcName, v.Language),
-			redirect.IndexEntry{Section: v.Section[:1], Language: v.Language})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/man%s/%s.%s", v.Section, lcName, v.Language),
-			redirect.IndexEntry{Section: v.Section, Language: v.Language})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/man0/%s.%s", lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/man%s/%s.%s", v.Section[:1], lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language, Section: v.Section[:1]})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/%s/%s.%s", v.Section, lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language, Section: v.Section})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/0/%s.%s", lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language})
-
-		// legacy, case 03
-		op.mustPrint(fmt.Sprintf("/%s/%s.%s", v.Section[:1], lcName, v.Language),
-			redirect.IndexEntry{Language: v.Language, Section: v.Section[:1]})
-
 		// case 04
 		op.mustPrint(fmt.Sprintf("/%s.%s.%s", lcName, v.Section, v.Language),
 			redirect.IndexEntry{Language: v.Language, Section: v.Section})
 
 		// case 04
 		op.mustPrint(fmt.Sprintf("/%s.%s.%s", lcName, v.Section[:1], v.Language),
-			redirect.IndexEntry{Language: v.Language, Section: v.Section[:1]})
-
-		// legacy, case 04
-		op.mustPrint(fmt.Sprintf("/%s/man%s/%s", v.Language, v.Section, lcName),
-			redirect.IndexEntry{Language: v.Language, Section: v.Section})
-
-		// legacy, case 04
-		op.mustPrint(fmt.Sprintf("/%s/man0/%s", v.Language, lcName),
-			redirect.IndexEntry{Language: v.Language})
-
-		// legacy, case 04
-		op.mustPrint(fmt.Sprintf("/%s/man%s/%s", v.Language, v.Section[:1], lcName),
 			redirect.IndexEntry{Language: v.Language, Section: v.Section[:1]})
 
 		// case 05
@@ -207,10 +151,6 @@ func printAll(bufw *bufio.Writer, idx redirect.Index, name string) {
 			op.mustPrint(fmt.Sprintf("/%s/%s", suite, lcName),
 				redirect.IndexEntry{Suite: v.Suite})
 
-			// legacy, case 10
-			op.mustPrint(fmt.Sprintf("/%s/%s.%s", suite, lcName, v.Language),
-				redirect.IndexEntry{Language: v.Language, Suite: v.Suite})
-
 			// case 10
 			op.mustPrint(fmt.Sprintf("/%s/%s.%s", suite, lcName, v.Language),
 				redirect.IndexEntry{Language: v.Language, Suite: v.Suite})
@@ -223,36 +163,12 @@ func printAll(bufw *bufio.Writer, idx redirect.Index, name string) {
 			op.mustPrint(fmt.Sprintf("/%s/%s.%s", suite, lcName, v.Section[:1]),
 				redirect.IndexEntry{Section: v.Section, Suite: v.Suite})
 
-			// legacy, case 11
-			op.mustPrint(fmt.Sprintf("/man/%s/%s/%s.%s", suite, v.Section, lcName, v.Language),
-				redirect.IndexEntry{Language: v.Language, Suite: v.Suite, Section: v.Section})
-
-			// legacy, case 11
-			op.mustPrint(fmt.Sprintf("/man/%s/0/%s.%s", suite, lcName, v.Language),
-				redirect.IndexEntry{Language: v.Language, Suite: v.Suite})
-
-			// legacy, case 11
-			op.mustPrint(fmt.Sprintf("/man/%s/%s/%s.%s", suite, v.Section[:1], lcName, v.Language),
-				redirect.IndexEntry{Language: v.Language, Suite: v.Suite, Section: v.Section[:1]})
-
 			// case 12
 			op.mustPrint(fmt.Sprintf("/%s/%s.%s.%s", suite, lcName, v.Section, v.Language),
 				redirect.IndexEntry{Language: v.Language, Section: v.Section, Suite: v.Suite})
 
 			// case 12
 			op.mustPrint(fmt.Sprintf("/%s/%s.%s.%s", suite, lcName, v.Section[:1], v.Language),
-				redirect.IndexEntry{Language: v.Language, Section: v.Section[:1], Suite: v.Suite})
-
-			// legacy, case 12
-			op.mustPrint(fmt.Sprintf("/man/%s/%s/%s/%s", suite, v.Language, v.Section, lcName),
-				redirect.IndexEntry{Language: v.Language, Section: v.Section, Suite: v.Suite})
-
-			// legacy, case 12
-			op.mustPrint(fmt.Sprintf("/man/%s/%s/0/%s", suite, v.Language, lcName),
-				redirect.IndexEntry{Language: v.Language, Suite: v.Suite})
-
-			// legacy, case 12
-			op.mustPrint(fmt.Sprintf("/man/%s/%s/%s/%s", suite, v.Language, v.Section[:1], lcName),
 				redirect.IndexEntry{Language: v.Language, Section: v.Section[:1], Suite: v.Suite})
 
 			// case 13
