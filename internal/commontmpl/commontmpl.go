@@ -45,6 +45,9 @@ func MustParseCommonTmpls() *template.Template {
 			"HasSuffix": func(s, suffix string) bool {
 				return strings.HasSuffix(s, suffix)
 			},
+			"HasPrefix": func(s, suffix string) bool {
+				return strings.HasPrefix(s, suffix)
+			},
 			"Now": func() string {
 				return time.Now().UTC().Format(iso8601Format)
 			}}).
