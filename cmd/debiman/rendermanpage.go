@@ -166,8 +166,8 @@ func (p byPkgAndLanguage) Len() int      { return len(p.opts) }
 func (p byPkgAndLanguage) Swap(i, j int) { p.opts[i], p.opts[j] = p.opts[j], p.opts[i] }
 func (p byPkgAndLanguage) Less(i, j int) bool {
 	// prefer manpages from the same package
-	if p.opts[i].Package.Binarypkg != p.opts[j].Package.Binarypkg {
-		if p.opts[i].Package.Binarypkg == p.currentpkg {
+	if p.opts[i].Package.Sourcepkg != p.opts[j].Package.Sourcepkg {
+		if p.opts[i].Package.Sourcepkg == p.currentpkg {
 			return true
 		}
 	}
@@ -177,7 +177,7 @@ func (p byPkgAndLanguage) Less(i, j int) bool {
 // bestLanguageMatch returns the best manpage out of options (coming
 // from current) based on text/language’s matching.
 func bestLanguageMatch(current *manpage.Meta, options []*manpage.Meta) *manpage.Meta {
-	sort.Stable(byPkgAndLanguage{options, current.Package.Binarypkg})
+	sort.Stable(byPkgAndLanguage{options, current.Package.Sourcepkg})
 
 	if options[0].Language != "en" {
 		for i := 1; i < len(options); i++ {
@@ -332,7 +332,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 
 	suites := make([]*manpage.Meta, 0, len(job.versions))
 	for _, v := range job.versions {
-		if v.Package.Binarypkg != meta.Package.Binarypkg {
+		if v.Package.Sourcepkg != meta.Package.Sourcepkg {
 			continue
 		}
 		if v.Section != meta.Section {

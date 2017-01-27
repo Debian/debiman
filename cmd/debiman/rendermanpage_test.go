@@ -16,6 +16,7 @@ func mustParseFromServingPath(t *testing.T, path string) *manpage.Meta {
 	if err != nil {
 		t.Fatal(err)
 	}
+	m.Package.Sourcepkg = m.Package.Binarypkg
 	return m
 }
 
@@ -75,6 +76,9 @@ baz
 	systemdCron := mustParseFromServingPath(t, "jessie/systemd-cron/crontab.5.en")
 	cron := mustParseFromServingPath(t, "jessie/cron/crontab.5.en")
 	bcronRun := mustParseFromServingPath(t, "jessie/bcron-run/crontab.5.en")
+	// Pretend crontab.5.en moved to manpages-fr-systemd for testing issue #27
+	manpagesFrSystemd := mustParseFromServingPath(t, "testing/manpages-fr-systemd/crontab.5.fr")
+	manpagesFrSystemd.Package.Sourcepkg = manpagesFrExtra5.Package.Sourcepkg
 
 	converter, err := convert.NewProcess()
 	if err != nil {
@@ -93,6 +97,7 @@ baz
 			systemdCron,
 			cron,
 			bcronRun,
+			manpagesFrSystemd,
 		},
 		xref: map[string][]*manpage.Meta{
 			"crontab": []*manpage.Meta{
@@ -102,6 +107,7 @@ baz
 				systemdCron,
 				cron,
 				bcronRun,
+				manpagesFrSystemd,
 			},
 		},
 		modTime: time.Now(),
@@ -109,6 +115,23 @@ baz
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Run("versions", func(t *testing.T) {
+		wantSuites := []*manpage.Meta{
+			manpagesFrExtra5,
+			manpagesFrSystemd,
+		}
+
+		if got, want := len(data.Suites), len(wantSuites); got != want {
+			t.Fatalf("unexpected number of data.Suites: got %d, want %d", got, want)
+		}
+
+		for i := 0; i < len(data.Suites); i++ {
+			if got, want := data.Suites[i], wantSuites[i]; got != want {
+				t.Fatalf("unexpected entry in data.Suites: got %v, want %v", got, want)
+			}
+		}
+	})
 
 	t.Run("lang", func(t *testing.T) {
 		wantLang := []*manpage.Meta{

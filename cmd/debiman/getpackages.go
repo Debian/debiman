@@ -295,6 +295,7 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 	for key, p := range byVersion {
 		result = append(result, p)
 		latestVersion[key] = &manpage.PkgMeta{
+			Sourcepkg: p.source,
 			Binarypkg: p.binarypkg,
 			Suite:     p.suite,
 			Version:   p.version,

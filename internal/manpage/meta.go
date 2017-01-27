@@ -13,6 +13,7 @@ import (
 
 type PkgMeta struct {
 	Binarypkg string
+	Sourcepkg string
 
 	// Version is used by the templates when rendering.
 	Version version.Version
