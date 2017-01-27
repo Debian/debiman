@@ -207,15 +207,6 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 					}
 				}
 
-				var reuse string
-				if symlink {
-					link, err := os.Readlink(full)
-					if err == nil {
-						resolved := filepath.Join(dir, link)
-						reuse = strings.TrimSuffix(resolved, ".gz") + ".html.gz"
-					}
-				}
-
 				// Render dependent manpages first to properly resume
 				// in case debiman is interrupted.
 				for _, v := range versions {
@@ -237,9 +228,9 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 						continue
 					}
 
-					reuse = ""
+					vreuse := ""
 					if vhtmlst != nil && vhtmlst.ModTime().After(vst.ModTime()) {
-						reuse = vfn
+						vreuse = vfn
 					}
 
 					log.Printf("%s invalidated by %s", vfn, full)
@@ -252,10 +243,19 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 						versions: versions,
 						xref:     gv.xref,
 						modTime:  vst.ModTime(),
-						reuse:    reuse,
+						reuse:    vreuse,
 					}:
 					case <-ctx.Done():
 						break
+					}
+				}
+
+				var reuse string
+				if symlink {
+					link, err := os.Readlink(full)
+					if err == nil {
+						resolved := filepath.Join(dir, link)
+						reuse = strings.TrimSuffix(resolved, ".gz") + ".html.gz"
 					}
 				}
 
