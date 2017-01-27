@@ -105,7 +105,6 @@ baz
 			},
 		},
 		modTime: time.Now(),
-		symlink: false,
 	})
 	if err != nil {
 		t.Fatal(err)

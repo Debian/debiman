@@ -206,6 +206,59 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 						break
 					}
 				}
+
+				var reuse string
+				if symlink {
+					link, err := os.Readlink(full)
+					if err == nil {
+						resolved := filepath.Join(dir, link)
+						reuse = strings.TrimSuffix(resolved, ".gz") + ".html.gz"
+					}
+				}
+
+				// Render dependent manpages first to properly resume
+				// in case debiman is interrupted.
+				for _, v := range versions {
+					if v == m {
+						continue
+					}
+
+					vfull := filepath.Join(*servingDir, v.RawPath())
+					vfn := filepath.Join(*servingDir, v.ServingPath()+".html.gz")
+					vhtmlst, err := os.Stat(vfn)
+					if err == nil && vhtmlst.ModTime().After(gv.start) {
+						// The variant was already re-rendered with this globalView.
+						continue
+					}
+
+					vst, err := os.Stat(vfull)
+					if err != nil {
+						log.Printf("WARNING: stat %q: %v", vfull, err)
+						continue
+					}
+
+					reuse = ""
+					if vhtmlst != nil && vhtmlst.ModTime().After(vst.ModTime()) {
+						reuse = vfn
+					}
+
+					log.Printf("%s invalidated by %s", vfn, full)
+
+					select {
+					case renderChan <- renderJob{
+						dest:     vfn,
+						src:      vfull,
+						meta:     v,
+						versions: versions,
+						xref:     gv.xref,
+						modTime:  vst.ModTime(),
+						reuse:    reuse,
+					}:
+					case <-ctx.Done():
+						break
+					}
+				}
+
 				select {
 				case renderChan <- renderJob{
 					dest:     filepath.Join(dir, n),
@@ -214,7 +267,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 					versions: versions,
 					xref:     gv.xref,
 					modTime:  st.ModTime(),
-					symlink:  symlink,
+					reuse:    reuse,
 				}:
 				case <-ctx.Done():
 					break

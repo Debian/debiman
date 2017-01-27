@@ -63,7 +63,6 @@ baz
 			"test": []*manpage.Meta{meta},
 		},
 		modTime: time.Now(),
-		symlink: false,
 	}); err != nil {
 		t.Fatal(err)
 	}

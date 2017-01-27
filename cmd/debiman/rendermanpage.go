@@ -234,7 +234,7 @@ type renderJob struct {
 	versions []*manpage.Meta
 	xref     map[string][]*manpage.Meta
 	modTime  time.Time
-	symlink  bool
+	reuse    string
 }
 
 var notYetRenderedSentinel = errors.New("Not yet rendered")
@@ -293,16 +293,10 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		toc       []string
 		renderErr = notYetRenderedSentinel
 	)
-	if job.symlink {
-		link, err := os.Readlink(job.src)
-		if err != nil {
-			return nil, manpagePrepData{}, err
-		}
-		resolved := filepath.Join(filepath.Dir(job.src), link)
-		renderedPath := strings.TrimSuffix(resolved, ".gz") + ".html.gz"
-		content, toc, renderErr = reuse(renderedPath)
+	if job.reuse != "" {
+		content, toc, renderErr = reuse(job.reuse)
 		if renderErr != nil {
-			log.Printf("WARNING: re-using %q failed: %v", renderedPath, renderErr)
+			log.Printf("WARNING: re-using %q failed: %v", job.reuse, renderErr)
 		}
 	}
 	if renderErr != nil {
@@ -501,5 +495,5 @@ func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob
 		return 0, err
 	}
 
-	return uint64(written), os.Chtimes(job.dest, job.modTime, job.modTime)
+	return uint64(written), nil
 }

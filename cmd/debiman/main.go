@@ -80,7 +80,8 @@ func logic() error {
 	// specified suites are discovered.
 	globalView, err := buildGlobalView(ar, distributions(
 		strings.Split(*syncCodenames, ","),
-		strings.Split(*syncSuites, ",")))
+		strings.Split(*syncSuites, ",")),
+		start)
 	if err != nil {
 		return err
 	}

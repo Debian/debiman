@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/manpage"
@@ -32,6 +33,7 @@ type globalView struct {
 	contentByPath map[string][]*contentEntry
 	xref          map[string][]*manpage.Meta
 	stats         *stats
+	start         time.Time
 }
 
 type distributionIdentifier int
@@ -72,7 +74,7 @@ func distributions(codenames []string, suites []string) []distribution {
 	return distributions
 }
 
-func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, error) {
+func buildGlobalView(ar *archive.Getter, dists []distribution, start time.Time) (globalView, error) {
 	var stats stats
 	res := globalView{
 		suites:        make(map[string]bool, len(dists)),
@@ -80,6 +82,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution) (globalView, erro
 		contentByPath: make(map[string][]*contentEntry),
 		xref:          make(map[string][]*manpage.Meta),
 		stats:         &stats,
+		start:         start,
 	}
 
 	for _, dist := range dists {
