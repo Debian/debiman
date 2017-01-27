@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"golang.org/x/sync/errgroup"
@@ -83,10 +84,19 @@ func (p *Process) initMandoc() error {
 
 func (p *Process) mandoc(r io.Reader) (stdout string, stderr string, err error) {
 	if p.mandocConn != nil {
-		return p.mandocUnix(r)
+		stdout, stderr, err = p.mandocUnix(r)
 	} else {
-		return p.mandocFork(r)
+		stdout, stderr, err = p.mandocFork(r)
 	}
+	// TODO(later): once a new-enough version of mandoc is in Debian,
+	// get rid of this compatibility code by changing our CSS to not
+	// rely on the mandoc class at all anymore.
+	if err == nil && !strings.HasPrefix(stdout, `<div class="mandoc">`) {
+		stdout = `<div class="mandoc">
+` + stdout + `</div>
+`
+	}
+	return stdout, stderr, err
 }
 
 func (p *Process) mandocFork(r io.Reader) (stdout string, stderr string, err error) {

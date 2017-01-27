@@ -437,8 +437,13 @@ table.head, table.foot {
     text-align: right;
 }
 
-.spacer {
+/* TODO(later): get rid of .spacer once a new-enough mandoc is in Debian */
+.spacer, .Pp {
     min-height: 1em;
+}
+
+pre {
+    margin-left: 2em;
 }
 
 .anchor {
