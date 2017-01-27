@@ -17,11 +17,15 @@ func Inject(dir string) error {
 		return err
 	}
 	defer f.Close()
-	names, err := f.Readdirnames(-1)
+	entries, err := f.Readdir(-1)
 	if err != nil {
 		return err
 	}
-	for _, fn := range names {
+	for _, fi := range entries {
+		if !fi.Mode().IsRegular() {
+			continue
+		}
+		fn := fi.Name()
 		path := filepath.Join(dir, fn)
 		b, err := ioutil.ReadFile(path)
 		if err != nil {
