@@ -20,7 +20,7 @@ script:
   # compilation with go1.0.2.
   - go get github.com/stapelberg/debiman/...
   # TODO: once mandoc trickles into the Ubuntu version which travis uses, get it whitelisted and use the apt addon to install it.
-  - wget https://people.debian.org/~stapelberg/mandoc_1.13.3-2~bpo8+1_amd64.deb
+  - wget https://people.debian.org/~stapelberg/mandoc_1.13.3-2~bpo8+1.20170127-1_amd64.deb
   - dpkg -x mandoc_1.13.3-2~bpo8+1_amd64.deb .
   # Only run tests on ≥ go1.7 for parallel subtests
   - if [[ $TRAVIS_GO_VERSION =~ ^1.[^3-6] ]]; then PATH=$PWD/usr/bin:$PATH go test github.com/stapelberg/debiman/...; fi
