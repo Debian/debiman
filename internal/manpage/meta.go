@@ -81,7 +81,8 @@ func FromManPath(path string, p *PkgMeta) (*Meta, error) {
 		parts = parts[1:]
 	}
 
-	// Both C and POSIX are to be treated as english. TODO: add reference
+	// Both C and POSIX are to be treated as english, see
+	// https://sources.debian.net/src/man-db/2.7.6.1-2/lib/encodings.c/#L83
 	if lang == "C" || lang == "POSIX" {
 		lang = "en"
 	}
