@@ -16,7 +16,6 @@ func mustParseFromServingPath(t *testing.T, path string) *manpage.Meta {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m.Package.Sourcepkg = m.Package.Binarypkg
 	return m
 }
 
@@ -78,7 +77,7 @@ baz
 	bcronRun := mustParseFromServingPath(t, "jessie/bcron-run/crontab.5.en")
 	// Pretend crontab.5.en moved to manpages-fr-systemd for testing issue #27
 	manpagesFrSystemd := mustParseFromServingPath(t, "testing/manpages-fr-systemd/crontab.5.fr")
-	manpagesFrSystemd.Package.Sourcepkg = manpagesFrExtra5.Package.Sourcepkg
+	manpagesFrSystemd.Package.Replaces = []string{"manpages-fr-extra"}
 
 	converter, err := convert.NewProcess()
 	if err != nil {

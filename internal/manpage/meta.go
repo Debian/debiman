@@ -13,7 +13,7 @@ import (
 
 type PkgMeta struct {
 	Binarypkg string
-	Sourcepkg string
+	Replaces  []string
 
 	// Version is used by the templates when rendering.
 	Version version.Version
@@ -21,6 +21,23 @@ type PkgMeta struct {
 	// Suite is the Debian suite in which this binary package was
 	// found.
 	Suite string
+}
+
+func (p *PkgMeta) SameBinary(o *PkgMeta) bool {
+	if p.Binarypkg == o.Binarypkg {
+		return true
+	}
+	for _, r := range p.Replaces {
+		if r == o.Binarypkg {
+			return true
+		}
+	}
+	for _, r := range o.Replaces {
+		if r == p.Binarypkg {
+			return true
+		}
+	}
+	return false
 }
 
 type Meta struct {

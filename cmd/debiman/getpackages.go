@@ -29,6 +29,7 @@ type pkgEntry struct {
 	version   version.Version
 	sha256    []byte
 	bytes     int64
+	replaces  []string
 }
 
 // TODO(later): containsMans could be a map[string]bool, if only all
@@ -61,6 +62,7 @@ var (
 	prefixFilename = []byte("Filename")
 	prefixSize     = []byte("Size")
 	prefixSHA256   = []byte("SHA256")
+	prefixReplaces = []byte("Replaces")
 )
 
 func parsePackageParagraph(scanner *bufio.Scanner, arch string, containsMans map[string]map[string]bool) (pkgEntry, error) {
@@ -102,6 +104,15 @@ func parsePackageParagraph(scanner *bufio.Scanner, arch string, containsMans map
 				return entry, err
 			}
 			entry.sha256 = h[:n]
+		} else if bytes.Equal(key, prefixReplaces) {
+			// e.g. Replaces: systemd (<< 224-2)
+			pkgs := strings.Split(string(text[idx+2:]), ",")
+			for _, pkg := range pkgs {
+				if idx := strings.Index(pkg, " "); idx > -1 {
+					pkg = pkg[:idx]
+				}
+				entry.replaces = append(entry.replaces, pkg)
+			}
 		}
 
 		if entry.binarypkg != "" &&
@@ -295,7 +306,7 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 	for key, p := range byVersion {
 		result = append(result, p)
 		latestVersion[key] = &manpage.PkgMeta{
-			Sourcepkg: p.source,
+			Replaces:  p.replaces,
 			Binarypkg: p.binarypkg,
 			Suite:     p.suite,
 			Version:   p.version,
