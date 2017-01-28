@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync/atomic"
 	"unicode/utf8"
@@ -42,6 +43,12 @@ func canSkip(p pkgEntry, vPath string) bool {
 
 	return version.Compare(vCurrent, p.version) >= 0
 }
+
+type contentByBinarypkg []*contentEntry
+
+func (p contentByBinarypkg) Len() int           { return len(p) }
+func (p contentByBinarypkg) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p contentByBinarypkg) Less(i, j int) bool { return p[i].binarypkg < p[j].binarypkg }
 
 // findClosestFile returns a manpage struct for name, if name exists in the same suite.
 // TODO(stapelberg): resolve multiple matches: consider dependencies of src
@@ -80,16 +87,23 @@ func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentBy
 			c = []*contentEntry{last}
 		}
 	}
-	if len(c) == 1 {
-		m, err := manpage.FromManPath(strings.TrimPrefix(name, "/usr/share/man/"), &manpage.PkgMeta{
-			Binarypkg: c[0].binarypkg,
-			Suite:     c[0].suite,
-		})
-		logger.Printf("parsing %q as man: %v", name, err)
-		if err == nil {
-			return m.ServingPath() + ".gz"
-		}
+	if len(c) > 1 {
+		// We can’t make a 100% correct choice, but we can at least
+		// make a deterministic choice. The user will see the
+		// conflicting packages in the navigation panel to ultimately
+		// resolve the situation, if necessary.
+		sort.Sort(contentByBinarypkg(c))
 	}
+
+	m, err := manpage.FromManPath(strings.TrimPrefix(name, "/usr/share/man/"), &manpage.PkgMeta{
+		Binarypkg: c[0].binarypkg,
+		Suite:     c[0].suite,
+	})
+	logger.Printf("parsing %q as man: %v", name, err)
+	if err == nil {
+		return m.ServingPath() + ".gz"
+	}
+
 	return ""
 }
 
