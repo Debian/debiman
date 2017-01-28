@@ -108,7 +108,6 @@ func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentBy
 }
 
 func findFile(logger *log.Logger, src, name string, contentByPath map[string][]*contentEntry) (string, string, bool) {
-	// TODO: where is searchPath defined canonically?
 	// TODO(later): why is "/"+ in front of src necessary?
 	searchPath := []string{
 		"/" + filepath.Dir(src), // “.”
@@ -118,7 +117,6 @@ func findFile(logger *log.Logger, src, name string, contentByPath map[string][]*
 		// /usr/share/man/fr/man1/bash.1 instead of
 		// /usr/share/man/man1/bash.1.
 		"/" + filepath.Dir(src) + "/..",
-		"/usr/local/man",
 		"/usr/share/man",
 	}
 	logger.Printf("searching reference so=%q", name)
