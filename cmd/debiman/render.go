@@ -210,7 +210,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 				// Render dependent manpages first to properly resume
 				// in case debiman is interrupted.
 				for _, v := range versions {
-					if v == m {
+					if v == m || *forceRerender {
 						continue
 					}
 
