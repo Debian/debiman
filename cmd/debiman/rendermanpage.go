@@ -18,7 +18,6 @@ import (
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
-	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
 )
 
@@ -215,17 +214,9 @@ func bestLanguageMatch(current *manpage.Meta, options []*manpage.Meta) *manpage.
 
 type byLanguage []*manpage.Meta
 
-func (p byLanguage) Len() int {
-	return len(p)
-}
-
-func (p byLanguage) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p byLanguage) Bytes(i int) []byte {
-	return []byte(p[i].Language)
-}
+func (p byLanguage) Len() int           { return len(p) }
+func (p byLanguage) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p byLanguage) Less(i, j int) bool { return p[i].Language < p[j].Language }
 
 type renderJob struct {
 	dest     string
@@ -420,14 +411,9 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 		}
 	}
 
-	// NOTE(stapelberg): since our user interface currently is in
-	// English, we use english collation rules to sort the list of
-	// languages.
-
-	// TODO(stapelberg): is english collation always the same as
-	// strings.Sort (at least on the list of languages)?
-	collate.New(language.English).Sort(byLanguage(langs))
-	collate.New(language.English).Sort(byLanguage(hrefLangs))
+	// Sort alphabetically by the locale names (e.g. zh_TW).
+	sort.Sort(byLanguage(langs))
+	sort.Sort(byLanguage(hrefLangs))
 
 	t := manpageTmpl
 	title := fmt.Sprintf("%s(%s) — %s — Debian %s", meta.Name, meta.Section, meta.Package.Binarypkg, meta.Package.Suite)
