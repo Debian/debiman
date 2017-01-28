@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 
 	"github.com/Debian/debiman/internal/aux"
@@ -74,6 +75,12 @@ func main() {
 			}
 
 			log.Printf("Index swapped")
+			// Force the garbage collector to return all unused memory to the
+			// operating system. Even though, on Linux, unused memory can
+			// apparently be reclaimed by the kernel, preemptively returning the
+			// memory is less confusing for sysadmins who aren’t intimately
+			// familiar with Go’s memory model.
+			debug.FreeOSMemory()
 		}
 	}()
 
