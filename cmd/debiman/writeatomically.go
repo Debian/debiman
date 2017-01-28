@@ -9,8 +9,19 @@ import (
 	"path/filepath"
 )
 
+func tempDir(dest string) string {
+	tempdir := os.Getenv("TMPDIR")
+	if tempdir == "" {
+		// Convenient for development: decreases the chance that we
+		// cannot move files due to /tmp being on a different file
+		// system.
+		tempdir = filepath.Dir(dest)
+	}
+	return tempdir
+}
+
 func writeAtomically(dest string, compress bool, write func(w io.Writer) error) error {
-	f, err := ioutil.TempFile(filepath.Dir(dest), "debiman-")
+	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
 	if err != nil {
 		return err
 	}
@@ -59,7 +70,7 @@ func writeAtomically(dest string, compress bool, write func(w io.Writer) error) 
 }
 
 func writeAtomicallyWithGz(dest string, gzipw *gzip.Writer, write func(w io.Writer) error) error {
-	f, err := ioutil.TempFile(filepath.Dir(dest), "debiman-")
+	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
 	if err != nil {
 		return err
 	}
