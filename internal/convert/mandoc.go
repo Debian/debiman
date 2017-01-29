@@ -49,7 +49,7 @@ func (p *Process) initMandoc() error {
 		return err
 	}
 
-	cmd := exec.Command("mandoc", "-man", "-Thtml", "-Ofragment", "-u", "/invalid")
+	cmd := exec.Command("mandoc", "-Thtml", "-Ofragment", "-u", "/invalid")
 	cmd.ExtraFiles = []*os.File{f}
 	cmd.Env = []string{"MANDOC_UNIX_SOCKFD=3"} // go dup2()s each file in ExtraFiles
 	cmd.Stdout = os.Stdout
@@ -101,7 +101,7 @@ func (p *Process) mandoc(r io.Reader) (stdout string, stderr string, err error) 
 
 func (p *Process) mandocFork(r io.Reader) (stdout string, stderr string, err error) {
 	var stdoutb, stderrb bytes.Buffer
-	cmd := exec.Command("mandoc", "-man", "-Ofragment", "-Thtml")
+	cmd := exec.Command("mandoc", "-Ofragment", "-Thtml")
 	cmd.Stdin = r
 	cmd.Stdout = &stdoutb
 	cmd.Stderr = &stderrb
