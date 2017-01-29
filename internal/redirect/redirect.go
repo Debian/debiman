@@ -306,6 +306,13 @@ func (e *NotFoundError) Error() string {
 
 func (i Index) Redirect(r *http.Request) (string, error) {
 	path := r.URL.Path
+
+	if strings.HasSuffix(path, "/") ||
+		strings.HasSuffix(path, "/index.html") ||
+		strings.HasPrefix(path, "/contents-") {
+		return "", &NotFoundError{}
+	}
+
 	for strings.HasSuffix(path, ".html") || strings.HasSuffix(path, ".gz") {
 		path = strings.TrimSuffix(path, ".html")
 		path = strings.TrimSuffix(path, ".gz")
