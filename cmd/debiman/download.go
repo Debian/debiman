@@ -86,13 +86,16 @@ func findClosestFile(logger *log.Logger, p pkgEntry, src, name string, contentBy
 		if cnt == 1 {
 			c = []*contentEntry{last}
 		}
-	}
-	if len(c) > 1 {
+
 		// We can’t make a 100% correct choice, but we can at least
 		// make a deterministic choice. The user will see the
 		// conflicting packages in the navigation panel to ultimately
 		// resolve the situation, if necessary.
 		sort.Sort(contentByBinarypkg(c))
+	}
+
+	if len(c) == 0 {
+		return ""
 	}
 
 	m, err := manpage.FromManPath(strings.TrimPrefix(name, "/usr/share/man/"), &manpage.PkgMeta{
