@@ -226,7 +226,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 
 	d, err := deb.Load(tmp, p.filename)
 	if err != nil {
-		return err
+		return fmt.Errorf("loading %q: %v", p.filename, err)
 	}
 	for {
 		header, err := d.Data.Next()
