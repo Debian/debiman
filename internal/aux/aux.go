@@ -88,11 +88,6 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if redir == r.URL.Path {
-		http.Error(w, "The request path already identifies a fully qualified manpage, the request should have been handled by the webserver upstream of auxserver. Your webserver might be misconfigured.", http.StatusNotFound)
-		return
-	}
-
 	// StatusTemporaryRedirect (HTTP 307) means subsequent requests
 	// should use the old URI, which is what we want — the redirect
 	// target will likely change in the future.
