@@ -20,13 +20,18 @@ func tempDir(dest string) string {
 	return tempdir
 }
 
-func writeAtomically(dest string, compress bool, write func(w io.Writer) error) error {
+func writeAtomically(dest string, compress bool, write func(w io.Writer) error) (err error) {
 	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
 	if err != nil {
 		return err
 	}
+	defer func() {
+		// Remove the tempfile if an error occurred
+		if err != nil {
+			os.Remove(f.Name())
+		}
+	}()
 	defer f.Close()
-	// TODO: defer os.Remove() in case we return before the tempfile is destroyed
 
 	bufw := bufio.NewWriter(f)
 
@@ -69,13 +74,18 @@ func writeAtomically(dest string, compress bool, write func(w io.Writer) error) 
 	return os.Rename(f.Name(), dest)
 }
 
-func writeAtomicallyWithGz(dest string, gzipw *gzip.Writer, write func(w io.Writer) error) error {
+func writeAtomicallyWithGz(dest string, gzipw *gzip.Writer, write func(w io.Writer) error) (err error) {
 	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
 	if err != nil {
 		return err
 	}
+	defer func() {
+		// Remove the tempfile if an error occurred
+		if err != nil {
+			os.Remove(f.Name())
+		}
+	}()
 	defer f.Close()
-	// TODO: defer os.Remove() in case we return before the tempfile is destroyed
 
 	bufw := bufio.NewWriter(f)
 	gzipw.Reset(bufw)
