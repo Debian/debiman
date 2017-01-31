@@ -23,8 +23,8 @@ type IndexEntry struct {
 	Language  string // TODO: type: would it make sense to use language.Tag?
 }
 
-func (e IndexEntry) ServingPath() string {
-	return "/" + e.Suite + "/" + e.Binarypkg + "/" + e.Name + "." + e.Section + "." + e.Language + ".html"
+func (e IndexEntry) ServingPath(suffix string) string {
+	return "/" + e.Suite + "/" + e.Binarypkg + "/" + e.Name + "." + e.Section + "." + e.Language + suffix
 }
 
 type Index struct {
@@ -313,9 +313,14 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 		return "", &NotFoundError{}
 	}
 
+	suffix := ".html"
+	// If a raw manpage was requested, redirect to raw, not HTML
+	if strings.HasSuffix(path, ".gz") && !strings.HasSuffix(path, ".html.gz") {
+		suffix = ".gz"
+	}
 	for strings.HasSuffix(path, ".html") || strings.HasSuffix(path, ".gz") {
-		path = strings.TrimSuffix(path, ".html")
 		path = strings.TrimSuffix(path, ".gz")
+		path = strings.TrimSuffix(path, ".html")
 	}
 
 	// Parens are converted into dots, so that “i3(1)” becomes
@@ -372,7 +377,7 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 			BestChoice: best}
 	}
 
-	return filtered[0].ServingPath(), nil
+	return filtered[0].ServingPath(suffix), nil
 }
 
 func IndexFromProto(path string) (Index, error) {

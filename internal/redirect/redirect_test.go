@@ -200,7 +200,7 @@ func TestNotFoundWrongSuite(t *testing.T) {
 	if got, want := e.Manpage, "i3"; got != want {
 		t.Fatalf("Unexpected e.Manpage: got %q, want %q", got, want)
 	}
-	if got, want := e.BestChoice.ServingPath(), "/jessie/i3-wm/i3.1.en.html"; got != want {
+	if got, want := e.BestChoice.ServingPath(".html"), "/jessie/i3-wm/i3.1.en.html"; got != want {
 		t.Fatalf("Unexpected e.BestChoice.ServingPath(): got %q, want %q", got, want)
 	}
 }
@@ -532,6 +532,37 @@ func TestFormExtra(t *testing.T) {
 				Header: http.Header{
 					"Accept-Language": []string{entry.lang},
 				},
+			}
+			got, err := testIdx.Redirect(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "/" + entry.want
+			if got != want {
+				t.Fatalf("Unexpected redirect: got %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestRawManpageRedirect(t *testing.T) {
+	table := []struct {
+		URL  string
+		want string
+	}{
+		{URL: "/stretch/i3-wm/i3.1.en.gz", want: "testing/i3-wm/i3.1.en.gz"},
+	}
+	for _, entry := range table {
+		entry := entry // capture
+		t.Run(entry.URL, func(t *testing.T) {
+			t.Parallel()
+
+			u, err := url.Parse("http://man.debian.org/" + entry.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req := &http.Request{
+				URL: u,
 			}
 			got, err := testIdx.Redirect(req)
 			if err != nil {

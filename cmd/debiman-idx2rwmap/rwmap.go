@@ -61,7 +61,7 @@ func (op oncePrinter) mustPrint(key string, template redirect.IndexEntry) {
 	if err := op.w.WriteByte(' '); err != nil {
 		log.Fatal(err)
 	}
-	if _, err := op.w.WriteString(filtered[0].ServingPath()); err != nil {
+	if _, err := op.w.WriteString(filtered[0].ServingPath(".html")); err != nil {
 		log.Fatal(err)
 	}
 	if err := op.w.WriteByte('\n'); err != nil {
