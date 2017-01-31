@@ -9,6 +9,11 @@ go:
   - 1.6
   - 1.7
 
+addons:
+  apt:
+    packages:
+    - debian-archive-keyring
+
 script:
   # Check whether files are syntactically correct.
   - "gofmt -l $(find . -name '*.go' | tr '\\n' ' ') >/dev/null"
