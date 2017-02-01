@@ -347,9 +347,18 @@ func (i Index) Redirect(r *http.Request) (string, error) {
 
 	log.Printf("path %q -> suite = %q, binarypkg = %q, name = %q, section = %q, lang = %q", path, suite, binarypkg, name, section, lang)
 
-	entries, ok := i.Entries[strings.ToLower(name)]
+	lname := strings.ToLower(name)
+	entries, ok := i.Entries[lname]
 	if !ok {
-		return "", &NotFoundError{Manpage: name}
+		// Fall back to joining (originally) whitespace-separated
+		// parts by dashes and underscores, like man(1).
+		entries, ok = i.Entries[strings.Replace(lname, ".", "-", -1)]
+		if !ok {
+			entries, ok = i.Entries[strings.Replace(lname, ".", "_", -1)]
+			if !ok {
+				return "", &NotFoundError{Manpage: name}
+			}
+		}
 	}
 
 	acceptLang := r.Header.Get("Accept-Language")
