@@ -145,6 +145,7 @@ a:visited {
     margin: 0 10px 0 52px;
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
 }
 
 .paneljump {
@@ -175,6 +176,7 @@ a:visited {
 .panels {
     display: block;
     order: 2;
+    font-size: smaller;
 }
 
 .maincontent {
@@ -228,7 +230,7 @@ a, a:hover, a:focus, a:visited {
 
 .panel-heading, .panel details {
   margin: -15px -15px 0px;
-  background-color: #d70751;
+  background-color: #ffffff;
   border-bottom: 1px solid #dddddd;
   border-top-right-radius: 3px;
   border-top-left-radius: 3px;
@@ -236,9 +238,7 @@ a, a:hover, a:focus, a:visited {
 
 .panel-heading, .panel summary {
   padding: 5px 5px;
-  font-size: 17.5px;
-  font-weight: 500;
-  color: #ffffff;
+  color: #000000;
   outline-style: none;
 }
 
