@@ -2,6 +2,7 @@ package convert
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -35,28 +36,41 @@ func (p *Process) Kill() error {
 }
 
 func (p *Process) initMandoc() error {
-	// TODO: get mandoc version, error if mandoc is not installed
-
-	// TODO: remove once mandoc patch landed upstream
-	return nil
-
-	l, err := net.ListenUnix("unix", &net.UnixAddr{Net: "unix"})
-	if err != nil {
-		return err
-	}
-	f, err := l.File()
+	pair, err := syscall.Socketpair(syscall.AF_UNIX, syscall.SOCK_STREAM, 0)
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.Command("mandoc", "-Thtml", "-Ofragment", "-u", "/invalid")
-	cmd.ExtraFiles = []*os.File{f}
-	cmd.Env = []string{"MANDOC_UNIX_SOCKFD=3"} // go dup2()s each file in ExtraFiles
+	// Use pair[0] in the parent process
+	syscall.CloseOnExec(pair[0])
+	f := os.NewFile(uintptr(pair[0]), "")
+	fc, err := net.FileConn(f)
+	if err != nil {
+		return err
+	}
+	conn := fc.(*net.UnixConn)
+
+	path, err := exec.LookPath("mandocd")
+	if err != nil {
+		if ee, ok := err.(*exec.Error); ok && ee.Err == exec.ErrNotFound {
+			log.Printf("mandocd not found, falling back to fork+exec for each manpage")
+			return nil
+		}
+		return err
+	}
+
+	cmd := exec.Command(path, "-Thtml", "3") // Go dup2()s ExtraFiles to 3 and onwards
+	cmd.ExtraFiles = []*os.File{os.NewFile(uintptr(pair[1]), "")}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
 		return err
 	}
+
+	if err := syscall.Close(pair[1]); err != nil {
+		return err
+	}
+
 	p.stopWait = make(chan bool)
 	go func() {
 		wait := make(chan error, 1)
@@ -72,12 +86,6 @@ func (p *Process) initMandoc() error {
 	}()
 
 	p.mandocProcess = cmd.Process
-
-	conn, err := net.DialUnix("unix", nil, l.Addr().(*net.UnixAddr))
-	if err != nil {
-		return err
-	}
-
 	p.mandocConn = conn
 	return nil
 }
@@ -106,7 +114,7 @@ func (p *Process) mandocFork(r io.Reader) (stdout string, stderr string, err err
 	cmd.Stdout = &stdoutb
 	cmd.Stderr = &stderrb
 	if err := cmd.Run(); err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("%v, stderr: %s", err, stderrb.String())
 	}
 	return stdoutb.String(), stderrb.String(), nil
 }
