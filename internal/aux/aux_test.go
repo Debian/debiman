@@ -3,6 +3,7 @@ package aux
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
 
 	"github.com/Debian/debiman/internal/redirect"
@@ -122,4 +123,35 @@ func TestIndexSwapFail(t *testing.T) {
 	}
 
 	mustRedirectI3(t, s)
+}
+
+func TestSuggest(t *testing.T) {
+	s := NewServer(i3OnlyIdx, nil, "")
+	for _, entry := range []struct {
+		query string
+		want  []string
+	}{
+		{
+			query: "i",
+			want:  []string{"i3.1"},
+		},
+		{
+			query: "a",
+			want:  nil,
+		},
+	} {
+		if got, want := s.suggest(entry.query), entry.want; !reflect.DeepEqual(got, want) {
+			t.Fatalf("unexpected result: got %v, want %v", got, want)
+		}
+	}
+}
+
+func BenchmarkSuggest(b *testing.B) {
+	// TODO: load representative index
+	s := NewServer(i3OnlyIdx, nil, "")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		// TODO: run sub benchmarks for a few search terms
+		s.suggest("i")
+	}
 }

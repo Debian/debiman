@@ -85,6 +85,7 @@ func main() {
 	}()
 
 	http.HandleFunc("/jump", server.HandleJump)
+	http.HandleFunc("/suggest", server.HandleSuggest)
 	http.HandleFunc("/", server.HandleRedirect)
 
 	log.Printf("Loaded %d manpage entries, %d suites, %d languages from index %q",

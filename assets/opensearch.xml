@@ -4,4 +4,5 @@
  <Description>some debiman installation</Description>
  <Url type="text/html" method="get" template="http://manpages.debian.org/jump?q={searchTerms}"/>
  <Query role="example" searchTerms="wget"/>
+ <Url type="application/x-suggestions+json" method="GET" template="http://debiman.localhost/suggest?q={searchTerms}" />
 </OpenSearchDescription>
