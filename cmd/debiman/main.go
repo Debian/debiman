@@ -56,6 +56,10 @@ var (
 		"",
 		"If non-empty, a file system path to a directory containing assets to overwrite")
 
+	alternativesDir = flag.String("alternatives_dir",
+		"",
+		"If non-empty, a directory containing JSON-encoded lists of slave alternative links, named after the suite (e.g. sid.json.gz, testing.json.gz, etc.)")
+
 	showVersion = flag.Bool("version",
 		false,
 		"Show debiman version and exit")
@@ -82,6 +86,7 @@ func logic() error {
 	globalView, err := buildGlobalView(ar, distributions(
 		strings.Split(*syncCodenames, ","),
 		strings.Split(*syncSuites, ",")),
+		*alternativesDir,
 		start)
 	if err != nil {
 		return err

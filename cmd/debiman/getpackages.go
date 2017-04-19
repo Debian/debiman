@@ -42,13 +42,21 @@ type pkgEntry struct {
 // that /usr/share is reserved for architecture independent files, see
 // http://www.pathname.com/fhs/pub/fhs-2.3.html#USRSHAREARCHITECTUREINDEPENDENTDATA
 // TODO(later): find out which packages are affected and file bugs
-func buildContainsMains(content []*contentEntry) map[string]map[string]bool {
+func buildContainsMains(content []*contentEntry, links map[string][]link) map[string]map[string]bool {
 	containsMans := make(map[string]map[string]bool)
 	for _, entry := range content {
 		if _, ok := containsMans[entry.binarypkg]; !ok {
 			containsMans[entry.binarypkg] = make(map[string]bool)
 		}
 		containsMans[entry.binarypkg][entry.arch] = true
+	}
+	for key := range links {
+		// key is e.g. “testing/vim-nox”
+		idx := strings.Index(key, "/")
+		binarypkg := key[idx+1:]
+		if containsMans[binarypkg] == nil {
+			containsMans[binarypkg] = map[string]bool{mostPopularArchitecture: true}
+		}
 	}
 	log.Printf("%d content entries, %d packages\n", len(content), len(containsMans))
 	return containsMans
