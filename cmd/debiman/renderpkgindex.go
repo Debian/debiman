@@ -8,6 +8,7 @@ import (
 
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/manpage"
+	"github.com/Debian/debiman/internal/write"
 )
 
 var pkgindexTmpl = mustParsePkgindexTmpl()
@@ -29,7 +30,7 @@ func renderPkgindex(dest string, manpageByName map[string]*manpage.Meta) error {
 	}
 	sort.Strings(mans)
 
-	return writeAtomically(dest, true, func(w io.Writer) error {
+	return write.Atomically(dest, true, func(w io.Writer) error {
 		return pkgindexTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string

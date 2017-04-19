@@ -18,6 +18,7 @@ import (
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
+	"github.com/Debian/debiman/internal/write"
 	"golang.org/x/text/language"
 )
 
@@ -475,7 +476,7 @@ func rendermanpage(gzipw *gzip.Writer, converter *convert.Process, job renderJob
 	}
 
 	var written countingWriter
-	if err := writeAtomicallyWithGz(job.dest, gzipw, func(w io.Writer) error {
+	if err := write.AtomicallyWithGz(job.dest, gzipw, func(w io.Writer) error {
 		return t.Execute(io.MultiWriter(w, &written), data)
 	}); err != nil {
 		return 0, err

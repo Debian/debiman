@@ -22,6 +22,7 @@ import (
 	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/manpage"
 	"github.com/Debian/debiman/internal/recode"
+	"github.com/Debian/debiman/internal/write"
 
 	"pault.ag/go/debian/deb"
 	"pault.ag/go/debian/version"
@@ -196,7 +197,7 @@ func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.
 			return nil, err
 		}
 	}
-	err = writeAtomically(dest, true, func(w io.Writer) error {
+	err = write.Atomically(dest, true, func(w io.Writer) error {
 		var err error
 		refs, err = soElim(logger, src, bytes.NewReader(content), w, contentByPath)
 		return err
@@ -380,7 +381,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 			if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
 				return err
 			}
-			if err := writeAtomically(destPath, false, func(w io.Writer) error {
+			if err := write.Atomically(destPath, false, func(w io.Writer) error {
 				_, err := io.Copy(w, d.Data)
 				return err
 			}); err != nil {

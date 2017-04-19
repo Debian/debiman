@@ -1,4 +1,4 @@
-package main
+package write
 
 import (
 	"bufio"
@@ -20,7 +20,7 @@ func tempDir(dest string) string {
 	return tempdir
 }
 
-func writeAtomically(dest string, compress bool, write func(w io.Writer) error) (err error) {
+func Atomically(dest string, compress bool, write func(w io.Writer) error) (err error) {
 	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
 	if err != nil {
 		return err
@@ -74,7 +74,7 @@ func writeAtomically(dest string, compress bool, write func(w io.Writer) error) 
 	return os.Rename(f.Name(), dest)
 }
 
-func writeAtomicallyWithGz(dest string, gzipw *gzip.Writer, write func(w io.Writer) error) (err error) {
+func AtomicallyWithGz(dest string, gzipw *gzip.Writer, write func(w io.Writer) error) (err error) {
 	f, err := ioutil.TempFile(tempDir(dest), "debiman-")
 	if err != nil {
 		return err

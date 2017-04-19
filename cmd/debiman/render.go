@@ -21,6 +21,7 @@ import (
 	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
 	"github.com/Debian/debiman/internal/sitemap"
+	"github.com/Debian/debiman/internal/write"
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 )
@@ -385,7 +386,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 		bins.Close()
 
 		sitemapPath := filepath.Join(*servingDir, sfi.Name(), "sitemap.xml.gz")
-		if err := writeAtomically(sitemapPath, true, func(w io.Writer) error {
+		if err := write.Atomically(sitemapPath, true, func(w io.Writer) error {
 			return sitemap.WriteTo(w, *baseURL+"/"+sfi.Name(), sitemapEntries)
 		}); err != nil {
 			return err
@@ -395,7 +396,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 			sitemaps[sfi.Name()] = st.ModTime()
 		}
 	}
-	return writeAtomically(filepath.Join(*servingDir, "sitemapindex.xml.gz"), true, func(w io.Writer) error {
+	return write.Atomically(filepath.Join(*servingDir, "sitemapindex.xml.gz"), true, func(w io.Writer) error {
 		return sitemap.WriteIndexTo(w, *baseURL, sitemaps)
 	})
 }

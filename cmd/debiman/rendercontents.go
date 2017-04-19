@@ -10,6 +10,7 @@ import (
 
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/manpage"
+	"github.com/Debian/debiman/internal/write"
 )
 
 var contentsTmpl = mustParseContentsTmpl()
@@ -21,7 +22,7 @@ func mustParseContentsTmpl() *template.Template {
 func renderContents(dest, suite string, bins []string) error {
 	sort.Strings(bins)
 
-	if err := writeAtomically(dest, true, func(w io.Writer) error {
+	if err := write.Atomically(dest, true, func(w io.Writer) error {
 		return contentsTmpl.Execute(w, struct {
 			Title          string
 			DebimanVersion string

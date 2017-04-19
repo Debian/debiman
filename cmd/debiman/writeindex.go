@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	pb "github.com/Debian/debiman/internal/proto"
+	"github.com/Debian/debiman/internal/write"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -47,7 +48,7 @@ func writeIndex(dest string, gv globalView) error {
 		return err
 	}
 
-	return writeAtomically(dest, false, func(w io.Writer) error {
+	return write.Atomically(dest, false, func(w io.Writer) error {
 		_, err := w.Write(idxb)
 		if err != nil {
 			return err

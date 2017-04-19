@@ -16,6 +16,7 @@ import (
 	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/commontmpl"
+	"github.com/Debian/debiman/internal/write"
 )
 
 var (
@@ -128,7 +129,7 @@ func logic() error {
 	fmt.Printf("auxserver index bytes:    %d\n", globalView.stats.IndexBytes)
 	fmt.Printf("wall-clock runtime (s):   %d\n", int(time.Now().Sub(start).Seconds()))
 
-	return writeAtomically(filepath.Join(*servingDir, "metrics.txt"), false, func(w io.Writer) error {
+	return write.Atomically(filepath.Join(*servingDir, "metrics.txt"), false, func(w io.Writer) error {
 		return writeMetrics(w, globalView, start)
 	})
 }
