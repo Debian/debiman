@@ -93,7 +93,7 @@ func renderAux(destDir string, gv globalView) error {
 			Meta           *manpage.Meta
 			HrefLangs      []*manpage.Meta
 		}{
-			Title:          "FAQ",
+			Title:          "About",
 			DebimanVersion: debimanVersion,
 		})
 	}); err != nil {
