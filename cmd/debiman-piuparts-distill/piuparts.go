@@ -45,6 +45,8 @@ type link struct {
 	To   string `json:"to"`
 }
 
+// process reads the piuparts logfile at path. links are extracted from each
+// LOG-ALTERNATIVES line and written to the links channel.
 func process(path string, links chan<- link) error {
 	f, err := os.Open(path)
 	if err != nil {
@@ -73,6 +75,8 @@ func process(path string, links chan<- link) error {
 	return scanner.Err()
 }
 
+// byPkg is a helper type for sorting the results slice by binary package. Once
+// Go 1.8 becomes available on piuparts.debian.org, we can switch to sort.Slice.
 type byPkg []link
 
 func (p byPkg) Len() int           { return len(p) }
@@ -90,6 +94,7 @@ func main() {
 		log.Fatal("-logs_dir must be specified")
 	}
 
+	// Spawn -parallel worker goroutines, waiting for work
 	work := make(chan string)
 	linksChan := make(chan link)
 	var wg sync.WaitGroup
@@ -104,12 +109,14 @@ func main() {
 			}
 		}()
 	}
+	// Collect results from all workers into linksMap
 	linksMap := make(map[link]bool)
 	go func() {
 		for l := range linksChan {
 			linksMap[l] = true
 		}
 	}()
+	// Walk through *logsDir, enqueue all .log files onto the work channel
 	if err := filepath.Walk(*logsDir, func(path string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".log") && info.Mode().IsRegular() {
 			work <- path
@@ -118,9 +125,12 @@ func main() {
 	}); err != nil {
 		log.Fatal(err)
 	}
+	// Close the channel, signaling termination to the worker goroutines
 	close(work)
+	// Wait for the worker goroutines to terminate
 	wg.Wait()
 	close(linksChan)
+	// Convert the unsorted linksMap into a slice for sorting
 	links := make([]link, 0, len(linksMap))
 	for l := range linksMap {
 		log.Printf("l = %+v", l)
