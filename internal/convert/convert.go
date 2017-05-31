@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"unicode"
 
 	"golang.org/x/net/html"
 )
@@ -119,10 +120,10 @@ func findUrls(txt string) [][]int {
 			}
 			lastSlash = i
 		default:
-			if inUrl && r != ' ' && r != '>' {
+			if inUrl && !unicode.IsSpace(r) && r != '>' {
 				continue
 			}
-			if inUrl && (r == ' ' || r == '>') {
+			if inUrl && (unicode.IsSpace(r) || r == '>') {
 				results = append(results, []int{lastWordBoundary + 1, i})
 				inUrl = false
 			}
