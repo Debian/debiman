@@ -192,6 +192,34 @@ func (i Index) Narrow(acceptLang string, template, ref IndexEntry, entries []Ind
 		filtered = tmp
 	}
 
+	if t.Language != "" {
+		// Verify the specified language is a valid choice
+		var found bool
+		for _, e := range filtered {
+			if e.Language == t.Language {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Language = ""
+		}
+	}
+
+	if t.Suite != "" {
+		// Verify the specified suite is a valid choice
+		var found bool
+		for _, e := range filtered {
+			if e.Suite == t.Suite {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Suite = ""
+		}
+	}
+
 	// Narrow down as much as possible upfront. The keep callback is
 	// the logical and of all the keep callbacks below:
 	filter(func(e IndexEntry) bool {

@@ -10,6 +10,7 @@ var testIdx = Index{
 	Langs: map[string]bool{
 		"en": true,
 		"fr": true,
+		"es": true,
 	},
 
 	Sections: map[string]bool{
@@ -195,34 +196,40 @@ var testIdx = Index{
 }
 
 func TestNotIndexed(t *testing.T) {
-	u, err := url.Parse("http://man.debian.org/experimental/i3")
+	u, err := url.Parse("http://man.debian.org/experimental/o3")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := testIdx.Redirect(&http.Request{URL: u}); err == nil {
-		t.Fatalf("Redirect for /experimental/i3 unexpectedly succeeded")
+		t.Fatalf("Redirect for /experimental/o3 unexpectedly succeeded")
 	}
 }
 
 func TestNotFoundWrongSuite(t *testing.T) {
-	u, err := url.Parse("http://man.debian.org/experimental/i3")
+	u, err := url.Parse("http://man.debian.org/experimental/o3")
 	if err != nil {
 		t.Fatal(err)
 	}
 	_, err = testIdx.Redirect(&http.Request{URL: u})
 	if err == nil {
-		t.Fatalf("Redirect for /experimental/i3 unexpectedly succeeded")
+		t.Fatalf("Redirect for /experimental/o3 unexpectedly succeeded")
 	}
 	e, ok := err.(*NotFoundError)
 	if !ok {
 		t.Fatalf("Error unexpectedly not of type redirect.NotFoundError")
 	}
-	if got, want := e.Manpage, "i3"; got != want {
+	if got, want := e.Manpage, "o3"; got != want {
 		t.Fatalf("Unexpected e.Manpage: got %q, want %q", got, want)
 	}
-	if got, want := e.BestChoice.ServingPath(".html"), "/jessie/i3-wm/i3.1.en.html"; got != want {
-		t.Fatalf("Unexpected e.BestChoice.ServingPath(): got %q, want %q", got, want)
-	}
+
+	// See https://github.com/Debian/debiman/issues/79 for details: Previously
+	// we returned an error for manpages which were not found, along with the
+	// best choice. Now, we are always redirecting, so we can’t keep the
+	// following test:
+
+	// if got, want := e.BestChoice.ServingPath(".html"), "/jessie/i3-wm/i3.1.en.html"; got != want {
+	// 	t.Fatalf("Unexpected e.BestChoice.ServingPath(): got %q, want %q", got, want)
+	// }
 }
 
 func TestNotFoundFullySpecified(t *testing.T) {
@@ -350,6 +357,10 @@ func TestUnderspecified(t *testing.T) {
 		{Case: 16, URL: "jessie/i3-wm/i3.1.fr", want: "jessie/i3-wm/i3.1.fr.html"},                             // default suite
 		{Case: 16, URL: "testing/i3-wm/i3.1.fr", want: "testing/i3-wm/i3.1.fr.html"},                           // non-default suite
 		{Case: 16, URL: "jessie/libedit-dev/editline.3.en", want: "jessie/libedit-dev/editline.3edit.en.html"}, // section with subsection
+
+		{Case: 17, URL: "jessie/i3.1.es", want: "jessie/i3-wm/i3.1.en.html"},       // non-existent locale
+		{Case: 17, URL: "potato/i3-wm/i3.1.en", want: "jessie/i3-wm/i3.1.en.html"}, // non-existent suite
+		{Case: 17, URL: "experimental/i3.1.en", want: "jessie/i3-wm/i3.1.en.html"}, // non-existent suite
 	}
 	for _, entry := range table {
 		entry := entry // capture
