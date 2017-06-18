@@ -35,7 +35,7 @@ type Index struct {
 }
 
 // TODO(later): the default suite should be the latest stable release
-const defaultSuite = "jessie"
+const defaultSuite = "stretch"
 const defaultLanguage = "en"
 
 // bestLanguageMatch is like bestLanguageMatch in rendermanpage.go, but for the redirector index. TODO: can we de-duplicate the code?
