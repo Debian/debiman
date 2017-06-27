@@ -142,7 +142,7 @@ func getContents(ar *archive.Getter, suite string, component string, archs []str
 			if exhausted[idx] {
 				continue
 			}
-			if contents[idx][0].filename < contents[lowest][0].filename {
+			if len(contents[lowest]) == 0 || contents[idx][0].filename < contents[lowest][0].filename {
 				lowest = idx
 			}
 		}
