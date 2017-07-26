@@ -420,6 +420,9 @@ min-width: 200px;
     font-family: 'Inconsolata', monospace;
     font-size: 1.04rem;
 }
+.mandoc pre {
+    white-space: pre-wrap;
+}
 .mandoc {
     margin-right: 45px;
 
