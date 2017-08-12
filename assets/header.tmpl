@@ -21,9 +21,9 @@
 <body>
 <div id="header">
    <div id="upperheader">
-  <h1><a href="/">some debiman installation</a></h1>
+  <h1><a href="{{ BaseURLPath }}/">some debiman installation</a></h1>
   <div id="searchbox">
-    <form action="/jump" method="get">
+    <form action="{{ BaseURLPath }}/jump" method="get">
       {{ if .Meta -}}
       <input type="hidden" name="suite" value="{{ .Meta.Package.Suite }}">
       <input type="hidden" name="binarypkg" value="{{ .Meta.Package.Binarypkg }}">
@@ -38,7 +38,7 @@
 <div id="navbar">
 <p class="hidecss"><a href="#content">Skip Quicknav</a></p>
 <ul>
-   <li><a href="/">Index</a></li>
+   <li><a href="{{ BaseURLPath }}/">Index</a></li>
 </ul>
 </div>
    <p id="breadcrumbs">&nbsp;
@@ -46,7 +46,7 @@
      {{ if eq $b.Link "" }}
      &#x2F; {{ $b.Text }}
      {{ else }}
-     &#x2F; <a href="{{ $b.Link }}">{{ $b.Text }}</a>
+     &#x2F; <a href="{{ BaseURLPath }}{{ $b.Link }}">{{ $b.Text }}</a>
      {{ end }}
      {{ end -}}
    </p>

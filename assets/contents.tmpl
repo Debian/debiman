@@ -7,7 +7,7 @@
 <ul>
 {{ range $idx, $dir := .Bins }}
 {{ if and (not (HasSuffix $dir ".gz")) (not (HasPrefix $dir ".")) }}
-  <li><a href="/{{ $.Suite }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
+  <li><a href="{{ BaseURLPath }}/{{ $.Suite }}/{{ $dir}}/index.html">{{ $dir }}</a></li>
 {{ end }}
 {{ end }}
 </ul>

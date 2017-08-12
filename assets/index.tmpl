@@ -12,7 +12,7 @@
 
 <ol>
   <li>
-    <form method="GET" action="/jump">
+    <form method="GET" action="{{ BaseURLPath }}/jump">
       Directly jump to manpage:
       <input type="text" name="q" autofocus="autofocus" placeholder="manpage name">
       <input type="submit" value="Jump to manpage">
@@ -35,7 +35,7 @@
     <ul>
       {{ range $idx, $suite := .Suites }}
       <li>
-	<a href="/contents-{{ $suite }}.html">Debian {{ $suite }}</a>
+	<a href="{{ BaseURLPath }}/contents-{{ $suite }}.html">Debian {{ $suite }}</a>
       </li>
       {{ end }}
     </ul>

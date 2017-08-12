@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/Debian/debiman/internal/bundled"
+	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/convert"
 	"github.com/Debian/debiman/internal/manpage"
 	"github.com/Debian/debiman/internal/write"
@@ -316,7 +317,7 @@ func rendermanpageprep(converter *convert.Process, job renderJob) (*template.Tem
 			if len(filtered) == 0 {
 				return ""
 			}
-			return "/" + bestLanguageMatch(meta, filtered).ServingPath() + ".html"
+			return commontmpl.BaseURLPath() + "/" + bestLanguageMatch(meta, filtered).ServingPath() + ".html"
 		})
 	}
 

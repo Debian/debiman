@@ -8,13 +8,13 @@ links
 <div class="panel-body">
 <ul class="list-group list-group-flush">
 <li class="list-group-item">
-<a href="/{{ .Meta.PermaLink }}">permalink</a>
+<a href="{{ BaseURLPath }}/{{ .Meta.PermaLink }}">permalink</a>
 </li>
 <li class="list-group-item">
 <a href="https://tracker.debian.org/pkg/{{ .Meta.Package.Binarypkg }}">package tracker</a>
 </li>
 <li class="list-group-item">
-<a href="/{{ .Meta.RawPath }}">raw man page</a>
+<a href="{{ BaseURLPath }}/{{ .Meta.RawPath }}">raw man page</a>
 </li>
 </ul>
 </div>
@@ -47,7 +47,7 @@ other versions
 <li class="list-group-item
 {{- if eq $man.Package.Suite $.Meta.Package.Suite }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
+<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Suite }}</a> <span class="pkgversion" title="{{ $man.Package.Version }}">{{ $man.Package.Version }}</span>
 </li>
 {{ end }}
 </ul>
@@ -65,7 +65,7 @@ other languages
 <li class="list-group-item
 {{- if eq $man.Language $.Meta.Language }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
+<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html" title="{{ EnglishLang $man.LanguageTag }} ({{ $man.Language }})">{{ DisplayLang $man.LanguageTag }}</a>
 {{ if (index $.Ambiguous $man) }}
 <span class="pkgname">{{ $man.Package.Binarypkg }}</span>
 {{ end }}
@@ -87,7 +87,7 @@ other sections
 <li class="list-group-item
 {{- if eq $man.Section $.Meta.Section }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ $man.Section }} (<span title="{{ LongSection $man.MainSection }}">{{ ShortSection $man.MainSection }}</span>)</a>
+<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Section }} (<span title="{{ LongSection $man.MainSection }}">{{ ShortSection $man.MainSection }}</span>)</a>
 </li>
 {{ end }}
 </ul>
@@ -106,7 +106,7 @@ conflicting packages
 <li class="list-group-item
 {{- if eq $man.Package.Binarypkg $.Meta.Package.Binarypkg }} active{{- end -}}
 ">
-<a href="/{{ $man.ServingPath }}.html">{{ $man.Package.Binarypkg }}</a>
+<a href="{{ BaseURLPath }}/{{ $man.ServingPath }}.html">{{ $man.Package.Binarypkg }}</a>
 </li>
 {{ end }}
 </ul>
