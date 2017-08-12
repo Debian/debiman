@@ -449,7 +449,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 			// might lag behind), this can happen occasionally.
 			return nil
 		}
-		return fmt.Errorf("Writing version file %q: %v", err)
+		return fmt.Errorf("Writing version file %q: %v", vPath, err)
 	}
 
 	atomic.AddUint64(&gv.stats.PackagesExtracted, 1)
