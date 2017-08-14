@@ -322,9 +322,14 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 			continue
 		}
 
-		r, err := gzip.NewReader(d.Data)
-		if err != nil {
-			return err
+		r := io.Reader(d.Data)
+		var gzr *gzip.Reader
+		if strings.HasSuffix(header.Name, ".gz") {
+			gzr, err = gzip.NewReader(d.Data)
+			if err != nil {
+				return err
+			}
+			r = gzr
 		}
 		refs, err := writeManpage(logger, header.Name, destPath, r, m, gv.contentByPath)
 		if err != nil {
@@ -333,8 +338,10 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 		if err := os.Chtimes(destPath, header.ModTime, header.ModTime); err != nil {
 			return err
 		}
-		if err := r.Close(); err != nil {
-			return err
+		if gzr != nil {
+			if err := gzr.Close(); err != nil {
+				return err
+			}
 		}
 
 		for _, r := range refs {
