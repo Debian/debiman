@@ -216,7 +216,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 
 	tmp, err := ar.Get(p.filename, p.sha256)
 	if err != nil {
-		return err
+		return fmt.Errorf("archive download: %v", err)
 	}
 
 	if _, err := tmp.Seek(0, os.SEEK_SET); err != nil {
@@ -472,7 +472,7 @@ func parallelDownload(ar *archive.Getter, gv globalView) error {
 		eg.Go(func() error {
 			for p := range downloadChan {
 				if err := downloadPkg(ar, p, gv); err != nil {
-					return err
+					return fmt.Errorf("downloading %s/src:%s %v: %v", p.suite, p.source, p.version, err)
 				}
 			}
 			return nil

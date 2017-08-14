@@ -89,7 +89,7 @@ func logic() error {
 		*alternativesDir,
 		start)
 	if err != nil {
-		return err
+		return fmt.Errorf("gathering packages: %v", err)
 	}
 
 	log.Printf("gathered packages of all suites, total %d packages", len(globalView.pkgs))
@@ -98,7 +98,7 @@ func logic() error {
 	// files which are included by a number of manpages) are extracted
 	// from the identified Debian packages.
 	if err := parallelDownload(ar, globalView); err != nil {
-		return err
+		return fmt.Errorf("extracting manpages: %v", err)
 	}
 
 	log.Printf("Extracted all manpages, now rendering")
@@ -107,7 +107,7 @@ func logic() error {
 	// using mandoc(1), directory index files are rendered, contents
 	// files are rendered.
 	if err := renderAll(globalView); err != nil {
-		return err
+		return fmt.Errorf("rendering manpages: %v", err)
 	}
 
 	log.Printf("Rendered all manpages, writing index")
@@ -118,11 +118,11 @@ func logic() error {
 	path := strings.Replace(*indexPath, "<serving_dir>", *servingDir, -1)
 	log.Printf("Writing debiman-auxserver index to %q", path)
 	if err := writeIndex(path, globalView); err != nil {
-		return err
+		return fmt.Errorf("writing index: %v", err)
 	}
 
 	if err := renderAux(*servingDir, globalView); err != nil {
-		return err
+		return fmt.Errorf("rendering aux files: %v", err)
 	}
 
 	fmt.Printf("total number of packages: %d\n", len(globalView.pkgs))
@@ -135,7 +135,10 @@ func logic() error {
 	fmt.Printf("wall-clock runtime (s):   %d\n", int(time.Now().Sub(start).Seconds()))
 
 	return write.Atomically(filepath.Join(*servingDir, "metrics.txt"), false, func(w io.Writer) error {
-		return writeMetrics(w, globalView, start)
+		if err := writeMetrics(w, globalView, start); err != nil {
+			return fmt.Errorf("writing metrics: %v", err)
+		}
+		return nil
 	})
 }
 
