@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/manpage"
 	"github.com/Debian/debiman/internal/redirect"
 )
@@ -115,7 +116,7 @@ func (s *Server) HandleRedirect(w http.ResponseWriter, r *http.Request) {
 	// StatusTemporaryRedirect (HTTP 307) means subsequent requests
 	// should use the old URI, which is what we want — the redirect
 	// target will likely change in the future.
-	http.Redirect(w, r, redir, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, commontmpl.BaseURLPath()+redir, http.StatusTemporaryRedirect)
 }
 
 func (s *Server) HandleJump(w http.ResponseWriter, r *http.Request) {
@@ -125,7 +126,7 @@ func (s *Server) HandleJump(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	r.URL.Path = "/" + q
+	r.URL.Path = "/" + strings.TrimPrefix(q, commontmpl.BaseURLPath())
 	s.HandleRedirect(w, r)
 }
 

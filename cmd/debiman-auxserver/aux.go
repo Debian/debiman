@@ -88,9 +88,12 @@ func main() {
 		}
 	}()
 
-	http.HandleFunc("/jump", server.HandleJump)
-	http.HandleFunc("/suggest", server.HandleSuggest)
-	http.HandleFunc("/", server.HandleRedirect)
+	basePath := commontmpl.BaseURLPath()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/jump", server.HandleJump)
+	mux.HandleFunc("/suggest", server.HandleSuggest)
+	mux.HandleFunc("/", server.HandleRedirect)
+	http.Handle("/", http.StripPrefix(basePath, mux))
 
 	log.Printf("Loaded %d manpage entries, %d suites, %d languages from index %q",
 		len(idx.Entries), len(idx.Suites), len(idx.Langs), *indexPath)
