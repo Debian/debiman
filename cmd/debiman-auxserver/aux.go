@@ -29,6 +29,10 @@ var (
 	injectAssets = flag.String("inject_assets",
 		"",
 		"If non-empty, a file system path to a directory containing assets to overwrite")
+
+	baseURL = flag.String("base_url",
+		"https://manpages.debian.org",
+		"Base URL (without trailing slash) to the site. Used where absolute URLs are required, e.g. sitemaps.")
 )
 
 // use go build -ldflags "-X main.debimanVersion=<version>" to set the version

@@ -77,6 +77,6 @@ func MustParseCommonTmpls() *template.Template {
 	t := template.New("root")
 	t = template.Must(t.New("header").Funcs(funcmap).Parse(bundled.Asset("header.tmpl")))
 	t = template.Must(t.New("footer").Funcs(funcmap).Parse(bundled.Asset("footer.tmpl")))
-	t = template.Must(t.New("style").Parse(bundled.Asset("style.css")))
+	t = template.Must(t.New("style").Funcs(funcmap).Parse(bundled.Asset("style.css")))
 	return t
 }

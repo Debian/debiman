@@ -1,13 +1,13 @@
 @font-face {
   font-family: 'Inconsolata';
-  src: local('Inconsolata'), url(/Inconsolata.woff2) format('woff2'), url(/Inconsolata.woff) format('woff');
+  src: local('Inconsolata'), url({{ BaseURLPath }}/Inconsolata.woff2) format('woff2'), url({{ BaseURLPath }}/Inconsolata.woff) format('woff');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: local('Roboto'), local('Roboto Regular'), local('Roboto-Regular'), url(/Roboto-Regular.woff2) format('woff2'), url(/Roboto-Regular.woff) format('woff');
+  src: local('Roboto'), local('Roboto Regular'), local('Roboto-Regular'), url({{ BaseURLPath }}/Roboto-Regular.woff2) format('woff2'), url({{ BaseURLPath }}/Roboto-Regular.woff) format('woff');
 }
 
 @font-face {
@@ -15,7 +15,7 @@
   font-style: normal;
   font-weight: 700;
   /* TODO: is local('Roboto Bold') really correct? */
-  src: local('Roboto Bold'), local('Roboto-Bold'), url(/Roboto-Bold.woff2) format('woff2'), url(/Roboto-Bold.woff) format('woff');
+  src: local('Roboto Bold'), local('Roboto-Bold'), url({{ BaseURLPath }}/Roboto-Bold.woff2) format('woff2'), url({{ BaseURLPath }}/Roboto-Bold.woff) format('woff');
 }
 
 body {
