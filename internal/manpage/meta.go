@@ -12,6 +12,9 @@ import (
 )
 
 type PkgMeta struct {
+	Component string
+	Filename  string
+	Sourcepkg string
 	Binarypkg string
 	Replaces  []string
 

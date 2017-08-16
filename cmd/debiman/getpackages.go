@@ -21,7 +21,7 @@ import (
 )
 
 type pkgEntry struct {
-	source    string // only used during getPackages
+	source    string
 	suite     string
 	binarypkg string
 	arch      string
@@ -315,6 +315,9 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 		result = append(result, p)
 		latestVersion[key] = &manpage.PkgMeta{
 			Replaces:  p.replaces,
+			Component: component,
+			Filename:  p.filename,
+			Sourcepkg: p.source,
 			Binarypkg: p.binarypkg,
 			Suite:     p.suite,
 			Version:   p.version,
