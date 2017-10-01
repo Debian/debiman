@@ -36,7 +36,7 @@ debiman works in 4 stages:
 1. All Debian packages of all architectures of the specified suites are discovered. The following optimizations are used to reduce the number of packages, and hence the input size/required bandwidth:
     1. packages which do not own any files in /usr/share/man (as per the Contents-<arch> archive files) are skipped.
     2. each package is downloaded only for 1 of its architectures, as manpages are architecture-independent.
-2. Man pages and auxilliary files (e.g. content fragment files which are included by a number of manpages) are extracted from the identified Debian packages.
+2. Man pages and auxiliary files (e.g. content fragment files which are included by a number of manpages) are extracted from the identified Debian packages.
 3. All man pages are rendered into an HTML representation using mandoc(1).
 4. An index file for debiman-auxserver (which serves redirects) is written.
 
@@ -131,9 +131,9 @@ re-use rendered manpages (for symlinked manpages):
 
 [crontab(5)](https://manpages.debian.org/crontab(5)) is present in multiple Debian versions, multiple languages, multiple sections and multiple conflicting packages. Hence, it showcases all debiman features.
 
-[w3m(1)](https://manpages.debian.org/w3m(1)) has a japanese translation which is only present in UTF-8 starting with Debian jessie. It also has a German translation starting with Debian stretch.
+[w3m(1)](https://manpages.debian.org/w3m(1)) has a Japanese translation which is only present in UTF-8 starting with Debian jessie. It also has a German translation starting with Debian stretch.
 
-[qelectrotech(1)](https://manpages.debian.org/qelectrotech(1)) has a french translation in 3 different encodings (none specified, ISO8859-1, UTF-8).
+[qelectrotech(1)](https://manpages.debian.org/qelectrotech(1)) has a French translation in 3 different encodings (none specified, ISO8859-1, UTF-8).
 
 [mysqld(8)](https://manpages.debian.org/mysqld(8)) is present in two conflicting packages: `mariadb-server-core-10.0` and `mysql-server-core-5.6`.
 
