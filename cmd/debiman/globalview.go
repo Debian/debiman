@@ -136,6 +136,7 @@ func parseAlternativesDir(dir string) (map[string][]link, error) {
 	results := make([]map[string][]link, len(infos))
 	var eg errgroup.Group
 	for idx, fi := range infos {
+		idx, fi := idx, fi // copy
 		eg.Go(func() error {
 			suite := strings.TrimSuffix(fi.Name(), ".json.gz")
 			res, err := parseAlternativesFile(filepath.Join(dir, fi.Name()), suite)
