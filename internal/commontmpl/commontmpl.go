@@ -42,7 +42,7 @@ func BaseURLPath() string {
 }
 
 func MustParseCommonTmpls() *template.Template {
-	funcmap := map[string]interface{}{
+	funcmap := template.FuncMap{
 		"DisplayLang": func(tag language.Tag) string {
 			lang := display.Self.Name(tag)
 			// Some languages are not present in the Unicode CLDR,
