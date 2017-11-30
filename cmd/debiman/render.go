@@ -97,21 +97,91 @@ type renderingMode int
 const (
 	regularFiles renderingMode = iota
 	symlinks
-	packageIndex
 )
+
+// listManpages lists all files in dir (non-recursively) and returns a map from
+// filename (within dir) to *manpage.Meta.
+func listManpages(dir string) (map[string]*manpage.Meta, error) {
+	manpageByName := make(map[string]*manpage.Meta)
+
+	files, err := os.Open(dir)
+	if err != nil {
+		return nil, err
+	}
+	defer files.Close()
+
+	var predictedEof bool
+	for {
+		if predictedEof {
+			break
+		}
+
+		names, err := files.Readdirnames(2048)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				// We avoid an additional stat syscalls for each
+				// binary package directory by just optimistically
+				// calling readdir and handling the ENOTDIR error.
+				if sce, ok := err.(*os.SyscallError); ok && sce.Err == syscall.ENOTDIR {
+					return nil, nil
+				}
+				return nil, err
+			}
+		}
+
+		// When len(names) < 2048 the next Readdirnames() call will
+		// result in io.EOF and can be skipped to reduce getdents(2)
+		// syscalls by half.
+		predictedEof = len(names) < 2048
+
+		for _, fn := range names {
+			if !strings.HasSuffix(fn, ".gz") ||
+				strings.HasSuffix(fn, ".html.gz") {
+				continue
+			}
+			full := filepath.Join(dir, fn)
+
+			m, err := manpage.FromServingPath(*servingDir, full)
+			if err != nil {
+				// If we run into this case, our code cannot correctly
+				// interpret the result of ServingPath().
+				log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
+				continue
+			}
+
+			manpageByName[fn] = m
+		}
+	}
+	return manpageByName, nil
+}
+
+func renderDirectoryIndex(dir string, newestModTime time.Time) error {
+	st, err := os.Stat(filepath.Join(dir, "index.html.gz"))
+	if !*forceRerender && err == nil && st.ModTime().After(newestModTime) {
+		return nil
+	}
+
+	manpageByName, err := listManpages(dir)
+	if err != nil {
+		return err
+	}
+
+	if len(manpageByName) == 0 {
+		log.Printf("WARNING: empty directory %q, not generating package index", dir)
+		return nil
+	}
+
+	return renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName)
+}
 
 // walkManContents walks over all entries in dir and, depending on mode, does:
 // 1. send a renderJob for each regular file
 // 2. send a renderJob for each symlink
-// 3. renders a directory index
 func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir string, mode renderingMode, gv globalView, newestModTime time.Time) (time.Time, error) {
 	// the invariant is: each file ending in .gz must have a corresponding .html.gz file
 	// the .html.gz must have a modtime that is >= the modtime of the .gz file
-
-	var manpageByName map[string]*manpage.Meta
-	if mode == packageIndex {
-		manpageByName = make(map[string]*manpage.Meta)
-	}
 
 	files, err := os.Open(dir)
 	if err != nil {
@@ -151,18 +221,6 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 				continue
 			}
 			full := filepath.Join(dir, fn)
-			if mode == packageIndex {
-				m, err := manpage.FromServingPath(*servingDir, full)
-				if err != nil {
-					// If we run into this case, our code cannot correctly
-					// interpret the result of ServingPath().
-					log.Printf("BUG: cannot parse manpage from serving path %q: %v", full, err)
-					continue
-				}
-
-				manpageByName[fn] = m
-				continue
-			}
 
 			st, err := os.Lstat(full)
 			if err != nil {
@@ -277,24 +335,6 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 		}
 	}
 
-	if mode != packageIndex {
-		return newestModTime, nil
-	}
-
-	st, err := os.Stat(filepath.Join(dir, "index.html.gz"))
-	if !*forceRerender && err == nil && st.ModTime().After(newestModTime) {
-		return newestModTime, nil
-	}
-
-	if len(manpageByName) == 0 {
-		log.Printf("WARNING: empty directory %q, not generating package index", dir)
-		return newestModTime, nil
-	}
-
-	if err := renderPkgindex(filepath.Join(dir, "index.html.gz"), manpageByName); err != nil {
-		return newestModTime, err
-	}
-
 	return newestModTime, nil
 }
 
@@ -366,7 +406,7 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 
 					// and finally render the package index files which need to
 					// consider both regular files and symlinks.
-					if _, err := walkManContents(ctx, renderChan, dir, packageIndex, gv, newestModTime); err != nil {
+					if err := renderDirectoryIndex(dir, newestModTime); err != nil {
 						return err
 					}
 
