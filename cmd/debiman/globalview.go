@@ -39,16 +39,32 @@ type link struct {
 }
 
 type globalView struct {
-	pkgs          []*pkgEntry
-	suites        map[string]bool
-	idxSuites     map[string]string
+	// pkgs contains all binary packages we know of.
+	pkgs []*pkgEntry
+
+	// suites contains the Debian suites that we know of. Can either be a codename or a suite,
+	// depending on the values of -sync_codenames and -sync_suites.
+	// e.g. “stretch” (codename) or “stable” (suite)
+	suites map[string]bool
+
+	// idxSuites maps codename, suite and command-line argument to suite (as in
+	// suites).
+	// e.g. map[oldoldstable:wheezy wheezy:wheezy]
+	idxSuites map[string]string
+
+	// contentByPath maps from paths underneath /usr/share/man to a contentEntry.
 	contentByPath map[string][]*contentEntry
-	xref          map[string][]*manpage.Meta
+
+	// xref maps from manpage.Meta.Name (e.g. “w3m” or “systemd.service”) to
+	// the corresponding manpage.Meta.
+	xref map[string][]*manpage.Meta
+
 	// alternatives maps from Debian binary package to a slice of
 	// links (from→to pairs).
 	alternatives map[string][]link
-	stats        *stats
-	start        time.Time
+
+	stats *stats
+	start time.Time
 }
 
 type distributionIdentifier int
@@ -211,9 +227,9 @@ func buildGlobalView(ar *archive.Getter, dists []distribution, alternativesDir s
 
 		var suite string
 		if dist.identifier == fromCodename {
-			suite = release.Codename
+			suite = release.Codename // e.g. “stretch”
 		} else {
-			suite = release.Suite
+			suite = release.Suite // e.g. “stable”
 		}
 
 		res.suites[suite] = true
