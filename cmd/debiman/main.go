@@ -160,6 +160,7 @@ func main() {
 		commonTmpls = commontmpl.MustParseCommonTmpls()
 		contentsTmpl = mustParseContentsTmpl()
 		pkgindexTmpl = mustParsePkgindexTmpl()
+		srcpkgindexTmpl = mustParseSrcPkgindexTmpl()
 		indexTmpl = mustParseIndexTmpl()
 		faqTmpl = mustParseFaqTmpl()
 		aboutTmpl = mustParseAboutTmpl()

@@ -1,0 +1,23 @@
+{{ template "header" . }}
+
+<div class="maincontents">
+
+<h1>Manpages of <a href="https://tracker.debian.org/pkg/{{ .Src }}">src:{{ .Src }}</a> in Debian {{ .First.Package.Suite }}</h1>
+
+<ul>
+{{ range $idx, $fn := .Mans }}
+  {{ with $m := index $.ManpageByName $fn }}
+<li>
+  <a href="{{ BaseURLPath }}/{{ $m.ServingPath }}.html">{{ $m.Name }}({{ $m.Section }})
+    {{ if ne $m.Language "en" }}
+      (<span title="{{ EnglishLang $m.LanguageTag }} ({{ $m.Language }})">{{ DisplayLang $m.LanguageTag }}</span>)
+    {{ end }}
+  </a>
+</li>
+  {{ end }}
+{{ end }}
+</ul>
+
+</div>
+
+{{ template "footer" . }}

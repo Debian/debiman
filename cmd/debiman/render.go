@@ -441,7 +441,65 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 	})
 }
 
+func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error {
+	// Partition by suite for reduced memory usage and better locality of file
+	// system access
+	for suite := range gv.suites {
+		binariesBySource := make(map[string][]string)
+		for _, p := range gv.pkgs {
+			if p.suite != suite {
+				continue
+			}
+			binariesBySource[p.source] = append(binariesBySource[p.source], p.binarypkg)
+		}
+
+		for src, binaries := range binariesBySource {
+			srcDir := filepath.Join(*servingDir, suite, "src:"+src)
+			// skip if current index file is more recent than newestForSource
+			st, err := os.Stat(filepath.Join(srcDir, "index.html.gz"))
+			if !*forceRerender && err == nil && st.ModTime().After(newestForSource[src]) {
+				continue
+			}
+
+			// Aggregate manpages of all binary packages for this source package
+			manpages := make(map[string]*manpage.Meta)
+			for _, binary := range binaries {
+				m, err := listManpages(filepath.Join(*servingDir, suite, binary))
+				if err != nil {
+					if os.IsNotExist(err) {
+						continue // The package might not contain any manpages.
+					}
+					return err
+				}
+				for k, v := range m {
+					manpages[k] = v
+				}
+			}
+			if len(manpages) == 0 {
+				continue // The entire source package does not contain any manpages.
+			}
+
+			if err := os.MkdirAll(srcDir, 0755); err != nil {
+				return err
+			}
+			if err := renderSrcPkgindex(filepath.Join(srcDir, "index.html.gz"), src, manpages); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func renderAll(gv globalView) error {
+	log.Printf("Preparing inverted maps")
+	sourceByBinary := make(map[string]string, len(gv.pkgs))
+	newestForSource := make(map[string]time.Time)
+	for _, p := range gv.pkgs {
+		sourceByBinary[p.suite+"/"+p.binarypkg] = p.source
+		newestForSource[p.source] = time.Time{}
+	}
+	log.Printf("%d sourceByBinary entries, %d newestForSource entries", len(sourceByBinary), len(newestForSource))
+
 	eg, ctx := errgroup.WithContext(context.Background())
 	renderChan := make(chan renderJob)
 	for i := 0; i < *renderConcurrency; i++ {
@@ -494,6 +552,10 @@ func renderAll(gv globalView) error {
 	close(renderChan)
 	if err := eg.Wait(); err != nil {
 		return err
+	}
+
+	if err := writeSourceIndex(gv, newestForSource); err != nil {
+		return fmt.Errorf("writing source index: %v", err)
 	}
 
 	suitedirs, err := ioutil.ReadDir(*servingDir)
