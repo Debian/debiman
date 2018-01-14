@@ -92,7 +92,7 @@ func renderSrcPkgindex(dest string, src string, manpageByName map[string]*manpag
 			DebimanVersion: debimanVersion,
 			Breadcrumbs: breadcrumbs{
 				{fmt.Sprintf("/contents-%s.html", first.Package.Suite), first.Package.Suite},
-				{fmt.Sprintf("/%s/%s/index.html", first.Package.Suite, first.Package.Binarypkg), first.Package.Binarypkg},
+				{fmt.Sprintf("/%s/src:%s/index.html", first.Package.Suite, src), "src:" + src},
 				{"", "Contents"},
 			},
 			First:         first,
