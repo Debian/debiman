@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -490,6 +491,35 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 	return nil
 }
 
+func writeSourcesWithManpages(gv globalView) error {
+	for suite := range gv.suites {
+		hasManpages := make(map[string]bool)
+		for _, p := range gv.pkgs {
+			if p.suite != suite {
+				continue
+			}
+			hasManpages[p.source] = true
+		}
+		sourcesWithManpages := make([]string, 0, len(hasManpages))
+		for source := range hasManpages {
+			sourcesWithManpages = append(sourcesWithManpages, source)
+		}
+		sort.Strings(sourcesWithManpages)
+		dest := filepath.Join(*servingDir, suite, "sourcesWithManpages.txt.gz")
+		if err := write.Atomically(dest, true, func(w io.Writer) error {
+			for _, source := range sourcesWithManpages {
+				if _, err := fmt.Fprintln(w, source); err != nil {
+					return err
+				}
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func renderAll(gv globalView) error {
 	log.Printf("Preparing inverted maps")
 	sourceByBinary := make(map[string]string, len(gv.pkgs))
@@ -556,6 +586,10 @@ func renderAll(gv globalView) error {
 
 	if err := writeSourceIndex(gv, newestForSource); err != nil {
 		return fmt.Errorf("writing source index: %v", err)
+	}
+
+	if err := writeSourcesWithManpages(gv); err != nil {
+		return fmt.Errorf("writing sourcesWithManpages: %v", err)
 	}
 
 	suitedirs, err := ioutil.ReadDir(*servingDir)
