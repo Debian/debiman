@@ -246,6 +246,17 @@ func replaceId(n *html.Node, id string) {
 	})
 }
 
+func stripAttr(n *html.Node, key, val string) {
+	var stripped []html.Attribute
+	for _, a := range n.Attr {
+		if a.Key == key && (val == "" || a.Val == val) {
+			continue
+		}
+		stripped = append(stripped, a)
+	}
+	n.Attr = stripped
+}
+
 func postprocess(resolve func(ref string) string, n *html.Node, toc *[]string) error {
 	if n.Parent == nil {
 		return nil
@@ -269,9 +280,37 @@ func postprocess(resolve func(ref string) string, n *html.Node, toc *[]string) e
 		return nil
 	}
 
+	if n.Type == html.ElementNode && n.Data == "a" {
+		// Remove title= attribute which mandoc ≥ 1.14.2 spits out: browsers
+		// show it as a mouse hover text, but it just contains the tag type
+		// (e.g. Lk for links).
+		stripAttr(n, "title", "Lk")
+		return nil
+	}
+
 	if n.Type == html.ElementNode && heading[n.Data] {
 		// Derive and set an id="" attribute for the heading
 		text := plaintext(n)
+		// Remove any line breaks (observed with mandoc ≥ 1.14.2): they are
+		// invisible and change the IDs, which we would like to keep stable to
+		// prevent dead links.
+		text = strings.Replace(text, "\n", " ", -1)
+		text = strings.Replace(text, "\r", " ", -1)
+		for strings.Contains(text, "  ") {
+			text = strings.Replace(text, "  ", " ", -1)
+		}
+		// Remove <a class="selflink"> which mandoc ≥ 1.14.2 spits out.
+		for n.FirstChild != nil {
+			n.RemoveChild(n.FirstChild)
+		}
+		n.AppendChild(&html.Node{
+			Type: html.TextNode,
+			Data: text,
+		})
+		// Remove title= attribute which mandoc ≥ 1.14.2 spits out: browsers
+		// show it as a mouse hover text, but it just contains the tag type
+		// (e.g. Sh for section headers).
+		stripAttr(n, "title", "")
 		// HTML5 requires that ids must contain at least one character
 		// and may not contain any spaces, see
 		// http://stackoverflow.com/a/79022/712014
