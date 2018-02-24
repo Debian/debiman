@@ -13,8 +13,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/manpage"
+
+	"pault.ag/go/archive"
 	"pault.ag/go/debian/control"
 )
 
@@ -202,7 +203,7 @@ func markPresent(latestVersion map[string]*manpage.PkgMeta, xref map[string][]*m
 	return nil
 }
 
-func buildGlobalView(ar *archive.Getter, dists []distribution, alternativesDir string, start time.Time) (globalView, error) {
+func buildGlobalView(ar *archive.Downloader, dists []distribution, alternativesDir string, start time.Time) (globalView, error) {
 	var stats stats
 	res := globalView{
 		suites:        make(map[string]bool, len(dists)),
@@ -220,7 +221,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution, alternativesDir s
 	}
 
 	for _, dist := range dists {
-		release, err := ar.GetRelease(dist.name)
+		release, rd, err := ar.Release(dist.name)
 		if err != nil {
 			return res, err
 		}
@@ -257,7 +258,7 @@ func buildGlobalView(ar *archive.Getter, dists []distribution, alternativesDir s
 			// Collect package download work units
 			var pkgs []*pkgEntry
 			var err error
-			pkgs, latestVersion, err = getAllPackages(ar, suite, release, hashByFilename, buildContainsMains(content, res.alternatives))
+			pkgs, latestVersion, err = getAllPackages(ar, rd, suite, release, hashByFilename, buildContainsMains(content, res.alternatives))
 			if err != nil {
 				return res, err
 			}

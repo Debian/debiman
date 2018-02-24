@@ -13,9 +13,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/manpage"
-	ptarchive "pault.ag/go/archive"
+
+	"pault.ag/go/archive"
 	"pault.ag/go/debian/control"
 	"pault.ag/go/debian/version"
 )
@@ -165,7 +165,7 @@ func done(exhausted []bool) bool {
 	return true
 }
 
-func getPackages(ar *archive.Getter, suite string, component string, archs []string, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]*pkgEntry, map[string]*manpage.PkgMeta, error) {
+func getPackages(ar *archive.Downloader, rd *archive.ReleaseDownloader, suite string, component string, archs []string, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]*pkgEntry, map[string]*manpage.PkgMeta, error) {
 	files := make([]*os.File, len(archs))
 	scanners := make([]*bufio.Scanner, len(archs))
 	pkgs := make([]pkgEntry, len(archs))
@@ -187,13 +187,8 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 				}
 			}
 
-			h, err := hex.DecodeString(fh.Hash)
-			if err != nil {
-				return err
-			}
-
 			log.Printf("getting %q (hash %v)", suite+"/"+path, fh.Hash)
-			r, err := ar.Get("dists/"+suite+"/"+path, h)
+			r, err := rd.TempFile(fh.FileHash)
 			if err != nil {
 				return err
 			}
@@ -207,6 +202,7 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 	defer func() {
 		for _, f := range files {
 			if f != nil {
+				os.Remove(f.Name())
 				f.Close()
 			}
 		}
@@ -327,7 +323,7 @@ func getPackages(ar *archive.Getter, suite string, component string, archs []str
 	return result, latestVersion, nil
 }
 
-func getAllPackages(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]*pkgEntry, map[string]*manpage.PkgMeta, error) {
+func getAllPackages(ar *archive.Downloader, rd *archive.ReleaseDownloader, suite string, release *archive.Release, hashByFilename map[string]*control.SHA256FileHash, containsMans map[string]map[string]bool) ([]*pkgEntry, map[string]*manpage.PkgMeta, error) {
 	var components = [...]string{"main", "contrib"}
 	partsp := make([][]*pkgEntry, len(components))
 	partsl := make([]map[string]*manpage.PkgMeta, len(components))
@@ -338,7 +334,7 @@ func getAllPackages(ar *archive.Getter, suite string, release *ptarchive.Release
 		for idx, arch := range release.Architectures {
 			archs[idx] = arch.String()
 		}
-		partp, partl, err := getPackages(ar, suite, component, archs, hashByFilename, containsMans)
+		partp, partl, err := getPackages(ar, rd, suite, component, archs, hashByFilename, containsMans)
 		if err != nil {
 			return nil, nil, err
 		}

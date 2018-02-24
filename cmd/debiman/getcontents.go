@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -11,8 +10,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Debian/debiman/internal/archive"
-	ptarchive "pault.ag/go/archive"
+	"pault.ag/go/archive"
 	"pault.ag/go/debian/control"
 )
 
@@ -60,7 +58,7 @@ func parseContentsEntry(scanner *bufio.Scanner) ([]*contentEntry, error) {
 	return nil, io.EOF
 }
 
-func getContents(ar *archive.Getter, suite string, component string, archs []string, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
+func getContents(ar *archive.Downloader, suite string, component string, archs []string, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
 	files := make([]*os.File, len(archs))
 	scanners := make([]*bufio.Scanner, len(archs))
 	contents := make([][]*contentEntry, len(archs))
@@ -77,13 +75,9 @@ func getContents(ar *archive.Getter, suite string, component string, archs []str
 				return fmt.Errorf("ERROR: expected path %q not found in Release file", path)
 			}
 
-			h, err := hex.DecodeString(fh.Hash)
-			if err != nil {
-				return err
-			}
-
 			log.Printf("getting %q (hash %v)", suite+"/"+path, fh.Hash)
-			r, err := ar.Get("dists/"+suite+"/"+path, h)
+			fh.Filename = "dists/" + suite + "/" + fh.Filename
+			r, err := ar.TempFile(fh.FileHash)
 			if err != nil {
 				return err
 			}
@@ -105,6 +99,7 @@ func getContents(ar *archive.Getter, suite string, component string, archs []str
 	defer func() {
 		for _, f := range files {
 			if f != nil {
+				os.Remove(f.Name())
 				f.Close()
 			}
 		}
@@ -178,7 +173,7 @@ func getContents(ar *archive.Getter, suite string, component string, archs []str
 	return entries, nil
 }
 
-func getAllContents(ar *archive.Getter, suite string, release *ptarchive.Release, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
+func getAllContents(ar *archive.Downloader, suite string, release *archive.Release, hashByFilename map[string]*control.SHA256FileHash) ([]*contentEntry, error) {
 	// We skip archAll, because there is no Contents-all file. The
 	// contents of Architecture: all packages are included in the
 	// architecture-specific Contents-* files.

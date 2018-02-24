@@ -19,11 +19,12 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/manpage"
 	"github.com/Debian/debiman/internal/recode"
 	"github.com/Debian/debiman/internal/write"
 
+	"pault.ag/go/archive"
+	"pault.ag/go/debian/control"
 	"pault.ag/go/debian/deb"
 	"pault.ag/go/debian/version"
 )
@@ -205,7 +206,7 @@ func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.
 	return refs, err
 }
 
-func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
+func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 	vPath := filepath.Join(*servingDir, p.suite, p.binarypkg, "VERSION")
 
 	if !*forceReextract && canSkip(p, vPath) {
@@ -214,10 +215,16 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 
 	logger := log.New(os.Stderr, p.suite+"/"+p.binarypkg+": ", log.LstdFlags)
 
-	tmp, err := ar.Get(p.filename, p.sha256)
+	tmp, err := ar.TempFile(control.FileHash{
+		Filename:  p.filename,
+		Algorithm: "sha256",
+		Hash:      fmt.Sprintf("%x", p.sha256),
+	})
 	if err != nil {
 		return fmt.Errorf("archive download: %v", err)
 	}
+	defer os.Remove(tmp.Name())
+	defer tmp.Close()
 
 	if _, err := tmp.Seek(0, os.SEEK_SET); err != nil {
 		return err
@@ -464,7 +471,7 @@ func downloadPkg(ar *archive.Getter, p pkgEntry, gv globalView) error {
 	return nil
 }
 
-func parallelDownload(ar *archive.Getter, gv globalView) error {
+func parallelDownload(ar *archive.Downloader, gv globalView) error {
 	eg, ctx := errgroup.WithContext(context.Background())
 	downloadChan := make(chan pkgEntry)
 	// TODO: flag for parallelism level

@@ -13,10 +13,11 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/Debian/debiman/internal/archive"
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/write"
+
+	"pault.ag/go/archive"
 )
 
 var (
@@ -76,9 +77,11 @@ var debimanVersion = "HEAD"
 func logic() error {
 	start := time.Now()
 
-	ar := &archive.Getter{
-		ConnectionsPerMirror: 10,
-		LocalMirror:          *localMirror,
+	ar := &archive.Downloader{
+		Parallel:            10,
+		MaxTransientRetries: 3,
+		Mirror:              "http://localhost:3142/deb.debian.org/debian",
+		LocalMirror:         *localMirror,
 	}
 
 	// Stage 1: all Debian packages of all architectures of the
