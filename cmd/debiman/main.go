@@ -97,7 +97,7 @@ func logic() error {
 
 	log.Printf("gathered packages of all suites, total %d packages", len(globalView.pkgs))
 
-	// Stage 2: man pages and auxilliary files (e.g. content fragment
+	// Stage 2: man pages and auxiliary files (e.g. content fragment
 	// files which are included by a number of manpages) are extracted
 	// from the identified Debian packages.
 	if err := parallelDownload(ar, globalView); err != nil {

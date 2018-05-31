@@ -288,7 +288,7 @@ func buildGlobalView(ar *archive.Downloader, dists []distribution, alternativesD
 		}
 
 		for key, errors := range knownIssues {
-			// TODO: write these to a known-issues file, parse bug numbers from an auxilliary file
+			// TODO: write these to a known-issues file, parse bug numbers from an auxiliary file
 			log.Printf("package %q has errors: %v", key, errors)
 		}
 	}
