@@ -1,5 +1,5 @@
 [Unit]
-Description=debiman auxilliary service endpoints
+Description=debiman auxiliary service endpoints
 
 [Service]
 Restart=always
