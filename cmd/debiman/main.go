@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/openpgp"
+
 	_ "net/http/pprof"
 
 	"github.com/Debian/debiman/internal/bundled"
@@ -61,6 +63,10 @@ var (
 		"",
 		"If non-empty, a directory containing JSON-encoded lists of slave alternative links, named after the suite (e.g. sid.json.gz, testing.json.gz, etc.)")
 
+	keyring = flag.String("keyring",
+		"",
+		"If non-empty, the specified GPG public keyring will be used for validating archive signatures instead of "+archive.DebianArchiveKeyring)
+
 	showVersion = flag.Bool("version",
 		false,
 		"Show debiman version and exit")
@@ -82,6 +88,18 @@ func logic() error {
 		MaxTransientRetries: 3,
 		Mirror:              "http://localhost:3142/deb.debian.org/debian",
 		LocalMirror:         *localMirror,
+	}
+
+	if *keyring != "" {
+		f, err := os.Open(*keyring)
+		if err != nil {
+			return fmt.Errorf("loading -keyring: %v", err)
+		}
+		defer f.Close()
+		ar.Keyring, err = openpgp.ReadKeyRing(f)
+		if err != nil {
+			return fmt.Errorf("ReadKeyRing(%s): %v", *keyring, err)
+		}
 	}
 
 	// Stage 1: all Debian packages of all architectures of the
