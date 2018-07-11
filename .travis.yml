@@ -24,6 +24,6 @@ script:
   # compilation with go1.0.2.
   - go get github.com/Debian/debiman/...
   # TODO: once mandoc trickles into the Ubuntu version which travis uses, get it whitelisted and use the apt addon to install it.
-  - wget https://deb.debian.org/debian/pool/main/m/mdocml/mandoc_1.14.3-4_amd64.deb
-  - dpkg -x mandoc_1.14.3-4_amd64.deb .
+  - wget http://snapshot.debian.org/archive/debian/20170918T214131Z/pool/main/m/mdocml/mandoc_1.14.3-3_amd64.deb
+  - dpkg -x mandoc_1.14.3-3_amd64.deb .
   - PATH=$PWD/usr/bin:$PATH go test github.com/Debian/debiman/...
