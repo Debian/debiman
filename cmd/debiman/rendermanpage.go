@@ -204,14 +204,8 @@ func bestLanguageMatch(current *manpage.Meta, options []*manpage.Meta) *manpage.
 	// improves cross-references.
 
 	matcher := language.NewMatcher(tags)
-	tag, _, _ := matcher.Match(current.LanguageTag)
-	for idx, t := range tags {
-		if t == tag {
-			return options[idx]
-		}
-	}
-	// unreached
-	return nil
+	_, idx, _ := matcher.Match(current.LanguageTag)
+	return options[idx]
 }
 
 type byLanguage []*manpage.Meta
