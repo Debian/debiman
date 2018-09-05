@@ -19,7 +19,9 @@ var testIdx = Index{
 		"2":     true,
 		"3":     true,
 		"3edit": true,
+		"3tcl":  true,
 		"5":     true,
+		"8":     true,
 	},
 
 	Suites: map[string]string{
@@ -189,6 +191,23 @@ var testIdx = Index{
 				Suite:     "jessie",
 				Binarypkg: "git-man",
 				Section:   "1",
+				Language:  "en",
+			},
+		},
+
+		"cron": []IndexEntry{
+			{
+				Name:      "cron",
+				Suite:     "jessie",
+				Binarypkg: "tcllib",
+				Section:   "3tcl",
+				Language:  "en",
+			},
+			{
+				Name:      "cron",
+				Suite:     "jessie",
+				Binarypkg: "cron",
+				Section:   "8",
 				Language:  "en",
 			},
 		},
@@ -615,6 +634,37 @@ func TestBlankRedirect(t *testing.T) {
 		{URL: "git-rebase", want: "jessie/git-man/git-rebase.1.en.html"},
 		{URL: "git rebase", want: "jessie/git-man/git-rebase.1.en.html"},
 		{URL: "git stash", want: "jessie/git-man/git_stash.1.en.html"},
+	}
+	for _, entry := range table {
+		entry := entry // capture
+		t.Run(entry.URL, func(t *testing.T) {
+			t.Parallel()
+
+			u, err := url.Parse("http://man.debian.org/" + entry.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req := &http.Request{
+				URL: u,
+			}
+			got, err := testIdx.Redirect(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "/" + entry.want
+			if got != want {
+				t.Fatalf("Unexpected redirect: got %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestCronSection(t *testing.T) {
+	table := []struct {
+		URL  string
+		want string
+	}{
+		{URL: "cron", want: "jessie/cron/cron.8.en.html"},
 	}
 	for _, entry := range table {
 		entry := entry // capture

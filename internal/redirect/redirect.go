@@ -152,11 +152,35 @@ func (p byMainSection) Less(i, j int) bool {
 	return len(p[i].Section) > len(p[j].Section)
 }
 
+// Default taken from man(1):
+var mansect = searchOrder(strings.Split("1 n l 8 3 2 3posix 3pm 3perl 3am 5 4 9 6 7", " "))
+
+func searchOrder(sections []string) map[string]int {
+	order := make(map[string]int)
+	for idx, section := range sections {
+		order[section] = idx
+	}
+	return order
+}
+
 type bySection []IndexEntry
 
-func (p bySection) Len() int           { return len(p) }
-func (p bySection) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-func (p bySection) Less(i, j int) bool { return p[i].Section < p[j].Section }
+func (p bySection) Len() int      { return len(p) }
+func (p bySection) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p bySection) Less(i, j int) bool {
+	oI, okI := mansect[p[i].Section]
+	oJ, okJ := mansect[p[j].Section]
+	if okI && okJ { // both sections are in mansect
+		return oI < oJ
+	}
+	if !okI && okJ {
+		return false // sort all mansect sections before custom sections
+	}
+	if okI && !okJ {
+		return true // sort all mansect sections before custom sections
+	}
+	return p[i].Section < p[j].Section // neither are in mansect
+}
 
 func (i Index) Narrow(acceptLang string, template, ref IndexEntry, entries []IndexEntry) []IndexEntry {
 	t := template // for convenience
