@@ -67,10 +67,6 @@ func (p *Process) initMandoc() error {
 		return err
 	}
 
-	if err := syscall.Close(pair[1]); err != nil {
-		return err
-	}
-
 	p.stopWait = make(chan bool)
 	go func() {
 		wait := make(chan error, 1)
