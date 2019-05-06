@@ -15,7 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Debian/debiman/internal/aux"
+	"github.com/Debian/debiman/internal/auxserver"
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/redirect"
@@ -88,7 +88,7 @@ func main() {
 
 	commonTmpls := commontmpl.MustParseCommonTmpls()
 	notFoundTmpl := template.Must(commonTmpls.New("notfound").Parse(bundled.Asset("notfound.tmpl")))
-	server := aux.NewServer(idx, notFoundTmpl, debimanVersion)
+	server := auxserver.NewServer(idx, notFoundTmpl, debimanVersion)
 
 	http.HandleFunc("/jump", server.HandleJump)
 

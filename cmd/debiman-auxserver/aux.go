@@ -11,7 +11,7 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	"github.com/Debian/debiman/internal/aux"
+	"github.com/Debian/debiman/internal/auxserver"
 	"github.com/Debian/debiman/internal/bundled"
 	"github.com/Debian/debiman/internal/commontmpl"
 	"github.com/Debian/debiman/internal/redirect"
@@ -56,7 +56,7 @@ func main() {
 
 	commonTmpls := commontmpl.MustParseCommonTmpls()
 	notFoundTmpl := template.Must(commonTmpls.New("notfound").Parse(bundled.Asset("notfound.tmpl")))
-	server := aux.NewServer(idx, notFoundTmpl, debimanVersion)
+	server := auxserver.NewServer(idx, notFoundTmpl, debimanVersion)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP)
