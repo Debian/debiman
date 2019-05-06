@@ -58,7 +58,7 @@ export GOPATH=~/go
 
 To download, compile and install debiman to `$GOPATH/bin`, run:
 ```
-go get -u github.com/Debian/debiman
+go get -u github.com/Debian/debiman/cmd/...
 ```
 
 ### Run debiman
