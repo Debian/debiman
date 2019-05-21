@@ -26,7 +26,7 @@ manpages_rendered {{ .Stats.ManpagesRendered }}
 # HELP manpage_bytes Total number of bytes used by manpages (by format).
 # TYPE manpage_bytes gauge
 manpage_bytes{format="man"} {{ .Stats.ManpageBytes }}
-manpage_bytes{format="html"} {{ .Stats.HtmlBytes }}
+manpage_bytes{format="html"} {{ .Stats.HTMLBytes }}
 
 # HELP index_bytes Total number of bytes used for the auxserver index.
 # TYPE index_bytes gauge
