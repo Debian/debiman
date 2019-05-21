@@ -6,7 +6,7 @@ import (
 )
 
 func TestBreadcrumbsToJSON(t *testing.T) {
-	const breadcrumbsJson = `{"@context":"http://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"Thing","@id":"/contents-jessie.html","name":"jessie"}},{"@type":"ListItem","position":2,"item":{"@type":"Thing","@id":"/jessie/i3-wm/index.html","name":"i3-wm"}},{"@type":"ListItem","position":3,"item":{"@type":"Thing","@id":"","name":"i3(1)"}}]}`
+	const breadcrumbsJSON = `{"@context":"http://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"Thing","@id":"/contents-jessie.html","name":"jessie"}},{"@type":"ListItem","position":2,"item":{"@type":"Thing","@id":"/jessie/i3-wm/index.html","name":"i3-wm"}},{"@type":"ListItem","position":3,"item":{"@type":"Thing","@id":"","name":"i3(1)"}}]}`
 
 	const Suite = "jessie"
 	const Binarypkg = "i3-wm"

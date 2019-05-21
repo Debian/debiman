@@ -151,7 +151,7 @@ func logic() error {
 	fmt.Printf("packages deleted:         %d\n", globalView.stats.PackagesDeleted)
 	fmt.Printf("manpages rendered:        %d\n", globalView.stats.ManpagesRendered)
 	fmt.Printf("total manpage bytes:      %d\n", globalView.stats.ManpageBytes)
-	fmt.Printf("total HTML bytes:         %d\n", globalView.stats.HtmlBytes)
+	fmt.Printf("total HTML bytes:         %d\n", globalView.stats.HTMLBytes)
 	fmt.Printf("auxserver index bytes:    %d\n", globalView.stats.IndexBytes)
 	fmt.Printf("wall-clock runtime (s):   %d\n", int(time.Now().Sub(start).Seconds()))
 

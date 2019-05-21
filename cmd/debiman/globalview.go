@@ -30,7 +30,7 @@ type stats struct {
 	PackagesDeleted   uint64
 	ManpagesRendered  uint64
 	ManpageBytes      uint64
-	HtmlBytes         uint64
+	HTMLBytes         uint64
 	IndexBytes        uint64
 }
 

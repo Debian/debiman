@@ -55,7 +55,7 @@ type breadcrumbs []breadcrumb
 func (b breadcrumbs) ToJSON() template.HTML {
 	type item struct {
 		Type string `json:"@type"`
-		Id   string `json:"@id"`
+		ID   string `json:"@id"`
 		Name string `json:"name"`
 	}
 	type listItem struct {
@@ -111,9 +111,9 @@ func listManpages(dir string) (map[string]*manpage.Meta, error) {
 	}
 	defer files.Close()
 
-	var predictedEof bool
+	var predictedEOF bool
 	for {
-		if predictedEof {
+		if predictedEOF {
 			break
 		}
 
@@ -135,7 +135,7 @@ func listManpages(dir string) (map[string]*manpage.Meta, error) {
 		// When len(names) < 2048 the next Readdirnames() call will
 		// result in io.EOF and can be skipped to reduce getdents(2)
 		// syscalls by half.
-		predictedEof = len(names) < 2048
+		predictedEOF = len(names) < 2048
 
 		for _, fn := range names {
 			if !strings.HasSuffix(fn, ".gz") ||
@@ -190,9 +190,9 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 	}
 	defer files.Close()
 
-	var predictedEof bool
+	var predictedEOF bool
 	for {
-		if predictedEof {
+		if predictedEOF {
 			break
 		}
 
@@ -214,7 +214,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 		// When len(names) < 2048 the next Readdirnames() call will
 		// result in io.EOF and can be skipped to reduce getdents(2)
 		// syscalls by half.
-		predictedEof = len(names) < 2048
+		predictedEOF = len(names) < 2048
 
 		for _, fn := range names {
 			if !strings.HasSuffix(fn, ".gz") ||
@@ -245,7 +245,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 			n := strings.TrimSuffix(fn, ".gz") + ".html.gz"
 			htmlst, err := os.Stat(filepath.Join(dir, n))
 			if err == nil {
-				atomic.AddUint64(&gv.stats.HtmlBytes, uint64(htmlst.Size()))
+				atomic.AddUint64(&gv.stats.HTMLBytes, uint64(htmlst.Size()))
 			}
 			if err != nil || *forceRerender || htmlst.ModTime().Before(st.ModTime()) {
 				m, err := manpage.FromServingPath(*servingDir, full)
@@ -557,7 +557,7 @@ func renderAll(gv globalView) error {
 					return err
 				}
 
-				atomic.AddUint64(&gv.stats.HtmlBytes, n)
+				atomic.AddUint64(&gv.stats.HTMLBytes, n)
 				atomic.AddUint64(&gv.stats.ManpagesRendered, 1)
 			}
 			return nil
