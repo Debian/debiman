@@ -48,6 +48,8 @@ var releaseList = []string{
 	"buster-backports",
 	"bullseye",
 	"bullseye-backports",
+	"bookworm",
+	"bookworm-backports",
 }
 var sortOrder = make(map[string]int)
 
@@ -55,7 +57,7 @@ func init() {
 	for idx, r := range releaseList {
 		sortOrder[r] = idx
 	}
-	sortOrder["testing"] = sortOrder["stretch"]
+	sortOrder["testing"] = sortOrder["bullseye"]
 	sortOrder["unstable"] = len(releaseList)
 	sortOrder["experimental"] = sortOrder["unstable"] + 1
 }
