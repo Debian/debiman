@@ -35,26 +35,22 @@ func Atomically(dest string, compress bool, write func(w io.Writer) error) (err 
 
 	bufw := bufio.NewWriter(f)
 
-	w := io.Writer(bufw)
-	var gzipw *gzip.Writer
 	if compress {
 		// NOTE(stapelberg): gzip’s decompression phase takes the same
 		// time, regardless of compression level. Hence, we invest the
 		// maximum CPU time once to achieve the best compression.
-		gzipw, err = gzip.NewWriterLevel(bufw, gzip.BestCompression)
+		gzipw, err := gzip.NewWriterLevel(bufw, gzip.BestCompression)
 		if err != nil {
 			return err
 		}
-		defer gzipw.Close()
-		w = gzipw
-	}
-
-	if err := write(w); err != nil {
-		return err
-	}
-
-	if compress {
+		if err := write(gzipw); err != nil {
+			return err
+		}
 		if err := gzipw.Close(); err != nil {
+			return err
+		}
+	} else {
+		if err := write(bufw); err != nil {
 			return err
 		}
 	}
