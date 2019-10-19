@@ -84,6 +84,9 @@ func getContents(ar *archive.Downloader, suite string, component string, archs [
 
 			files[idx] = r
 			scanners[idx] = bufio.NewScanner(r)
+			// Some packages have excessively large fields, see e.g.:
+			// https://bugs.debian.org/942487
+			scanners[idx].Buffer(nil, 512*1024)
 			contents[idx], err = parseContentsEntry(scanners[idx])
 			if err != nil {
 				if err == io.EOF {

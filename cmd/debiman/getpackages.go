@@ -195,6 +195,9 @@ func getPackages(ar *archive.Downloader, rd *archive.ReleaseDownloader, suite st
 
 			files[idx] = r
 			scanners[idx] = bufio.NewScanner(r)
+			// Some packages have excessively large fields, see e.g.:
+			// https://bugs.debian.org/942487
+			scanners[idx].Buffer(nil, 512*1024)
 			advance[idx] = true
 			return nil
 		})
