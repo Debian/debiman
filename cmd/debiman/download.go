@@ -206,14 +206,78 @@ func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.
 	return refs, err
 }
 
+func createAlternativesLinks(logger *log.Logger, p pkgEntry, gv globalView) (map[string]bool, error) {
+	refs := make(map[string]bool)
+	key := p.suite + "/" + p.binarypkg
+	if len(gv.alternatives[key]) == 0 {
+		return nil, nil
+	}
+	logger.Printf("creating %d links for binary package %q", len(gv.alternatives[key]), p.binarypkg)
+	for _, link := range gv.alternatives[key] {
+		if !strings.HasPrefix(link.from, "/usr/share/man/") {
+			continue
+		}
+
+		m, err := manpage.FromManPath(strings.TrimPrefix(link.from, "/usr/share/man/"), &manpage.PkgMeta{
+			Binarypkg: p.binarypkg,
+			Suite:     p.suite,
+		})
+		if err != nil {
+			logger.Printf("WARNING: file name %q (underneath /usr/share/man) cannot be parsed: %v", link.from, err)
+			continue
+		}
+
+		resolved := link.to
+		if !strings.HasSuffix(resolved, ".gz") {
+			resolved = resolved + ".gz"
+		}
+
+		destsp := findClosestFile(logger, p, link.from, resolved, gv.contentByPath)
+		if destsp == "" {
+			// Try to extract the resolved file as non-manpage
+			// file. If the resolved file does not live in this
+			// package, this will result in a dangling symlink.
+			refs[resolved] = true
+			destsp = filepath.Join(filepath.Dir(m.ServingPath()), "aux", resolved)
+			logger.Printf("WARNING: possibly dangling symlink %q -> %q, setting to %q", link.from, link.to, destsp)
+		}
+
+		// TODO(stapelberg): add a unit test for this entire function
+		// TODO(stapelberg): ganeti has an interesting twist: their manpages live outside of usr/share/man, and they only have symlinks. in this case, we should extract the file to aux/ and then mangle the symlink dest. problem: manpages actually are in a separate package (ganeti-2.15) and use an absolute symlink (/etc/ganeti/share), which is not shipped with the package.
+		rel, err := filepath.Rel(filepath.Dir(m.ServingPath()), destsp)
+		if err != nil {
+			logger.Printf("WARNING: %v", err)
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(m.ServingPath()), 0755); err != nil {
+			return refs, err
+		}
+
+		if err := os.Symlink(rel, m.ServingPath()+".gz"); err != nil {
+			if os.IsExist(err) {
+				continue
+			}
+			return refs, err
+		}
+	}
+	return refs, nil
+}
+
 func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 	vPath := filepath.Join(*servingDir, p.suite, p.binarypkg, "VERSION")
 
+	logger := log.New(os.Stderr, p.suite+"/"+p.binarypkg+": ", log.LstdFlags)
+
 	if !*forceReextract && canSkip(p, vPath) {
+		// Even when skipping the package, the alternatives data we get from
+		// piuparts might have changed, see issue #119.
+		if _, err := createAlternativesLinks(logger, p, gv); err != nil {
+			return err
+		}
+
 		return nil
 	}
-
-	logger := log.New(os.Stderr, p.suite+"/"+p.binarypkg+": ", log.LstdFlags)
 
 	tmp, err := ar.TempFile(control.FileHash{
 		Filename:  p.filename,
@@ -357,55 +421,12 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 	}
 
 	// Create all symlinks for slave alternatives.
-	key := p.suite + "/" + p.binarypkg
-	logger.Printf("creating %d links for binary package %q", len(gv.alternatives[key]), p.binarypkg)
-	for _, link := range gv.alternatives[key] {
-		if !strings.HasPrefix(link.from, "/usr/share/man/") {
-			continue
-		}
-
-		m, err := manpage.FromManPath(strings.TrimPrefix(link.from, "/usr/share/man/"), &manpage.PkgMeta{
-			Binarypkg: p.binarypkg,
-			Suite:     p.suite,
-		})
-		if err != nil {
-			logger.Printf("WARNING: file name %q (underneath /usr/share/man) cannot be parsed: %v", link.from, err)
-			continue
-		}
-
-		resolved := link.to
-		if !strings.HasSuffix(resolved, ".gz") {
-			resolved = resolved + ".gz"
-		}
-
-		destsp := findClosestFile(logger, p, link.from, resolved, gv.contentByPath)
-		if destsp == "" {
-			// Try to extract the resolved file as non-manpage
-			// file. If the resolved file does not live in this
-			// package, this will result in a dangling symlink.
-			allRefs[resolved] = true
-			destsp = filepath.Join(filepath.Dir(m.ServingPath()), "aux", resolved)
-			logger.Printf("WARNING: possibly dangling symlink %q -> %q, setting to %q", link.from, link.to, destsp)
-		}
-
-		// TODO(stapelberg): add a unit test for this entire function
-		// TODO(stapelberg): ganeti has an interesting twist: their manpages live outside of usr/share/man, and they only have symlinks. in this case, we should extract the file to aux/ and then mangle the symlink dest. problem: manpages actually are in a separate package (ganeti-2.15) and use an absolute symlink (/etc/ganeti/share), which is not shipped with the package.
-		rel, err := filepath.Rel(filepath.Dir(m.ServingPath()), destsp)
-		if err != nil {
-			logger.Printf("WARNING: %v", err)
-			continue
-		}
-
-		if err := os.MkdirAll(filepath.Dir(m.ServingPath()), 0755); err != nil {
-			return err
-		}
-
-		if err := os.Symlink(rel, m.ServingPath()+".gz"); err != nil {
-			if os.IsExist(err) {
-				continue
-			}
-			return err
-		}
+	refs, err := createAlternativesLinks(logger, p, gv)
+	if err != nil {
+		return err
+	}
+	for r := range refs {
+		allRefs[r] = true
 	}
 
 	// Extract all non-manpage files which were referenced via .so
