@@ -51,6 +51,10 @@ var (
 		false,
 		"Forces all manpages to be re-extracted, even if there is no newer package version")
 
+	remoteMirror = flag.String("remote_mirror",
+		"http://localhost:3142/deb.debian.org/",
+		"URL of a Debian mirror to fetch packages from. localhost:3142 is provided by apt-cacher-ng")
+
 	localMirror = flag.String("local_mirror",
 		"",
 		"If non-empty, a file system path to a Debian mirror, e.g. /srv/mirrors/debian on DSA-maintained machines")
@@ -86,7 +90,7 @@ func logic() error {
 	ar := &archive.Downloader{
 		Parallel:            10,
 		MaxTransientRetries: 3,
-		Mirror:              "http://localhost:3142/deb.debian.org/debian",
+		Mirror:              *remoteMirror + "/debian",
 		LocalMirror:         *localMirror,
 	}
 
