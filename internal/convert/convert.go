@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"unicode"
 
 	"golang.org/x/net/html"
 )
@@ -107,7 +106,18 @@ func findUrls(txt string) [][]int {
 	lastSlash := -1
 	inUrl := false
 
+	maybeStripParens := func(end int) int {
+		if lastWordBoundary > 1 &&
+			txt[lastWordBoundary] == '(' &&
+			txt[end-1] == ')' {
+			end--
+		}
+		return end
+	}
+
+Outer:
 	for i, r := range txt {
+		// As per https://stackoverflow.com/a/1547940/712014:
 		switch {
 		case 'a' <= r && r <= 'z' ||
 			'A' <= r && r <= 'Z' ||
@@ -120,12 +130,17 @@ func findUrls(txt string) [][]int {
 			}
 			lastSlash = i
 		default:
-			if inUrl && !unicode.IsSpace(r) && r != '>' {
-				continue
-			}
-			if inUrl && (unicode.IsSpace(r) || r == '>') {
-				results = append(results, []int{lastWordBoundary + 1, i})
-				inUrl = false
+			if inUrl {
+				switch r {
+				case '-', '.', '_', '~', '?', '#', '[', ']', '@', '!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=':
+					// Valid URL character, continue processing:
+					continue Outer
+				default:
+					// Invalid URL character, i.e. end of URL:
+					end := maybeStripParens(i)
+					results = append(results, []int{lastWordBoundary + 1, end})
+					inUrl = false
+				}
 			}
 
 			lastWordBoundary = i
@@ -134,7 +149,8 @@ func findUrls(txt string) [][]int {
 		}
 	}
 	if inUrl {
-		results = append(results, []int{lastWordBoundary + 1, len(txt)})
+		end := maybeStripParens(len(txt))
+		results = append(results, []int{lastWordBoundary + 1, end})
 	}
 	return results
 }

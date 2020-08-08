@@ -415,3 +415,38 @@ func BenchmarkXref(b *testing.B) {
 		xref(data, func(ref string) string { return ref })
 	}
 }
+
+func TestXrefHrefExclude(t *testing.T) {
+	input := &html.Node{
+		Type: html.TextNode,
+		Data: "the upstream website (http://debian.org/) goes into more detail",
+	}
+
+	a1 := &html.Node{
+		Type: html.ElementNode,
+		Data: "a",
+		Attr: []html.Attribute{
+			{Key: "href", Val: "http://debian.org/"},
+		},
+	}
+	a1.AppendChild(&html.Node{
+		Type: html.TextNode,
+		Data: "http://debian.org/",
+	})
+
+	want := []*html.Node{
+		&html.Node{
+			Type: html.TextNode,
+			Data: "the upstream website (",
+		},
+		a1,
+		&html.Node{
+			Type: html.TextNode,
+			Data: ") goes into more detail",
+		},
+	}
+	got := xref(input.Data, func(ref string) string { return ref })
+	if err := cmpElems(input, got, want); err != nil {
+		t.Fatalf("Unexpected xref() HTML result: %v", err)
+	}
+}
