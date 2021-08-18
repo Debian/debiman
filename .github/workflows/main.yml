@@ -1,0 +1,38 @@
+name: Push
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        # Run on the latest minor release of Go 1.17:
+        go-version: ^1.17
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Ensure all files were formatted as per gofmt
+      run: |
+        [ "$(gofmt -l $(find . -name '*.go') 2>&1)" = "" ] || { gofmt -l $(find . -name '*.go'); false; }
+
+    - name: Install dependency Debian packages
+      run: sudo apt-get install debian-archive-keyring
+
+    - name: Run tests
+      run: |
+        /usr/lib/apt/apt-helper download-file https://people.debian.org/~stapelberg/mandoc-static/mandoc mandoc SHA256:91d1f1a6120d0fcccd7590645dcb852ad83a7ad59523e6fd026a64b1c913a102
+        /usr/lib/apt/apt-helper download-file https://people.debian.org/~stapelberg/mandoc-static/mandocd mandocd SHA256:9c30e64b5721ae223e18449d4c82b30919cf11e423de160beff4724cefcdd02e
+        chmod +x mandoc mandocd
+        PATH=$PWD:$PATH go test ./...
