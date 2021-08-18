@@ -380,6 +380,11 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 				if whitelist != nil && !whitelist[bfn] {
 					continue
 				}
+				if bfn == "sourcesWithManpages.txt.gz" ||
+					bfn == "index.html.gz" ||
+					bfn == "sitemap.xml.gz" {
+					continue
+				}
 
 				bfn := bfn // copy
 				dir := filepath.Join(*servingDir, sfi.Name(), bfn)
