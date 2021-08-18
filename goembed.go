@@ -1,5 +1,6 @@
 // copied from https://github.com/dsymonds/goembed/ with pull requests applied
 
+//go:build ignore
 // +build ignore
 
 // goembed generates a Go source file from an input file.
