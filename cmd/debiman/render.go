@@ -382,7 +382,8 @@ func walkContents(ctx context.Context, renderChan chan<- renderJob, whitelist ma
 				}
 				if bfn == "sourcesWithManpages.txt.gz" ||
 					bfn == "index.html.gz" ||
-					bfn == "sitemap.xml.gz" {
+					bfn == "sitemap.xml.gz" ||
+					bfn == ".nobackup" {
 					continue
 				}
 
