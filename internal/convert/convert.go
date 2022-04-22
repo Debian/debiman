@@ -115,6 +115,15 @@ func findUrls(txt string) [][]int {
 		return end
 	}
 
+	// A dot at the end of a URL is most likely not part of the URL, but part of
+	// the text. https://github.com/Debian/debiman/issues/140
+	maybeStripDot := func(end int) int {
+		if txt[end-1] == '.' {
+			end--
+		}
+		return end
+	}
+
 Outer:
 	for i, r := range txt {
 		// As per https://stackoverflow.com/a/1547940/712014:
@@ -150,6 +159,7 @@ Outer:
 	}
 	if inUrl {
 		end := maybeStripParens(len(txt))
+		end = maybeStripDot(end)
 		results = append(results, []int{lastWordBoundary + 1, end})
 	}
 	return results

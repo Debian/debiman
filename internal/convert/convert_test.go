@@ -450,3 +450,38 @@ func TestXrefHrefExclude(t *testing.T) {
 		t.Fatalf("Unexpected xref() HTML result: %v", err)
 	}
 }
+
+func TestXrefHrefExcludeDot(t *testing.T) {
+	input := &html.Node{
+		Type: html.TextNode,
+		Data: "the upstream website goes into more detail at http://debian.org/.",
+	}
+
+	a1 := &html.Node{
+		Type: html.ElementNode,
+		Data: "a",
+		Attr: []html.Attribute{
+			{Key: "href", Val: "http://debian.org/"},
+		},
+	}
+	a1.AppendChild(&html.Node{
+		Type: html.TextNode,
+		Data: "http://debian.org/",
+	})
+
+	want := []*html.Node{
+		&html.Node{
+			Type: html.TextNode,
+			Data: "the upstream website goes into more detail at ",
+		},
+		a1,
+		&html.Node{
+			Type: html.TextNode,
+			Data: ".",
+		},
+	}
+	got := xref(input.Data, func(ref string) string { return ref })
+	if err := cmpElems(input, got, want); err != nil {
+		t.Fatalf("Unexpected xref() HTML result: %v", err)
+	}
+}
