@@ -541,7 +541,7 @@ h2 {
 		padding-right: 1.2em;
 		vertical-align: top; }
 .Bl-tag > dd {
-		clear: right;
+		clear: both;
 		width: 100%;
 		margin-top: 0em;
 		margin-left: 0em;
