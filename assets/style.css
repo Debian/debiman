@@ -147,6 +147,7 @@ a:visited {
     margin: 0 10px 0 52px;
     display: flex;
     flex-direction: row;
+    word-wrap: break-word;
 }
 
 .paneljump {

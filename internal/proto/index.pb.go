@@ -6,9 +6,11 @@
 Package proto is a generated protocol buffer package.
 
 It is generated from these files:
+
 	index.proto
 
 It has these top-level messages:
+
 	IndexEntry
 	Index
 */

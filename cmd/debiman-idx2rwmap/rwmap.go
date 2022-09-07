@@ -6,12 +6,12 @@
 // The -concurrency option determines how many shards are created in
 // -output_dir. To sort and combine the individual shards, use:
 //
-//    LC_ALL=C sort output.* > /srv/man/rwmap.txt
+//	LC_ALL=C sort output.* > /srv/man/rwmap.txt
 //
 // Usually, the resulting file is then converted to DBM so that Apache
 // can quickly look up keys:
 //
-//    httxt2dbm -i /srv/man/rwmap.txt -o /srv/man/rwmap.dbm
+//	httxt2dbm -i /srv/man/rwmap.txt -o /srv/man/rwmap.dbm
 package main
 
 import (
