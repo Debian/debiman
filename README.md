@@ -20,7 +20,7 @@ With regards to speed, debiman can process all manpages of Debian unstable in **
 ## Prerequisites
 
 * mandoc
-* apt-cacher-ng running on localhost:3142
+* a local or remote Debian mirror or an apt-cacher-ng running on localhost:3142
 * a number of Go packages (which `go get` will automatically get for you, see below)
     * pault.ag/go/debian
     * pault.ag/go/archive
