@@ -55,7 +55,7 @@ stable, you likely need to install from backports.
 
 ### Install debiman
 
-To download, compile and install debiman to `$GOPATH/bin`, run:
+To download, compile and install debiman to `~/go/bin`, run:
 ```
 go install github.com/Debian/debiman/cmd/...@main
 ```
@@ -64,14 +64,14 @@ go install github.com/Debian/debiman/cmd/...@main
 
 To synchronize Debian testing to ~/man and render a handful of packages, run:
 ```
-$GOPATH/bin/debiman -serving_dir=~/man -only_render_pkgs=qelectrotech,i3-wm,cron
+~/go/bin/debiman -serving_dir=~/man -only_render_pkgs=qelectrotech,i3-wm,cron
 ```
 
 ### Test the output
 
 To serve manpages from ~/man on localhost:8089, run:
 ```
-$GOPATH/bin/debiman-minisrv -serving_dir=~/man
+~/go/bin/debiman-minisrv -serving_dir=~/man
 ```
 
 Note that for a production setup, you should not use debiman-minisrv. Instead,
@@ -80,7 +80,7 @@ refer to the web server example configuration files in example/.
 ### Recompile debiman
 
 To update your debiman installation after making changes to the HTML
-templates or code in `$GOPATH/src/github.com/Debian/debiman`, run:
+templates or code in your `debiman` git working directory, run:
 ```
 go generate github.com/Debian/debiman/...
 go install github.com/Debian/debiman/cmd/...
