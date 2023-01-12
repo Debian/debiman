@@ -49,17 +49,15 @@ e.g. extraction needs to complete before rendering can start.
 
 ### Set up Go
 
-If this is the first time you’re using Go, run:
-```
-sudo apt install golang-go
-export GOPATH=~/go
-```
+Install the latest supported version of Go from https://go.dev/dl. If you prefer
+to install Go from Debian, ensure you get the same version — if you use Debian
+stable, you likely need to install from backports.
 
 ### Install debiman
 
 To download, compile and install debiman to `$GOPATH/bin`, run:
 ```
-go get -u github.com/Debian/debiman/cmd/...
+go install github.com/Debian/debiman/cmd/...@main
 ```
 
 ### Run debiman
@@ -85,7 +83,7 @@ To update your debiman installation after making changes to the HTML
 templates or code in `$GOPATH/src/github.com/Debian/debiman`, run:
 ```
 go generate github.com/Debian/debiman/...
-go install github.com/Debian/debiman/...
+go install github.com/Debian/debiman/cmd/...
 ```
 
 ## Synchronizing
