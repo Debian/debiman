@@ -197,6 +197,14 @@ func main() {
 	// All of our .so references are relative to *servingDir. For
 	// mandoc(1) to find the files, we need to change the working
 	// directory now.
+	//
+	// We turn *servingDir into an absolute path so that it still refers to the
+	// same location even after our os.Chdir() call (see issue #152).
+	abs, err := filepath.Abs(*servingDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	*servingDir = abs
 	if err := os.Chdir(*servingDir); err != nil {
 		log.Fatal(err)
 	}
