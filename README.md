@@ -1,6 +1,6 @@
 # debiman
 
-[![Build Status](https://travis-ci.org/Debian/debiman.svg?branch=master)](https://travis-ci.org/Debian/debiman)
+[![Actions workflow](https://github.com/Debian/debiman/actions/workflows/main.yml/badge.svg)](https://github.com/Debian/debiman/actions/workflows/main.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Debian/debiman)](https://goreportcard.com/report/github.com/Debian/debiman)
 
 <img src="https://debian.github.io/debiman/debiman-logo.svg" width="300" height="280" align="right" alt="debiman logo">
