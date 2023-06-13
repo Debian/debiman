@@ -512,6 +512,9 @@ func writeSourcesWithManpages(gv globalView) error {
 		}
 		sort.Strings(sourcesWithManpages)
 		dest := filepath.Join(*servingDir, suite, "sourcesWithManpages.txt.gz")
+		if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+			return err
+		}
 		if err := write.Atomically(dest, true, func(w io.Writer) error {
 			for _, source := range sourcesWithManpages {
 				if _, err := fmt.Fprintln(w, source); err != nil {
