@@ -59,7 +59,7 @@ func init() {
 	for idx, r := range releaseList {
 		sortOrder[r] = idx
 	}
-	sortOrder["testing"] = sortOrder["bookworm"]
+	sortOrder["testing"] = sortOrder["trixie"]
 	sortOrder["unstable"] = len(releaseList)
 	sortOrder["experimental"] = sortOrder["unstable"] + 1
 }
