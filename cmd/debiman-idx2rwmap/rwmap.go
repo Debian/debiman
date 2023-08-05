@@ -22,7 +22,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -71,20 +70,6 @@ func (op oncePrinter) mustPrint(key string, template redirect.IndexEntry) {
 	op.printed[key] = true
 }
 
-type byServingPath []redirect.IndexEntry
-
-func (p byServingPath) Len() int {
-	return len(p)
-}
-
-func (p byServingPath) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p byServingPath) Less(i, j int) bool {
-	return p[i].ServingPath(".html") < p[j].ServingPath(".html")
-}
-
 func printAll(bufw *bufio.Writer, idx redirect.Index, name string) {
 	variants := idx.Entries[name]
 
@@ -94,9 +79,6 @@ func printAll(bufw *bufio.Writer, idx redirect.Index, name string) {
 		idx:      idx,
 		variants: variants,
 	}
-
-	// sort to make the output deterministic
-	sort.Stable(byServingPath(variants))
 
 	for _, v := range variants {
 		suites := []string{v.Suite}
