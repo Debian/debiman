@@ -29,7 +29,7 @@ body {
 	padding: 0;
 }
 
-#header {
+body > div#header {
 	padding: 0 10px 0 52px;
 }
 
@@ -186,7 +186,7 @@ a:visited {
     order: 1;
 }
 
-#footer {
+body > div#footer {
 	border: 1px solid #dfdfe0;
 	border-left: 0;
 	border-right: 0;
