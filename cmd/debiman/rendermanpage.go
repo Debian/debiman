@@ -157,11 +157,6 @@ func convertFile(converter *convert.Process, src string, resolve func(ref string
 		return "", nil, err
 	}
 	defer r.Close()
-	if strings.HasSuffix(src, "libossp-uuid-dev/uuid.3ossp.en.gz") {
-		// https://github.com/Debian/debiman/issues/186
-		bugMessage := "BUG: temporarily unavailable: https://github.com/Debian/debiman/issues/186"
-		return bugMessage, nil, nil
-	}
 	out, toc, err := converter.ToHTML(r, resolve)
 	if err != nil {
 		return "", nil, fmt.Errorf("convert(%q): %v", src, err)
