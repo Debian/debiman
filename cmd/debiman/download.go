@@ -143,6 +143,8 @@ func findFile(logger *log.Logger, src, name string, contentByPath map[string][]*
 			continue
 		}
 
+		sort.Sort(contentByBinarypkg(c))
+
 		m, err := manpage.FromManPath(strings.TrimPrefix(check, "/usr/share/man/"), &manpage.PkgMeta{
 			Binarypkg: c[0].binarypkg,
 			Suite:     c[0].suite,
@@ -152,7 +154,6 @@ func findFile(logger *log.Logger, src, name string, contentByPath map[string][]*
 			return m.ServingPath() + ".gz", "", true
 		}
 
-		// TODO: we currently use the first manpage we find. this is non-deterministic, so sort.
 		// TODO(later): try to resolve this reference intelligently, i.e. consider installability to narrow down the list of candidates. add a testcase with all cases that we have in all Debian suites currently
 		return c[0].suite + "/" + c[0].binarypkg + "/aux" + check, check, true
 	}
