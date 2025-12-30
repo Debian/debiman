@@ -103,9 +103,9 @@ func mustParseManpageTmpl() *template.Template {
 			"LongSection": func(section string) string {
 				return longSections[section]
 			},
-			"FragmentLink": func(fragment string) string {
+			"FragmentLink": func(fragment string) template.URL {
 				u := url.URL{Fragment: strings.Replace(fragment, " ", "_", -1)}
-				return u.String()
+				return template.URL(u.String())
 			},
 		}).
 		Parse(bundled.Asset("manpage.tmpl")))

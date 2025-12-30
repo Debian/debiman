@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"strings"
 	"testing"
+
+	"github.com/Debian/debiman/internal/manpage"
 )
 
 func TestBreadcrumbsToJSON(t *testing.T) {
@@ -18,5 +22,29 @@ func TestBreadcrumbsToJSON(t *testing.T) {
 	if got, want := string(b.ToJSON()), breadcrumbsJSON; got != want {
 		fmt.Printf("%s\n", got)
 		t.Fatalf("unexpected breadcrumbs JSON: got %q, want %q", got, want)
+	}
+}
+
+// Ensure that section names containing unsafe characters like colons
+// are properly handled (and do not result in ZgotmplZ values) on pages
+// like https://manpages.debian.org/trixie/foot/foot.ini.5.en.html
+func TestFragmentLinkWithColon(t *testing.T) {
+	var buf bytes.Buffer
+	err := manpageTmpl.ExecuteTemplate(&buf, "manpage", manpagePrepData{
+		Meta: &manpage.Meta{
+			Name:    "test",
+			Section: "1",
+			Package: &manpage.PkgMeta{
+				Suite:     "testing",
+				Binarypkg: "test",
+			},
+		},
+		TOC: []string{"SECTION: main"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(buf.String(), "ZgotmplZ") {
+		t.Fatal("ZgotmplZ in output")
 	}
 }
