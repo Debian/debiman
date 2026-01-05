@@ -292,5 +292,27 @@ func buildGlobalView(ar *archive.Downloader, dists []distribution, alternativesD
 			log.Printf("package %q has errors: %v", key, errors)
 		}
 	}
+	validPaths := make(map[string]bool, len(res.contentByPath))
+		for path := range res.contentByPath {
+			validPaths[path] = true
+		}
+
+		for name, metas := range res.xref {
+			filtered := metas[:0]
+
+			for _, m := range metas {
+				p := "usr/share/man/" + m.Path()
+				if validPaths[p] {
+					filtered = append(filtered, m)
+				}
+			}
+
+			if len(filtered) == 0 {
+				delete(res.xref, name)
+			} else {
+				res.xref[name] = filtered
+			}
+		}
+		
 	return res, nil
 }
