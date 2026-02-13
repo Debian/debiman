@@ -1,5 +1,6 @@
 [Unit]
 Description=debiman auxiliary service endpoints
+Documentation=man:debiman-auxserver(1)
 
 [Service]
 Restart=always
