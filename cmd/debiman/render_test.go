@@ -25,6 +25,40 @@ func TestBreadcrumbsToJSON(t *testing.T) {
 	}
 }
 
+// Ensure that the JSON-LD breadcrumbs are emitted as a JSON object and
+// not, due to html/template's contextual escaping inside <script>, as a
+// quoted (and backslash-escaped) JSON string. See issue #193.
+func TestBreadcrumbsRenderedAsObject(t *testing.T) {
+	var buf bytes.Buffer
+	err := manpageTmpl.ExecuteTemplate(&buf, "manpage", manpagePrepData{
+		Meta: &manpage.Meta{
+			Name:    "test",
+			Section: "1",
+			Package: &manpage.PkgMeta{
+				Suite:     "testing",
+				Binarypkg: "test",
+			},
+		},
+		Breadcrumbs: breadcrumbs{
+			{"/contents-testing.html", "testing"},
+			{"", "test(1)"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, `<script type="application/ld+json">`) {
+		t.Fatal("ld+json script tag missing from output")
+	}
+	if !strings.Contains(out, `{"@context":"http://schema.org"`) {
+		t.Errorf("ld+json not emitted as a JSON object; output:\n%s", out)
+	}
+	if strings.Contains(out, `"{\"@context\"`) {
+		t.Errorf("ld+json emitted as a quoted JSON string; output:\n%s", out)
+	}
+}
+
 // Ensure that section names containing unsafe characters like colons
 // are properly handled (and do not result in ZgotmplZ values) on pages
 // like https://manpages.debian.org/trixie/foot/foot.ini.5.en.html
