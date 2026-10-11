@@ -28,6 +28,8 @@ google.golang.org/protobuf v1.33.0 h1:uNO2rsAINq/JlFpSdYEKIZ0uKD/R9cpdv0T+yoGwGm
 google.golang.org/protobuf v1.33.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=
 pault.ag/go/archive v1.0.1 h1:VA9P4PIWUBC61Lz3bTi6weKd9JLiQJFgW+9igdMT2Q8=
 pault.ag/go/archive v1.0.1/go.mod h1:GUGDFOnqMwuFC8TiPSPgNGDXL3t86YjuwVdxTU7wx98=
+pault.ag/go/archive v1.1.0 h1:0y5uLXv5hQaoguTC3QmTFUcVOtl+QOKPFsuj7g5AHyM=
+pault.ag/go/archive v1.1.0/go.mod h1:GUGDFOnqMwuFC8TiPSPgNGDXL3t86YjuwVdxTU7wx98=
 pault.ag/go/blobstore v0.0.0-20180314122834-d6d187c5a029 h1:cNq0RBAXx0QlORNPsT78f04j6OtI8LKxXrKN/Uo1IQQ=
 pault.ag/go/blobstore v0.0.0-20180314122834-d6d187c5a029/go.mod h1:t2UsqOkWrvOEVHHesR/BDhxYKvww36r/JOdFe0nNObk=
 pault.ag/go/debian v0.21.0 h1:6Q+7oNe3HtNf28BVErD7Zic1XN74lJvjQqzDN7C9i5g=
