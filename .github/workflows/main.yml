@@ -32,7 +32,8 @@ jobs:
 
     - name: Run tests
       run: |
-        /usr/lib/apt/apt-helper download-file https://people.debian.org/~stapelberg/mandoc-static/mandoc mandoc SHA256:91d1f1a6120d0fcccd7590645dcb852ad83a7ad59523e6fd026a64b1c913a102
-        /usr/lib/apt/apt-helper download-file https://people.debian.org/~stapelberg/mandoc-static/mandocd mandocd SHA256:9c30e64b5721ae223e18449d4c82b30919cf11e423de160beff4724cefcdd02e
+        /usr/lib/apt/apt-helper download-file https://people.debian.org/~stapelberg/mandoc_dfgk5ayl54saxinl4mvndg9gxah8wqyp/mandoc mandoc SHA256:2ef03df7084f14e6be8fa6b4b8f979a91c5783d310bf0c5a649106551e440a8f
+        /usr/lib/apt/apt-helper download-file https://people.debian.org/~stapelberg/mandoc_dfgk5ayl54saxinl4mvndg9gxah8wqyp/mandocd mandocd SHA256:b9ce308ec79ce0175cc2e85b29e325ad36afc7678ccda0864d2e143560ecf63c
         chmod +x mandoc mandocd
+        ./mandoc -V
         PATH=$PWD:$PATH go test ./...
