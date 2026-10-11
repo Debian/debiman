@@ -1,3 +1,8 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+# Edit Release, then run 'go generate ./...' in the repo root
+# to create a GPG-signed InRelease (from a temporary key/keyring).
 Origin: Debian
 Label: Debian
 Suite: testing
@@ -13,3 +18,15 @@ SHA256:
  cbaf8f5c71fc8b3e8f0203d6b8f28a6dc2d5915d6f3607b0fef7daab3573929c  35 contrib/Contents-amd64.gz
  b95d7eb17250c5aa3bd52a365e2eab3f53437e76fc6aef3ff863cf20dba639ac  719 main/binary-amd64/Packages.gz
  d97a7fd85512719a9c2f31a21ed28fffa3acfc1436615ec7d9072cb60d5de917  29 contrib/binary-amd64/Packages.gz
+
+-----BEGIN PGP SIGNATURE-----
+
+wsCpBAEBCABdBYJqy6EMCRCNn5xlrAeAfDUUAAAAAAAcABBzYWx0QG5vdGF0aW9u
+cy5vcGVucGdwanMub3JnnuI7ZMrxyFwDTascH6KBOxYhBF32o4Dm4QvyX7F2Zo2f
+nGWsB4B8AAAtDwf/U/d72GvshEvS7ntkAt5qFQoCJr9xN0Pa0n6HGRVj0UKtCpPh
+Q023VMQxfe3a/KyYlXmilmL6z6ywps2nXSVzTNfQpT+8wyLzGe4asDwTB1IhdE/a
+qXTisSA7t18TKZ2/zRzoR6EEG7KN8ggRgajA4Rom4wIuHg5Da/K2QcMgLCpUyAzT
++WtQEemCtVx2FGB48NJE/UESmM9qvihj7C0jpZ8fU/wbPO8HGrhXQdcd7U7hAC9k
+rkvDwXQYvBvLoatAe+WfFnsNA5sUAGGTMfeOJyHo1ePOOMndo2mzbhOAJII0u02n
+Ww3tZ9lbbzZZN562xz96fYC1C+aCkMZQ2n6qvA==
+-----END PGP SIGNATURE-----

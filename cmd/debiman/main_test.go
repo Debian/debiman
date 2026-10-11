@@ -15,6 +15,7 @@ func TestEndToEnd(t *testing.T) {
 	defer os.RemoveAll(dir)
 	flag.Set("serving_dir", dir)
 	flag.Set("local_mirror", "../../testdata/tinymirror")
+	flag.Set("keyring", "../../testdata/tinymirror/keyring.gpg")
 	if err := logic(); err != nil {
 		t.Fatal(err)
 	}

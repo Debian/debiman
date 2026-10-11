@@ -9,7 +9,7 @@ require (
 	golang.org/x/sync v0.22.0
 	golang.org/x/sys v0.47.0
 	golang.org/x/text v0.40.0
-	pault.ag/go/archive v1.0.1
+	pault.ag/go/archive v1.1.0
 	pault.ag/go/debian v0.21.0
 )
 
