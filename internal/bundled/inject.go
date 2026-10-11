@@ -1,12 +1,35 @@
 package bundled
 
 import (
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	bundle "github.com/Debian/debiman"
 )
+
+// assets maps "assets/<name>" to the file contents, filled from the
+// //go:embed in the root package (see assets.go there).
+var assets = mustLoadAssets()
+
+func mustLoadAssets() map[string]string {
+	entries, err := fs.ReadDir(bundle.Assets, "assets")
+	if err != nil {
+		panic(err)
+	}
+	m := make(map[string]string, len(entries))
+	for _, e := range entries {
+		b, err := fs.ReadFile(bundle.Assets, "assets/"+e.Name())
+		if err != nil {
+			panic(err)
+		}
+		m["assets/"+e.Name()] = string(b)
+	}
+	return m
+}
 
 // Inject overwrites bundled assets with versions from dir. Not all
 // assets must be overwritten at once, i.e. just supplying a modified
