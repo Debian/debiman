@@ -2,6 +2,7 @@ package convert
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,6 +14,8 @@ import (
 
 	"golang.org/x/net/html"
 )
+
+var update = flag.Bool("update", false, "write (= update) golden files (test expectations)")
 
 func diff(got, want string) ([]byte, error) {
 	gf, err := ioutil.TempFile("", "debiman-")
@@ -76,7 +79,8 @@ func TestToHTML(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			b, err := ioutil.ReadFile("../../testdata/" + d + ".html")
+			fn := "../../testdata/" + d + ".html"
+			b, err := ioutil.ReadFile(fn)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -85,6 +89,12 @@ func TestToHTML(t *testing.T) {
 			// Ignore leading/trailing whitespace to make the tests more
 			// forgiving to differences in text editor setup.
 			got = strings.TrimSpace(got)
+			if *update {
+				if err := os.WriteFile(fn, []byte(got+"\n"), 0644); err != nil {
+					t.Fatal(err)
+				}
+				return
+			}
 			want = strings.TrimSpace(want)
 			if got != want {
 				d, err := diff(got, want)
