@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 	"sync/atomic"
+	"time"
 	"unicode/utf8"
 
 	"golang.org/x/sync/errgroup"
@@ -206,7 +207,7 @@ func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.
 	return refs, err
 }
 
-func createAlternativesLinks(logger *log.Logger, p pkgEntry, gv globalView) (map[string]bool, error) {
+func createAlternativesLinks(logger *log.Logger, p pkgEntry, gv globalView, reextracted bool) (map[string]bool, error) {
 	refs := make(map[string]bool)
 	key := p.suite + "/" + p.binarypkg
 	if len(gv.alternatives[key]) == 0 {
@@ -254,6 +255,11 @@ func createAlternativesLinks(logger *log.Logger, p pkgEntry, gv globalView) (map
 			return refs, err
 		}
 
+		if reextracted {
+			if err := invalidateHTML(m.ServingPath() + ".gz"); err != nil {
+				return refs, err
+			}
+		}
 		if err := os.Symlink(rel, m.ServingPath()+".gz"); err != nil {
 			if os.IsExist(err) {
 				continue
@@ -264,6 +270,16 @@ func createAlternativesLinks(logger *log.Logger, p pkgEntry, gv globalView) (map
 	return refs, nil
 }
 
+// invalidateHTML enforces a re-render by setting the mtime to 0.
+func invalidateHTML(destPath string) error {
+	html := strings.TrimSuffix(destPath, ".gz") + ".html.gz"
+	zero := time.Unix(0, 0)
+	if err := os.Chtimes(html, zero, zero); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
 func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 	vPath := filepath.Join(*servingDir, p.suite, p.binarypkg, "VERSION")
 
@@ -272,7 +288,7 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 	if !*forceReextract && canSkip(p, vPath) {
 		// Even when skipping the package, the alternatives data we get from
 		// piuparts might have changed, see issue #119.
-		if _, err := createAlternativesLinks(logger, p, gv); err != nil {
+		if _, err := createAlternativesLinks(logger, p, gv, false); err != nil {
 			return err
 		}
 
@@ -349,10 +365,14 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 				logger.Printf("WARNING: hard link name %q (underneath /usr/share/man) cannot be parsed: %v", header.Linkname, err)
 				continue
 			}
+			// Remove the destination to ensure the link will point to the new file contents.
+			if err := os.Remove(destPath); err != nil && !os.IsNotExist(err) {
+				return err
+			}
 			if err := os.Link(filepath.Join(*servingDir, d.ServingPath()+".gz"), m.ServingPath()+".gz"); err != nil {
-				if os.IsExist(err) {
-					continue
-				}
+				return err
+			}
+			if err := invalidateHTML(destPath); err != nil {
 				return err
 			}
 			continue
@@ -380,6 +400,9 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 			if err != nil {
 				logger.Printf("WARNING: %v", err)
 				continue
+			}
+			if err := invalidateHTML(destPath); err != nil {
+				return err
 			}
 			if err := os.Symlink(rel, destPath); err != nil {
 				if os.IsExist(err) {
@@ -410,6 +433,9 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 		if err := os.Chtimes(destPath, header.ModTime, header.ModTime); err != nil {
 			return err
 		}
+		if err := invalidateHTML(destPath); err != nil {
+			return err
+		}
 		if gzr != nil {
 			if err := gzr.Close(); err != nil {
 				return err
@@ -422,7 +448,7 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 	}
 
 	// Create all symlinks for slave alternatives.
-	refs, err := createAlternativesLinks(logger, p, gv)
+	refs, err := createAlternativesLinks(logger, p, gv, true)
 	if err != nil {
 		return err
 	}

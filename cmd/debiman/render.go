@@ -317,7 +317,12 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 					link, err := os.Readlink(full)
 					if err == nil {
 						resolved := filepath.Join(dir, link)
-						reuse = strings.TrimSuffix(resolved, ".gz") + ".html.gz"
+						target := strings.TrimSuffix(resolved, ".gz") + ".html.gz"
+						rst, rerr := os.Stat(resolved)
+						tst, terr := os.Stat(target)
+						if rerr == nil && terr == nil && !tst.ModTime().Before(rst.ModTime()) {
+							reuse = target
+						}
 					}
 				}
 
