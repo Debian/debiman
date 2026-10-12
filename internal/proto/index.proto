@@ -1,6 +1,8 @@
-syntax = "proto3";
+edition = "2024";
 
 package proto;
+
+option go_package = "github.com/Debian/debiman/internal/proto";
 
 message IndexEntry {
   string name = 1;

@@ -11,8 +11,8 @@ import (
 
 	pb "github.com/Debian/debiman/internal/proto"
 	"github.com/Debian/debiman/internal/tag"
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/text/language"
+	"google.golang.org/protobuf/proto"
 )
 
 type IndexEntry struct {
@@ -455,22 +455,22 @@ func IndexFromProto(path string) (Index, error) {
 	if err := proto.Unmarshal(b, &idx); err != nil {
 		return index, err
 	}
-	index.Entries = make(map[string][]IndexEntry, len(idx.Entry))
-	for _, e := range idx.Entry {
-		name := strings.ToLower(e.Name)
+	index.Entries = make(map[string][]IndexEntry, len(idx.GetEntry()))
+	for _, e := range idx.GetEntry() {
+		name := strings.ToLower(e.GetName())
 		index.Entries[name] = append(index.Entries[name], IndexEntry{
-			Name:      e.Name,
-			Suite:     e.Suite,
-			Binarypkg: e.Binarypkg,
-			Section:   e.Section,
-			Language:  e.Language,
+			Name:      e.GetName(),
+			Suite:     e.GetSuite(),
+			Binarypkg: e.GetBinarypkg(),
+			Section:   e.GetSection(),
+			Language:  e.GetLanguage(),
 		})
 	}
-	for _, l := range idx.Language {
+	for _, l := range idx.GetLanguage() {
 		index.Langs[l] = true
 	}
-	index.Suites = idx.Suite
-	for _, l := range idx.Section {
+	index.Suites = idx.GetSuite()
+	for _, l := range idx.GetSection() {
 		index.Sections[l] = true
 	}
 	index.Sections["0"] = true
