@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"html/template"
@@ -126,7 +127,7 @@ func listManpages(dir string) (map[string]*manpage.Meta, error) {
 				// We avoid an additional stat syscalls for each
 				// binary package directory by just optimistically
 				// calling readdir and handling the ENOTDIR error.
-				if sce, ok := err.(*os.SyscallError); ok && sce.Err == syscall.ENOTDIR {
+				if errors.Is(err, syscall.ENOTDIR) {
 					return nil, nil
 				}
 				return nil, err
@@ -205,7 +206,7 @@ func walkManContents(ctx context.Context, renderChan chan<- renderJob, dir strin
 				// We avoid an additional stat syscalls for each
 				// binary package directory by just optimistically
 				// calling readdir and handling the ENOTDIR error.
-				if sce, ok := err.(*os.SyscallError); ok && sce.Err == syscall.ENOTDIR {
+				if errors.Is(err, syscall.ENOTDIR) {
 					return newestModTime, nil
 				}
 				return newestModTime, err
