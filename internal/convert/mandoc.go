@@ -147,6 +147,7 @@ func (p *Process) mandocUnix(r io.Reader) (stdout string, stderr string, err err
 	var eg errgroup.Group
 
 	eg.Go(func() error {
+		defer manw.Close() // unblock mandoc, which waits for EOF on stdin
 		if _, err := io.Copy(manw, r); err != nil {
 			return err
 		}
