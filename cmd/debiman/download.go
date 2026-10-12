@@ -300,6 +300,7 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 	if err != nil {
 		return fmt.Errorf("loading %q: %v", p.filename, err)
 	}
+	defer d.Close()
 	for {
 		header, err := d.Data.Next()
 		if err == io.EOF {
@@ -440,6 +441,7 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 		if err != nil {
 			return err
 		}
+		defer d.Close()
 		for {
 			header, err := d.Data.Next()
 			if err == io.EOF {
