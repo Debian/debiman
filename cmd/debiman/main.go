@@ -90,7 +90,7 @@ func logic() error {
 	ar := &archive.Downloader{
 		Parallel:            10,
 		MaxTransientRetries: 3,
-		Mirror:              *remoteMirror + "/debian",
+		Mirror:              strings.TrimSuffix(*remoteMirror, "/") + "/debian",
 		LocalMirror:         *localMirror,
 	}
 
