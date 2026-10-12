@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"os"
 	"strconv"
 	"strings"
@@ -52,8 +53,8 @@ func buildContainsMains(content []*contentEntry, links map[string][]link) map[st
 	}
 	for key := range links {
 		// key is e.g. “testing/vim-nox”
-		idx := strings.Index(key, "/")
-		binarypkg := key[idx+1:]
+		_, after, _ := strings.Cut(key, "/")
+		binarypkg := after
 		if containsMans[binarypkg] == nil {
 			containsMans[binarypkg] = map[string]bool{mostPopularArchitecture: true}
 		}
@@ -114,8 +115,8 @@ func parsePackageParagraph(scanner *bufio.Scanner, arch string, containsMans map
 			entry.sha256 = h[:n]
 		} else if bytes.Equal(key, prefixReplaces) {
 			// e.g. Replaces: systemd (<< 224-2)
-			pkgs := strings.Split(string(text[idx+2:]), ",")
-			for _, pkg := range pkgs {
+			pkgs := strings.SplitSeq(string(text[idx+2:]), ",")
+			for pkg := range pkgs {
 				if idx := strings.Index(pkg, " "); idx > -1 {
 					pkg = pkg[:idx]
 				}
@@ -173,8 +174,6 @@ func getPackages(ar *archive.Downloader, rd *archive.ReleaseDownloader, suite st
 	exhausted := make([]bool, len(archs))
 	var eg errgroup.Group
 	for idx, arch := range archs {
-		idx := idx   // copy
-		arch := arch // copy
 		eg.Go(func() error {
 			// Prefer gzip over xz because gzip uncompresses faster.
 			path := component + "/binary-" + arch + "/Packages.gz"
@@ -349,9 +348,7 @@ func getAllPackages(ar *archive.Downloader, rd *archive.ReleaseDownloader, suite
 	results := make([]*pkgEntry, 0, sum)
 	for idx := range partsp {
 		results = append(results, partsp[idx]...)
-		for key, value := range partsl[idx] {
-			latestVersion[key] = value
-		}
+		maps.Copy(latestVersion, partsl[idx])
 	}
 
 	return results, latestVersion, nil

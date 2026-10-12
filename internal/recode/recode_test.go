@@ -3,7 +3,7 @@ package recode
 import (
 	"bytes"
 	"compress/gzip"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"unicode/utf8"
@@ -20,7 +20,7 @@ func readGzipped(fn string) ([]byte, error) {
 		return nil, err
 	}
 
-	c, err := ioutil.ReadAll(gz)
+	c, err := io.ReadAll(gz)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,6 @@ func TestRecode(t *testing.T) {
 		},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.src, func(t *testing.T) {
 			t.Parallel()
 
@@ -64,7 +63,7 @@ func TestRecode(t *testing.T) {
 			}
 
 			r := Reader(bytes.NewReader(srcb), entry.language)
-			recoded, err := ioutil.ReadAll(r)
+			recoded, err := io.ReadAll(r)
 			if err != nil {
 				t.Fatal(err)
 			}

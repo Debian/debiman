@@ -66,8 +66,6 @@ func getContents(ar *archive.Downloader, suite string, component string, archs [
 	exhausted := make([]bool, len(archs))
 	var eg errgroup.Group
 	for idx, arch := range archs {
-		idx := idx   // copy
-		arch := arch // copy
 		eg.Go(func() error {
 			path := component + "/Contents-" + arch + ".gz"
 			fh, ok := hashByFilename[path]

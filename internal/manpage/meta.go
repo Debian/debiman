@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/Debian/debiman/internal/tag"
@@ -30,17 +31,10 @@ func (p *PkgMeta) SameBinary(o *PkgMeta) bool {
 	if p.Binarypkg == o.Binarypkg {
 		return true
 	}
-	for _, r := range p.Replaces {
-		if r == o.Binarypkg {
-			return true
-		}
+	if slices.Contains(p.Replaces, o.Binarypkg) {
+		return true
 	}
-	for _, r := range o.Replaces {
-		if r == p.Binarypkg {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(o.Replaces, p.Binarypkg)
 }
 
 type Meta struct {

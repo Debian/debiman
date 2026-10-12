@@ -164,7 +164,7 @@ func (s *Server) HandleSuggest(w http.ResponseWriter, r *http.Request) {
 	completions := s.suggest(q)
 
 	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode([]interface{}{
+	if err := json.NewEncoder(&buf).Encode([]any{
 		q,
 		completions,
 	}); err != nil {

@@ -53,7 +53,6 @@ func TestManpageFromManPath(t *testing.T) {
 	}
 
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.path, func(t *testing.T) {
 			t.Parallel()
 			m, err := FromManPath(entry.path, &entry.pkg)
@@ -100,7 +99,6 @@ func TestLanguageTag(t *testing.T) {
 	}
 
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.path, func(t *testing.T) {
 			t.Parallel()
 			m, err := FromManPath(entry.path, &entry.pkg)

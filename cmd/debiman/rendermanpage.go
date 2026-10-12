@@ -96,7 +96,7 @@ var manpageTmpl = mustParseManpageTmpl()
 
 func mustParseManpageTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("manpage").
-		Funcs(map[string]interface{}{
+		Funcs(map[string]any{
 			"ShortSection": func(section string) string {
 				return shortSections[section]
 			},
@@ -115,7 +115,7 @@ var manpageerrorTmpl = mustParseManpageerrorTmpl()
 
 func mustParseManpageerrorTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("manpage-error").
-		Funcs(map[string]interface{}{
+		Funcs(map[string]any{
 			"ShortSection": func(section string) string {
 				return shortSections[section]
 			},
@@ -134,7 +134,7 @@ var manpagefooterextraTmpl = mustParseManpagefooterextraTmpl()
 
 func mustParseManpagefooterextraTmpl() *template.Template {
 	return template.Must(template.Must(commonTmpls.Clone()).New("manpage-footerextra").
-		Funcs(map[string]interface{}{
+		Funcs(map[string]any{
 			"Iso8601": func(t time.Time) string {
 				return t.UTC().Format(iso8601Format)
 			},

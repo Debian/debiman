@@ -2,7 +2,7 @@ package main
 
 import (
 	"compress/gzip"
-	"io/ioutil"
+
 	"os"
 	"strings"
 	"testing"
@@ -17,7 +17,7 @@ func TestReuse(t *testing.T) {
 baz
 .SH qux
 `
-	f, err := ioutil.TempFile("", "debiman-test")
+	f, err := os.CreateTemp("", "debiman-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +87,7 @@ baz
 	if got, want := len(tocGot), len(tocWant); got != want {
 		t.Fatalf("Unexpected table of contents length: got %d, want %d", got, want)
 	}
-	for n := 0; n < len(tocGot); n++ {
+	for n := range tocGot {
 		if got, want := tocGot[n], tocWant[n]; got != want {
 			t.Fatalf("Unexpected table of contents element %d: got %q, want %q", n, got, want)
 		}

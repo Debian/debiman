@@ -2,7 +2,8 @@ package redirect
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+
 	"log"
 	"net/http"
 	"path/filepath"
@@ -447,7 +448,7 @@ func IndexFromProto(path string) (Index, error) {
 		Sections: make(map[string]bool),
 		Suites:   make(map[string]string),
 	}
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return index, err
 	}

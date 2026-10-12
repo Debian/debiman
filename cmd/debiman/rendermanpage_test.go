@@ -2,7 +2,7 @@ package main
 
 import (
 	"compress/gzip"
-	"io/ioutil"
+
 	"os"
 	"testing"
 	"time"
@@ -37,7 +37,6 @@ func TestBestLanguageMatch(t *testing.T) {
 	}
 
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.wantServingPath, func(t *testing.T) {
 			t.Parallel()
 			best := bestLanguageMatch(entry.current, entry.options)
@@ -53,7 +52,7 @@ func TestPrep(t *testing.T) {
 baz
 .SH qux
 `
-	f, err := ioutil.TempFile("", "debiman-test")
+	f, err := os.CreateTemp("", "debiman-test")
 	if err != nil {
 		t.Fatal(err)
 	}

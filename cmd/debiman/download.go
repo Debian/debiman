@@ -5,9 +5,9 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,7 +16,6 @@ import (
 	"sync/atomic"
 	"unicode/utf8"
 
-	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Debian/debiman/internal/manpage"
@@ -32,7 +31,7 @@ import (
 // canSkip returns true if the package is present in the same (or a
 // newer) version on disk already.
 func canSkip(p pkgEntry, vPath string) bool {
-	v, err := ioutil.ReadFile(vPath)
+	v, err := os.ReadFile(vPath)
 	if err != nil {
 		return false
 	}
@@ -189,12 +188,12 @@ func soElim(logger *log.Logger, src string, r io.Reader, w io.Writer, contentByP
 
 func writeManpage(logger *log.Logger, src, dest string, r io.Reader, m *manpage.Meta, contentByPath map[string][]*contentEntry) ([]string, error) {
 	var refs []string
-	content, err := ioutil.ReadAll(r)
+	content, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 	if !utf8.Valid(content) {
-		content, err = ioutil.ReadAll(recode.Reader(bytes.NewReader(content), m.Language))
+		content, err = io.ReadAll(recode.Reader(bytes.NewReader(content), m.Language))
 		if err != nil {
 			return nil, err
 		}
@@ -478,7 +477,7 @@ func downloadPkg(ar *archive.Downloader, p pkgEntry, gv globalView) error {
 		}
 	}
 
-	if err := ioutil.WriteFile(vPath, []byte(p.version.String()), 0644); err != nil {
+	if err := os.WriteFile(vPath, []byte(p.version.String()), 0644); err != nil {
 		if os.IsNotExist(err) {
 			// If the directory does not exist, we did not extract any
 			// manpages. Since Contents files are not precise (they
@@ -497,7 +496,7 @@ func parallelDownload(ar *archive.Downloader, gv globalView) error {
 	eg, ctx := errgroup.WithContext(context.Background())
 	downloadChan := make(chan pkgEntry)
 	// TODO: flag for parallelism level
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		eg.Go(func() error {
 			for p := range downloadChan {
 				if err := downloadPkg(ar, p, gv); err != nil {

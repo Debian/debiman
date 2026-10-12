@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -18,7 +17,7 @@ import (
 var update = flag.Bool("update", false, "write (= update) golden files (test expectations)")
 
 func diff(got, want string) ([]byte, error) {
-	gf, err := ioutil.TempFile("", "debiman-")
+	gf, err := os.CreateTemp("", "debiman-")
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +29,7 @@ func diff(got, want string) ([]byte, error) {
 	}
 	defer os.Remove(gf.Name())
 
-	wf, err := ioutil.TempFile("", "debiman-")
+	wf, err := os.CreateTemp("", "debiman-")
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +58,6 @@ func TestToHTML(t *testing.T) {
 	}
 	docs := []string{"i3lock", "refs"}
 	for _, d := range docs {
-		d := d // copy
 		t.Run(d, func(t *testing.T) {
 			t.Parallel()
 
@@ -80,7 +78,7 @@ func TestToHTML(t *testing.T) {
 				t.Fatal(err)
 			}
 			fn := "../../testdata/" + d + ".html"
-			b, err := ioutil.ReadFile(fn)
+			b, err := os.ReadFile(fn)
 			if err != nil {
 				t.Fatal(err)
 			}

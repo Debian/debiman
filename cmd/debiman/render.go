@@ -2,6 +2,7 @@ package main
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 	"sort"
@@ -23,7 +25,6 @@ import (
 	"github.com/Debian/debiman/internal/manpage"
 	"github.com/Debian/debiman/internal/sitemap"
 	"github.com/Debian/debiman/internal/write"
-	"golang.org/x/net/context"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -478,9 +479,7 @@ func writeSourceIndex(gv globalView, newestForSource map[string]time.Time) error
 					}
 					return err
 				}
-				for k, v := range m {
-					manpages[k] = v
-				}
+				maps.Copy(manpages, m)
 			}
 			if len(manpages) == 0 {
 				continue // The entire source package does not contain any manpages.
@@ -577,7 +576,7 @@ func renderAll(gv globalView) error {
 	if *onlyRender != "" {
 		whitelist = make(map[string]bool)
 		log.Printf("Restricting rendering to the following binary packages:")
-		for _, e := range strings.Split(strings.TrimSpace(*onlyRender), ",") {
+		for e := range strings.SplitSeq(strings.TrimSpace(*onlyRender), ",") {
 			whitelist[e] = true
 			log.Printf("  %q", e)
 		}

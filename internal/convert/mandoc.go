@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -158,13 +157,13 @@ func (p *Process) mandocUnix(r io.Reader) (stdout string, stderr string, err err
 
 	eg.Go(func() error {
 		var err error
-		stdoutb, err = ioutil.ReadAll(outr)
+		stdoutb, err = io.ReadAll(outr)
 		return err
 	})
 
 	eg.Go(func() error {
 		var err error
-		stderrb, err = ioutil.ReadAll(errr)
+		stderrb, err = io.ReadAll(errr)
 		return err
 	})
 

@@ -2,13 +2,13 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
+
 	"os"
 	"testing"
 )
 
 func TestEndToEnd(t *testing.T) {
-	dir, err := ioutil.TempDir("", "debiman")
+	dir, err := os.MkdirTemp("", "debiman")
 	if err != nil {
 		t.Fatal(err)
 	}

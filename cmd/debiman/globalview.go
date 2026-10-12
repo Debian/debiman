@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -153,7 +154,6 @@ func parseAlternativesDir(dir string) (map[string][]link, error) {
 	results := make([]map[string][]link, len(infos))
 	var eg errgroup.Group
 	for idx, fi := range infos {
-		idx, fi := idx, fi // copy
 		eg.Go(func() error {
 			suite := strings.TrimSuffix(fi.Name(), ".json.gz")
 			res, err := parseAlternativesFile(filepath.Join(dir, fi.Name()), suite)
@@ -169,9 +169,7 @@ func parseAlternativesDir(dir string) (map[string][]link, error) {
 	// derived from the filename and hence unique.
 	merged := make(map[string][]link)
 	for idx := range infos {
-		for key, val := range results[idx] {
-			merged[key] = val
-		}
+		maps.Copy(merged, results[idx])
 	}
 	return merged, nil
 }

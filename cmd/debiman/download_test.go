@@ -154,7 +154,6 @@ func TestWriteManpage(t *testing.T) {
 		},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.src, func(t *testing.T) {
 			t.Parallel()
 
@@ -171,7 +170,7 @@ func TestWriteManpage(t *testing.T) {
 			if got, want := len(refs), len(entry.wantRefs); got != want {
 				t.Fatalf("Unexpected number of soElim() ref results: got %d, want %d", got, want)
 			}
-			for i := 0; i < len(refs); i++ {
+			for i := range refs {
 				if got, want := refs[i], entry.wantRefs[i]; got != want {
 					t.Fatalf("soElim() ref differs in entry %d: got %q, want %q", i, got, want)
 				}

@@ -382,7 +382,6 @@ func TestUnderspecified(t *testing.T) {
 		{Case: 17, URL: "experimental/i3.1.en", want: "jessie/i3-wm/i3.1.en.html"}, // non-existent suite
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
@@ -451,7 +450,6 @@ func TestLegacyManpagesDebianOrgRedirects(t *testing.T) {
 		{Case: 12, URL: "man/testing/fr/5/i3", want: "testing/i3-wm/i3.5.fr.html"},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
@@ -482,7 +480,6 @@ func TestManFreeBSDRedirects(t *testing.T) {
 		{URL: "i3/1", want: "jessie/i3-wm/i3.1.en.html"},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
@@ -530,7 +527,6 @@ func TestAcceptLanguage(t *testing.T) {
 		},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
@@ -569,7 +565,6 @@ func TestFormExtra(t *testing.T) {
 		},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
@@ -603,7 +598,6 @@ func TestRawManpageRedirect(t *testing.T) {
 		{URL: "stretch/i3-wm/i3.1.en.gz", want: "testing/i3-wm/i3.1.en.gz"},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
@@ -636,7 +630,6 @@ func TestBlankRedirect(t *testing.T) {
 		{URL: "git stash", want: "jessie/git-man/git_stash.1.en.html"},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
@@ -667,7 +660,6 @@ func TestCronSection(t *testing.T) {
 		{URL: "cron", want: "jessie/cron/cron.8.en.html"},
 	}
 	for _, entry := range table {
-		entry := entry // capture
 		t.Run(entry.URL, func(t *testing.T) {
 			t.Parallel()
 
